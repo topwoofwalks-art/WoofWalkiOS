@@ -1,0 +1,69 @@
+name: Nightly Tests
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  comprehensive-tests:
+    name: Comprehensive Test Suite
+    runs-on: macos-14
+    strategy:
+      matrix:
+        device: ['iPhone 15 Pro', 'iPhone 15', 'iPad Pro (12.9-inch)']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app
+
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install
+          pod install
+
+      - name: Run tests on ${{ matrix.device }}
+        run: |
+          xcodebuild test \
+            -workspace WoofWalk.xcworkspace \
+            -scheme WoofWalk \
+            -destination "platform=iOS Simulator,name=${{ matrix.device }}" \
+            -resultBundlePath "TestResults-${{ matrix.device }}.xcresult" \
+            -enableCodeCoverage YES
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.device }}
+          path: TestResults-${{ matrix.device }}.xcresult
+
+  performance-tests:
+    name: Performance Tests
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app
+
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install
+          pod install
+
+      - name: Run performance tests
+        run: |
+          xcodebuild test \
+            -workspace WoofWalk.xcworkspace \
+            -scheme WoofWalk \
+            -destination "platform=iOS Simulator,name=iPhone 15 Pro" \
+            -only-testing:WoofWalkTests/PerformanceTests
+
+      - name: Analyze performance metrics
+        run: |
+          echo "Performance test metrics collected"

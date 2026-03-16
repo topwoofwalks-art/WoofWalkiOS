@@ -1,0 +1,130 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Run unit tests"
+  lane :test do
+    run_tests(
+      scheme: "WoofWalk",
+      devices: ["iPhone 15 Pro"],
+      clean: true,
+      code_coverage: true,
+      derived_data_path: "DerivedData",
+      output_directory: "fastlane/test_output"
+    )
+  end
+
+  desc "Run UI tests"
+  lane :ui_test do
+    run_tests(
+      scheme: "WoofWalk",
+      devices: ["iPhone 15 Pro"],
+      only_testing: ["WoofWalkUITests"],
+      clean: true,
+      derived_data_path: "DerivedData",
+      output_directory: "fastlane/test_output"
+    )
+  end
+
+  desc "Run all tests with coverage"
+  lane :test_all do
+    run_tests(
+      scheme: "WoofWalk",
+      devices: ["iPhone 15 Pro"],
+      clean: true,
+      code_coverage: true,
+      derived_data_path: "DerivedData",
+      output_directory: "fastlane/test_output",
+      result_bundle: true
+    )
+
+    slather(
+      proj: "WoofWalk.xcodeproj",
+      scheme: "WoofWalk",
+      output_directory: "fastlane/test_output/coverage",
+      html: true,
+      show: false
+    )
+  end
+
+  desc "Build app for testing"
+  lane :build_for_testing do
+    build_app(
+      scheme: "WoofWalk",
+      configuration: "Debug",
+      build_for_testing: true,
+      derived_data_path: "DerivedData"
+    )
+  end
+
+  desc "Run tests without building"
+  lane :test_without_building do
+    run_tests(
+      scheme: "WoofWalk",
+      devices: ["iPhone 15 Pro"],
+      test_without_building: true,
+      derived_data_path: "DerivedData",
+      output_directory: "fastlane/test_output"
+    )
+  end
+
+  desc "Lint code"
+  lane :lint do
+    swiftlint(
+      mode: :lint,
+      executable: "Pods/SwiftLint/swiftlint",
+      config_file: ".swiftlint.yml",
+      raise_if_swiftlint_error: true
+    )
+  end
+
+  desc "Build for App Store"
+  lane :release do
+    increment_build_number(xcodeproj: "WoofWalk.xcodeproj")
+
+    build_app(
+      scheme: "WoofWalk",
+      configuration: "Release",
+      export_method: "app-store"
+    )
+  end
+
+  desc "Build for TestFlight"
+  lane :beta do
+    increment_build_number(xcodeproj: "WoofWalk.xcodeproj")
+
+    build_app(
+      scheme: "WoofWalk",
+      configuration: "Release",
+      export_method: "app-store"
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Take screenshots"
+  lane :screenshots do
+    capture_screenshots(
+      scheme: "WoofWalkUITests",
+      devices: [
+        "iPhone 15 Pro",
+        "iPhone 15 Pro Max",
+        "iPad Pro (12.9-inch)"
+      ]
+    )
+  end
+
+  desc "Clean build artifacts"
+  lane :clean_build do
+    clean_build_artifacts
+    clear_derived_data
+  end
+
+  error do |lane, exception|
+    notification(
+      title: "Fastlane",
+      message: "Error in lane #{lane}: #{exception.message}"
+    )
+  end
+end

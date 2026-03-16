@@ -1,0 +1,69 @@
+import Foundation
+import FirebaseAuth
+import FirebaseFirestore
+
+@MainActor
+class BadgeAwardingService: ObservableObject {
+    static let shared = BadgeAwardingService()
+
+    @Published var pendingAchievements: [WalkAchievement] = []
+
+    private let db = Firestore.firestore()
+    private let auth = Auth.auth()
+
+    func checkAndAwardBadges(walkDistance: Double, totalWalks: Int, totalDistance: Double, poisCreated: Int, votesGiven: Int) async {
+        guard let uid = auth.currentUser?.uid else { return }
+
+        do {
+            let doc = try await db.collection("users").document(uid).getDocument()
+            let existingBadges = doc.data()?["badges"] as? [String] ?? []
+
+            var newBadges: [String] = []
+            var achievements: [WalkAchievement] = []
+
+            for badge in BadgeDefinitions.allBadges {
+                guard !existingBadges.contains(badge.id) else { continue }
+
+                let earned: Bool
+                switch badge.unlockCriteria.type {
+                case .walksCompleted:
+                    earned = totalWalks >= badge.unlockCriteria.targetValue
+                case .distanceTotal:
+                    earned = totalDistance >= Double(badge.unlockCriteria.targetValue)
+                case .poisCreated:
+                    earned = poisCreated >= badge.unlockCriteria.targetValue
+                case .votesGiven:
+                    earned = votesGiven >= badge.unlockCriteria.targetValue
+                case .timeOfDay, .special:
+                    earned = false
+                }
+
+                if earned {
+                    newBadges.append(badge.id)
+                    achievements.append(WalkAchievement(
+                        id: badge.id,
+                        title: badge.name,
+                        description: badge.description,
+                        icon: badge.iconName,
+                        color: badge.rarity.color
+                    ))
+                }
+            }
+
+            if !newBadges.isEmpty {
+                try await db.collection("users").document(uid).updateData([
+                    "badges": FieldValue.arrayUnion(newBadges)
+                ])
+                pendingAchievements.append(contentsOf: achievements)
+            }
+        } catch {
+            print("Badge check error: \(error)")
+        }
+    }
+
+    func dismissNextAchievement() {
+        if !pendingAchievements.isEmpty {
+            pendingAchievements.removeFirst()
+        }
+    }
+}

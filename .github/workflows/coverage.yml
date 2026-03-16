@@ -1,0 +1,62 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  coverage:
+    name: Generate Coverage Report
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app
+
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          gem install slather
+          bundle install
+          pod install
+
+      - name: Run tests with coverage
+        run: |
+          bundle exec fastlane test_all
+
+      - name: Generate HTML coverage report
+        run: |
+          slather coverage \
+            --html \
+            --scheme WoofWalk \
+            --output-directory fastlane/test_output/coverage \
+            WoofWalk.xcodeproj
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: fastlane/test_output/coverage
+
+      - name: Generate coverage badge
+        run: |
+          COVERAGE=$(slather coverage --scheme WoofWalk WoofWalk.xcodeproj | grep -Eo '[0-9]+\.[0-9]+%' | head -1)
+          echo "Coverage: $COVERAGE"
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const coverage = fs.readFileSync('fastlane/test_output/coverage/index.html', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Coverage report generated. Check artifacts for details.'
+            });

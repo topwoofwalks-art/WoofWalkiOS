@@ -1,0 +1,12 @@
+coverage_service: cobertura_xml
+xcodeproj: WoofWalk.xcodeproj
+workspace: WoofWalk.xcworkspace
+scheme: WoofWalk
+source_directory: WoofWalk
+output_directory: fastlane/test_output/coverage
+ignore:
+  - Pods/*
+  - WoofWalkTests/*
+  - WoofWalkUITests/*
+  - "**/R.generated.swift"
+  - "**/GoogleService-Info.plist"
