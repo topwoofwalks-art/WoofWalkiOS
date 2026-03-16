@@ -18,9 +18,7 @@ target 'WoofWalk' do
   pod 'Alamofire', '~> 5.9.0'
   pod 'Kingfisher', '~> 7.11.0'
 
-  target 'WoofWalkTests' do
-    inherit! :search_paths
-  end
+
 end
 
 post_install do |installer|
