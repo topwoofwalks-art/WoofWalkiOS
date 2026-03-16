@@ -12,11 +12,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16.2
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: List available Xcode versions
+        run: ls /Applications/ | grep Xcode
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+      - name: Select Xcode
+        run: |
+          # Find the latest available Xcode
+          XCODE_APP=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Using: $XCODE_APP"
+          sudo xcode-select -s "$XCODE_APP"
+
+      - name: Show Xcode and SDK info
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i sim
+          xcrun simctl list runtimes
+
+      - name: Install iOS Simulator runtime if needed
+        run: |
+          # Check if any iOS runtime is available
+          if ! xcrun simctl list runtimes | grep -q "iOS"; then
+            echo "No iOS runtime found, installing..."
+            xcodebuild -downloadPlatform iOS
+          else
+            echo "iOS runtime available"
+          fi
 
       - name: Cache CocoaPods
         uses: actions/cache@v4
@@ -28,18 +48,24 @@ jobs:
       - name: Install CocoaPods
         run: pod install --repo-update
 
-      - name: List available simulators
-        run: xcrun simctl list devices available | grep -i iphone | head -10
+      - name: Find simulator
+        id: sim
+        run: |
+          SIM_NAME=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/^ *//' | cut -d'(' -f1 | xargs)
+          echo "simulator=$SIM_NAME" >> $GITHUB_OUTPUT
+          echo "Using simulator: $SIM_NAME"
 
       - name: Build
         run: |
+          set -o pipefail
           xcodebuild build \
             -workspace WoofWalk.xcworkspace \
             -scheme WoofWalk \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.simulator }}" \
             CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tee build.log | xcpretty; exit ${PIPESTATUS[0]}
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            2>&1 | tee build.log | xcpretty
 
       - name: Upload build log on failure
         if: failure()
