@@ -28,13 +28,16 @@ jobs:
       - name: Install CocoaPods
         run: pod install --repo-update
 
+      - name: List available simulators
+        run: xcrun simctl list devices available | grep -i iphone | head -10
+
       - name: Build
         run: |
           xcodebuild build \
             -workspace WoofWalk.xcworkspace \
             -scheme WoofWalk \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
+            -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
             2>&1 | tee build.log | xcpretty; exit ${PIPESTATUS[0]}
 
