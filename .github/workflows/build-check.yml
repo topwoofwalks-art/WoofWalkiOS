@@ -28,7 +28,7 @@ jobs:
       - name: Install CocoaPods
         run: pod install --repo-update
 
-      - name: Build
+      - name: Build for simulator
         run: |
           set -o pipefail
           xcodebuild build \
@@ -39,7 +39,59 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             ENABLE_USER_SCRIPT_SANDBOXING=NO \
+            CONFIGURATION_BUILD_DIR=$(pwd)/build \
             2>&1 | tee build.log | xcpretty
+
+      - name: Boot simulator
+        run: |
+          xcrun simctl boot "iPhone 15" || true
+          sleep 5
+          xcrun simctl status_bar "iPhone 15" override \
+            --time "9:41" \
+            --batteryState charged \
+            --batteryLevel 100 \
+            --cellularMode active \
+            --cellularBars 4 \
+            --wifiBars 3
+
+      - name: Install app in simulator
+        run: |
+          xcrun simctl install "iPhone 15" build/WoofWalk.app
+          sleep 2
+
+      - name: Launch app and capture screenshots
+        run: |
+          mkdir -p screenshots
+
+          # Launch the app
+          xcrun simctl launch "iPhone 15" com.woofwalk.ios
+          sleep 8
+
+          # Screenshot 1: Launch / Login screen
+          xcrun simctl io "iPhone 15" screenshot screenshots/01-launch.png
+          echo "Captured: Launch screen"
+
+          # Try navigating via deep links or just capture what's visible
+          sleep 3
+          xcrun simctl io "iPhone 15" screenshot screenshots/02-main.png
+          echo "Captured: Main screen"
+
+          # Tap around using simctl - simulate home button to get different states
+          # Send the app to background and back
+          xcrun simctl launch "iPhone 15" com.woofwalk.ios
+          sleep 3
+          xcrun simctl io "iPhone 15" screenshot screenshots/03-app-state.png
+          echo "Captured: App state"
+
+          # List all screenshots
+          echo "=== Screenshots captured ==="
+          ls -la screenshots/
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-screenshots
+          path: screenshots/
 
       - name: Upload build log on failure
         if: failure()
