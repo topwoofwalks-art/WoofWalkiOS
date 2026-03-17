@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 
 // MARK: - Typography System
@@ -107,3 +108,4 @@ struct LineSpacingModifier: ViewModifier {
         content.lineSpacing(spacing)
     }
 }
+#endif

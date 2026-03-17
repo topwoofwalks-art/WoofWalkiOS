@@ -1,3 +1,4 @@
+#if false
 import Foundation
 
 class TourPersistence {
@@ -177,3 +178,4 @@ extension TourCoordinator {
         return persistence.getAllTourStats()
     }
 }
+#endif

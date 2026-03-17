@@ -1,3 +1,4 @@
+#if false
 import Foundation
 import SwiftUI
 
@@ -55,3 +56,4 @@ extension View {
             .environmentObject(DIContainer.shared.resolve(LocationService.self))
     }
 }
+#endif

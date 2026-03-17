@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 
 struct LivestockFieldTourDemo: View {
@@ -521,3 +522,4 @@ struct LivestockFieldTourDemo_Previews: PreviewProvider {
         )
     }
 }
+#endif

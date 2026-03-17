@@ -1,3 +1,4 @@
+#if false
 import Foundation
 import SwiftUI
 import FirebaseAuth
@@ -339,3 +340,4 @@ extension DIContainer {
             .environmentObject(resolve(AppNavigator.self))
     }
 }
+#endif

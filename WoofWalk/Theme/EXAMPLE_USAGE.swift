@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 
 // MARK: - Example: Complete Screen Using Theme
@@ -427,3 +428,4 @@ struct ThemeExamples_Previews: PreviewProvider {
         }
     }
 }
+#endif

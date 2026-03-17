@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 
 struct InstructionCard: View {
@@ -147,3 +148,4 @@ struct InstructionCard_Previews: PreviewProvider {
         }
     }
 }
+#endif

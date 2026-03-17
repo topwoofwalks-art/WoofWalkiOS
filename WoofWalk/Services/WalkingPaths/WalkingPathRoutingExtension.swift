@@ -1,3 +1,4 @@
+#if false
 import Foundation
 import CoreLocation
 
@@ -136,3 +137,4 @@ extension WalkingPath {
         return earthRadius * c
     }
 }
+#endif
