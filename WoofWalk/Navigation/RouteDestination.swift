@@ -20,7 +20,7 @@ struct RouteDestination: View {
         case .stats:
             StatsView()
         case .editProfile:
-            EditProfileView()
+            EditProfileView(viewModel: ProfileViewModel())
         case .leaderboard:
             LeaderboardView()
         case .walkCompletion(let distance, let duration):

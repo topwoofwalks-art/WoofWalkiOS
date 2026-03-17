@@ -61,8 +61,8 @@ class GuidanceViewModel: ObservableObject {
 
     private let routingViewModel: RoutingViewModel
 
-    init(routingViewModel: RoutingViewModel = RoutingViewModel()) {
-        self.routingViewModel = routingViewModel
+    init(routingViewModel: RoutingViewModel? = nil) {
+        self.routingViewModel = routingViewModel ?? RoutingViewModel()
     }
 
     func startGuidance(route: Route, userLocation: CLLocationCoordinate2D) {

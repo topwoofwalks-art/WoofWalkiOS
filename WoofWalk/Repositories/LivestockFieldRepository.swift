@@ -108,11 +108,12 @@ actor LivestockFieldRepository {
 
         let tileCoord = TileCoord.from(coordinate: location, zoom: 14)
 
-        let enhancedNotes: String? = if isDangerous {
+        let enhancedNotes: String?
+        if isDangerous {
             let baseNotes = notes ?? ""
-            baseNotes.isEmpty ? "[HAZARD]" : "\(baseNotes) [HAZARD]"
+            enhancedNotes = baseNotes.isEmpty ? "[HAZARD]" : "\(baseNotes) [HAZARD]"
         } else {
-            notes
+            enhancedNotes = notes
         }
 
         let signal = FieldSignal(
@@ -138,8 +139,8 @@ actor LivestockFieldRepository {
 
     func findFieldAtLocation(location: CLLocationCoordinate2D) -> LivestockField? {
         cachedFields.values.first { field in
-            guard !field.polygonCoordinates.isEmpty else { return false }
-            return pointInPolygon(point: location, polygon: field.polygonCoordinates)
+            guard !field.polygon.isEmpty else { return false }
+            return pointInPolygon(point: location, polygon: field.polygon)
         }
     }
 
@@ -277,7 +278,7 @@ actor LivestockFieldRepository {
                         votesDown: updated.votesDown,
                         signalCount: updated.signalCount,
                         decayedAt: updated.decayedAt,
-                        polygon: polygon,
+                        polygonRaw: polygon,
                         isDangerous: updated.isDangerous,
                         isOsmField: updated.isOsmField,
                         osmLanduse: updated.osmLanduse,
@@ -298,7 +299,7 @@ actor LivestockFieldRepository {
                     centroid: GeoPoint(latitude: feature.centroid[1], longitude: feature.centroid[0]),
                     bbox: feature.bbox,
                     area_m2: feature.area_m2,
-                    polygon: polygon
+                    polygonRaw: polygon
                 )
                 addedCount += 1
             }
@@ -438,7 +439,7 @@ actor LivestockFieldRepository {
                 bbox: bbox,
                 area_m2: area_m2,
                 speciesScores: speciesScoresData,
-                polygon: polygon,
+                polygonRaw: polygon,
                 isDangerous: isDangerous,
                 lastSeenAt: lastSeenAt
             )
@@ -505,7 +506,7 @@ actor LivestockFieldRepository {
             bbox: bbox,
             area_m2: area,
             speciesScores: speciesScores,
-            polygon: polygonData,
+            polygonRaw: polygonData,
             isDangerous: isDangerous,
             lastSeenAt: Date().timeIntervalSince1970 * 1000
         )
@@ -611,7 +612,7 @@ actor LivestockFieldRepository {
             var minDistance = Double.infinity
 
             for field in cachedFields.values {
-                for boundaryPoint in field.polygonCoordinates {
+                for boundaryPoint in field.polygon {
                     let distance = calculateDistance(from: point, to: boundaryPoint)
 
                     if distance < minDistance && distance < snapThresholdMeters {
@@ -715,7 +716,7 @@ actor LivestockFieldRepository {
                 centroid: GeoPoint(latitude: center.lat, longitude: center.lon),
                 bbox: bbox,
                 area_m2: area,
-                polygon: polygon,
+                polygonRaw: polygon,
                 isOsmField: true,
                 osmLanduse: landuse
             )
