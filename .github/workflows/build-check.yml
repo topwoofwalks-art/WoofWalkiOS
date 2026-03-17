@@ -93,22 +93,38 @@ jobs:
           xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_EMAIL "${TEST_EMAIL:-}" || true
           xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_PASSWORD "${TEST_PASSWORD:-}" || true
 
-          # Launch app in screenshot mode
-          xcrun simctl launch "iPhone 15" com.woofwalk.ios -screenshot-mode || true
-          sleep 3
+          # Launch app in screenshot mode and stream logs
+          xcrun simctl launch "iPhone 15" com.woofwalk.ios -screenshot-mode
+          echo "App launched, waiting for automation..."
 
-          # Check if app is running
-          xcrun simctl spawn "iPhone 15" launchctl list | grep woofwalk || echo "App may not be running"
+          # Wait for app to fully load and render first tab (map)
+          sleep 8
+          xcrun simctl io "iPhone 15" screenshot screenshots/01-map-tab.png
+          echo "Captured: Map tab"
 
-          # Capture at intervals - the automation switches tabs every ~5 seconds
-          for i in $(seq 1 10); do
-            sleep 5
-            xcrun simctl io "iPhone 15" screenshot "screenshots/$(printf '%02d' $i)-capture.png"
-            echo "Captured screenshot $i"
-          done
+          # Automation cycles: map(already captured) -> social -> discover -> profile
+          # Each tab has 5s delay, so: social at ~10s, discover at ~15s, profile at ~20s
+          sleep 7
+          xcrun simctl io "iPhone 15" screenshot screenshots/02-social-tab.png
+          echo "Captured: Social tab"
 
-          # Check app logs for crash info
-          xcrun simctl spawn "iPhone 15" log show --predicate 'process == "WoofWalk"' --last 30s --style compact 2>/dev/null | tail -20 || true
+          sleep 7
+          xcrun simctl io "iPhone 15" screenshot screenshots/03-discover-tab.png
+          echo "Captured: Discover tab"
+
+          sleep 7
+          xcrun simctl io "iPhone 15" screenshot screenshots/04-profile-tab.png
+          echo "Captured: Profile tab"
+
+          # Automation goes back to map
+          sleep 5
+          xcrun simctl io "iPhone 15" screenshot screenshots/05-map-final.png
+          echo "Captured: Map final"
+
+          # Dump app logs to see automation progress
+          xcrun simctl spawn "iPhone 15" log show \
+            --predicate 'process == "WoofWalk"' \
+            --last 60s --style compact 2>/dev/null | grep "ScreenshotAutomation" || echo "No automation logs found"
 
           echo "=== Screenshots ==="
           ls -la screenshots/
