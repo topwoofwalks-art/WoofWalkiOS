@@ -66,9 +66,7 @@ struct WalkMapThumbnail: View {
     let coordinates: [CLLocationCoordinate2D]
 
     var body: some View {
-        Map(coordinateRegion: .constant(region), annotationItems: []) { _ in
-            EmptyView()
-        }
+        Map(coordinateRegion: .constant(region))
         .overlay(
             WalkMapPolyline(coordinates: coordinates)
                 .stroke(Color.blue, lineWidth: 3)
@@ -156,8 +154,6 @@ struct WalkMapPolyline: Shape {
     }
 }
 
-#if false
-// StatColumn is defined elsewhere - wrapped to avoid invalid redeclaration
 struct StatColumn: View {
     let label: String
     let value: String
@@ -173,4 +169,3 @@ struct StatColumn: View {
         }
     }
 }
-#endif

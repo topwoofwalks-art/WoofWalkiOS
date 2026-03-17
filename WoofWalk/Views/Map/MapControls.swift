@@ -224,15 +224,17 @@ struct POIDetailSheet: View {
                     .font(.title)
                     .fontWeight(.bold)
 
-                Text(poi.description)
+                Text(poi.desc)
                     .font(.body)
 
                 HStack {
                     Label("\(poi.voteUp - poi.voteDown)", systemImage: "hand.thumbsup.fill")
                     Spacer()
-                    Text(poi.createdAt, style: .date)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    if let createdAt = poi.createdAt {
+                        Text(createdAt.dateValue(), style: .date)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Divider()

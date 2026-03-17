@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 import MapKit
 import PhotosUI
@@ -279,3 +280,4 @@ struct FieldFormSheet: View {
         }
     }
 }
+#endif

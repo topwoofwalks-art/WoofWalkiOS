@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 import MapKit
 
@@ -132,3 +133,4 @@ struct LivestockMapIntegration: View {
         CLLocationCoordinate2D(latitude: 0, longitude: 0)
     }
 }
+#endif

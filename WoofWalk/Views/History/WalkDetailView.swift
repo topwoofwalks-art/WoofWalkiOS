@@ -163,9 +163,7 @@ struct WalkMapSection: View {
     @State private var region: MKCoordinateRegion = MKCoordinateRegion()
 
     var body: some View {
-        Map(coordinateRegion: $region, annotationItems: []) { _ in
-            EmptyView()
-        }
+        Map(coordinateRegion: $region)
         .overlay(
             WalkMapPolyline(coordinates: coordinates)
                 .stroke(Color.blue, lineWidth: 4)

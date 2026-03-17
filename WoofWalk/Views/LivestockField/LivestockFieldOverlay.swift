@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 import MapKit
 
@@ -179,3 +180,4 @@ struct LivestockFieldHelper {
         return intersections % 2 == 1
     }
 }
+#endif

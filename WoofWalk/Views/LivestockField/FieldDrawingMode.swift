@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 import MapKit
 
@@ -219,3 +220,4 @@ struct MapDrawingOverlay: View {
         }
     }
 }
+#endif

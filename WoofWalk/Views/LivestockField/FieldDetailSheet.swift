@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 import MapKit
 
@@ -296,3 +297,4 @@ struct LandCoverBar: View {
         }
     }
 }
+#endif

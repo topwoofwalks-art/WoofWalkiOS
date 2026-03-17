@@ -51,15 +51,16 @@ struct PostDetailScreen: View {
     }
 
     private func loadComments() async {
-        let snapshot = try? await db.collection("posts").document(post.id).collection("comments")
+        guard let postId = post.id else { return }
+        let snapshot = try? await db.collection("posts").document(postId).collection("comments")
             .order(by: "createdAt", descending: false).getDocuments()
         comments = (snapshot?.documents ?? []).compactMap { try? $0.data(as: PostComment.self) }
     }
 
     private func sendComment() {
-        guard !newComment.isEmpty else { return }
-        let comment = PostComment(postId: post.id, authorId: "", authorName: "You", text: newComment, createdAt: Timestamp())
-        try? db.collection("posts").document(post.id).collection("comments").addDocument(from: comment)
+        guard !newComment.isEmpty, let postId = post.id else { return }
+        let comment = PostComment(postId: postId, authorId: "", authorName: "You", text: newComment, createdAt: Timestamp())
+        try? db.collection("posts").document(postId).collection("comments").addDocument(from: comment)
         comments.append(comment)
         newComment = ""
     }
