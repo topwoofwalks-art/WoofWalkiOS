@@ -39,13 +39,24 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             ENABLE_USER_SCRIPT_SANDBOXING=NO \
-            CONFIGURATION_BUILD_DIR=$(pwd)/build \
             2>&1 | tee build.log | xcpretty
 
-      - name: Boot simulator
+      - name: Find built app
+        id: app
         run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "WoofWalk.app" -path "*/Debug-iphonesimulator/*" | head -1)
+          echo "path=$APP_PATH" >> $GITHUB_OUTPUT
+          echo "Found app at: $APP_PATH"
+
+      - name: Boot simulator and capture screenshots
+        run: |
+          mkdir -p screenshots
+
+          # Boot simulator
           xcrun simctl boot "iPhone 15" || true
           sleep 5
+
+          # Clean status bar
           xcrun simctl status_bar "iPhone 15" override \
             --time "9:41" \
             --batteryState charged \
@@ -54,40 +65,30 @@ jobs:
             --cellularBars 4 \
             --wifiBars 3
 
-      - name: Install app in simulator
-        run: |
-          xcrun simctl install "iPhone 15" build/WoofWalk.app
+          # Install and launch
+          xcrun simctl install "iPhone 15" "${{ steps.app.outputs.path }}"
           sleep 2
-
-      - name: Launch app and capture screenshots
-        run: |
-          mkdir -p screenshots
-
-          # Launch the app
           xcrun simctl launch "iPhone 15" com.woofwalk.ios
           sleep 8
 
-          # Screenshot 1: Launch / Login screen
+          # Capture screenshots
           xcrun simctl io "iPhone 15" screenshot screenshots/01-launch.png
-          echo "Captured: Launch screen"
+          echo "Captured: Launch/Login screen"
 
-          # Try navigating via deep links or just capture what's visible
           sleep 3
-          xcrun simctl io "iPhone 15" screenshot screenshots/02-main.png
-          echo "Captured: Main screen"
+          xcrun simctl io "iPhone 15" screenshot screenshots/02-after-delay.png
+          echo "Captured: After delay"
 
-          # Tap around using simctl - simulate home button to get different states
-          # Send the app to background and back
           xcrun simctl launch "iPhone 15" com.woofwalk.ios
           sleep 3
-          xcrun simctl io "iPhone 15" screenshot screenshots/03-app-state.png
-          echo "Captured: App state"
+          xcrun simctl io "iPhone 15" screenshot screenshots/03-relaunch.png
+          echo "Captured: Relaunch"
 
-          # List all screenshots
-          echo "=== Screenshots captured ==="
+          echo "=== Screenshots ==="
           ls -la screenshots/
 
       - name: Upload screenshots
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ios-screenshots
