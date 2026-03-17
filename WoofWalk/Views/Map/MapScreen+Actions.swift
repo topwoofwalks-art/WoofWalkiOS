@@ -125,4 +125,16 @@ extension MapScreen {
             UIApplication.shared.open(url)
         }
     }
+
+    // MARK: - Pub Actions
+
+    func openPubInMaps(_ pub: POI) {
+        let coordinate = CLLocationCoordinate2D(latitude: pub.lat, longitude: pub.lng)
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = pub.title
+        mapItem.openInMaps(launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking
+        ])
+    }
 }

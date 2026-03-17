@@ -12,7 +12,7 @@ struct RouteDestination: View {
         case .settings:
             SettingsView()
         case .walkHistory:
-            WalkHistoryView()
+            WalkHistoryScreen()
         case .stats:
             ProfileStatsView()
         case .editProfile:
@@ -27,8 +27,7 @@ struct RouteDestination: View {
                 onShare: {}, onDone: {}
             )
         case .walkDetail(let walkId):
-            Text("Walk Detail — \(walkId)")
-                .navigationTitle("Walk Detail")
+            WalkHistoryDetailScreen(walkId: walkId)
         case .liveShare(let walkId):
             PlaceholderView(title: "Live Share", icon: "location.fill", detail: walkId)
         case .walkPhotoGallery(let walkId):
@@ -91,7 +90,7 @@ struct RouteDestination: View {
         case .badgeDetail(let badgeId):
             PlaceholderView(title: "Badge Detail", icon: "trophy.circle.fill", detail: badgeId)
         case .walkHistoryDetail(let walkId):
-            PlaceholderView(title: "Walk History Detail", icon: "clock.arrow.circlepath", detail: walkId)
+            WalkHistoryDetailScreen(walkId: walkId)
         case .milestones:
             PlaceholderView(title: "Milestones", icon: "star.fill")
         case .levelUp:
@@ -145,9 +144,9 @@ struct RouteDestination: View {
         case .rainModeSettings:
             PlaceholderView(title: "Rain Mode", icon: "cloud.rain.fill")
         case .routeLibrary:
-            PlaceholderView(title: "Route Library", icon: "map.fill")
+            RouteLibraryScreen()
         case .routeDetail(let routeId):
-            PlaceholderView(title: "Route Detail", icon: "point.topleft.down.to.point.bottomright.curvepath.fill", detail: routeId)
+            RouteDetailScreen(routeId: routeId)
         case .nearbyPubs:
             PlaceholderView(title: "Nearby Pubs", icon: "mug.fill")
         case .pubDetail(let pubId):

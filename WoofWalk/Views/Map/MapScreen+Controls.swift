@@ -158,6 +158,9 @@ extension MapScreen {
                 }
             }
 
+            // Nearby pubs
+            pubsButton
+
             // Livestock mode toggle
             livestockModeButton
 
@@ -191,6 +194,18 @@ extension MapScreen {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(.regularMaterial)
             )
+        }
+    }
+
+    // MARK: - Pubs Button
+
+    var pubsButton: some View {
+        Button(action: { showNearbyPubsSheet = true }) {
+            Image(systemName: "mug.fill")
+                .font(.title3)
+                .foregroundColor(.white)
+                .padding(12)
+                .background(Circle().fill(Color(hex: 0xFF8F00)))
         }
     }
 

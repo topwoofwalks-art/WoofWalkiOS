@@ -130,17 +130,88 @@ struct POIMarkerView: View {
 
 struct ClusteredAnnotationView: View {
     let count: Int
+    var dominantType: PoiType?
 
     var body: some View {
         ZStack {
             Circle()
-                .fill(.blue)
+                .fill(dominantColor)
                 .frame(width: 50, height: 50)
                 .shadow(radius: 4)
 
             Text("\(count)")
                 .foregroundColor(.white)
                 .font(.system(size: 18, weight: .bold))
+        }
+    }
+
+    private var dominantColor: Color {
+        guard let type = dominantType else { return .blue }
+        return PoiTypeColors.color(for: type)
+    }
+}
+
+// MARK: - POI Type Color Lookup
+
+struct PoiTypeColors {
+    static func color(for type: PoiType) -> Color {
+        switch type {
+        case .bin: return .green
+        case .hazard: return .red
+        case .water: return .blue
+        case .dogPark: return .yellow
+        case .park: return .green.opacity(0.7)
+        case .church: return Color(hex: 0x9E9E9E)
+        case .landscape: return .orange
+        case .accessNote: return .orange.opacity(0.7)
+        case .livestock: return .purple
+        case .wildlife: return .pink.opacity(0.8)
+        case .amenity: return Color(hex: 0x607D8B)
+        case .bench: return Color(hex: 0x03A9F4)
+        case .picnicSite: return Color(hex: 0x4CAF50)
+        case .picnicTable: return Color(hex: 0x4CAF50)
+        case .attraction: return Color(hex: 0xFFC107)
+        case .viewpoint: return Color(hex: 0xFF9800)
+        case .dogFriendlyPub: return Color(hex: 0xFF8F00)
+        case .dogFriendlyCafe: return Color(hex: 0x795548)
+        case .dogFriendlyRestaurant: return Color(hex: 0xE53935)
+        case .vet: return Color(hex: 0xD32F2F)
+        case .toilet: return Color(hex: 0x1976D2)
+        case .fountain: return Color(hex: 0x29B6F6)
+        case .waterfall: return Color(hex: 0x00BCD4)
+        case .shelter: return Color(hex: 0x6D4C41)
+        case .other: return Color(hex: 0x9E9E9E)
+        }
+    }
+}
+
+// MARK: - Zoom-Aware Cluster Configuration
+
+struct ClusterConfig {
+    static func thresholdForZoom(_ zoom: Double) -> Int {
+        switch zoom {
+        case 17...: return 2
+        case 15..<17: return 4
+        case 12..<15: return 8
+        default: return 15
+        }
+    }
+
+    /// Convert MKCoordinateRegion span to an approximate zoom level
+    static func zoomLevel(from region: MKCoordinateRegion) -> Double {
+        let maxSpan = max(region.span.latitudeDelta, region.span.longitudeDelta)
+        guard maxSpan > 0 else { return 20 }
+        // Approximate: zoom ~ log2(360 / span)
+        return log2(360.0 / maxSpan)
+    }
+
+    /// Clustering distance in meters scaled by zoom
+    static func distanceForZoom(_ zoom: Double) -> CLLocationDistance {
+        switch zoom {
+        case 17...: return 20
+        case 15..<17: return 50
+        case 12..<15: return 150
+        default: return 500
         }
     }
 }
@@ -168,15 +239,34 @@ struct AnnotationCluster: Identifiable {
     var count: Int {
         annotations.count
     }
+
+    /// Returns the most common POI type in this cluster, if any
+    var dominantType: PoiType? {
+        var counts: [PoiType: Int] = [:]
+        for annotation in annotations {
+            if case .poi(let poi) = annotation.type {
+                let poiType = poi.poiType
+                counts[poiType, default: 0] += 1
+            }
+        }
+        return counts.max(by: { $0.value < $1.value })?.key
+    }
 }
 
 @MainActor
 class AnnotationClusterManager: ObservableObject {
     @Published var clusters: [AnnotationCluster] = []
 
-    private let clusteringDistance: CLLocationDistance = 50
+    /// Cluster annotations using zoom-aware distance and merge thresholds.
+    /// - Parameters:
+    ///   - annotations: All annotations to cluster
+    ///   - visibleRegion: The current map region (used to derive zoom level)
+    ///   - zoomOverride: Optional explicit zoom level; if nil, derived from region
+    func cluster(annotations: [CustomAnnotation], visibleRegion: MKCoordinateRegion, zoomOverride: Double? = nil) {
+        let zoom = zoomOverride ?? ClusterConfig.zoomLevel(from: visibleRegion)
+        let clusteringDistance = ClusterConfig.distanceForZoom(zoom)
+        let mergeThreshold = ClusterConfig.thresholdForZoom(zoom)
 
-    func cluster(annotations: [CustomAnnotation], visibleRegion: MKCoordinateRegion) {
         var unclustered = annotations
         var newClusters: [AnnotationCluster] = []
 
@@ -193,7 +283,8 @@ class AnnotationClusterManager: ObservableObject {
                 return true
             }
 
-            if clusterGroup.count > 1 {
+            // Only merge into a visual cluster if the group meets the zoom threshold
+            if clusterGroup.count >= mergeThreshold {
                 let centerCoordinate = calculateCenter(for: clusterGroup)
                 let cluster = AnnotationCluster(
                     coordinate: centerCoordinate,
@@ -201,11 +292,14 @@ class AnnotationClusterManager: ObservableObject {
                 )
                 newClusters.append(cluster)
             } else {
-                let cluster = AnnotationCluster(
-                    coordinate: annotation.coordinate,
-                    annotations: clusterGroup
-                )
-                newClusters.append(cluster)
+                // Below threshold: emit each annotation as its own single-item cluster
+                for item in clusterGroup {
+                    let cluster = AnnotationCluster(
+                        coordinate: item.coordinate,
+                        annotations: [item]
+                    )
+                    newClusters.append(cluster)
+                }
             }
         }
 

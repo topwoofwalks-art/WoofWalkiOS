@@ -47,6 +47,11 @@ struct MapScreen: View {
     @State var showWalkingPaths = false
     @State var dismissedHazardIds: Set<String> = []
     @State var showTrailConditionSheet = false
+    @State var showNearbyPubsSheet = false
+    @State var showPubDetailSheet = false
+    @State var selectedPub: POI?
+    @State var showClusterSelectionSheet = false
+    @State var selectedCluster: AnnotationCluster?
     @AppStorage("hasShownBackgroundLocationPrompt") var hasShownPrompt = false
     @AppStorage("walkStreak") var walkStreak: Int = 0
 
@@ -137,6 +142,48 @@ struct MapScreen: View {
                     mapViewModel.trailConditions.append(condition)
                 }
             )
+        }
+        .sheet(isPresented: $showNearbyPubsSheet) {
+            NearbyPubsSheet(
+                pubs: mapViewModel.filteredPOIs.filter { $0.poiType == .dogFriendlyPub },
+                userLocation: locationManager.location,
+                onSelect: { pub in
+                    selectedPub = pub
+                    showPubDetailSheet = true
+                },
+                onOpenInMaps: { pub in
+                    openPubInMaps(pub)
+                }
+            )
+        }
+        .sheet(isPresented: $showPubDetailSheet) {
+            if let pub = selectedPub {
+                PubDetailSheet(
+                    poi: pub,
+                    userLocation: locationManager.location,
+                    onNavigate: {
+                        showPubDetailSheet = false
+                        if let userLoc = locationManager.location {
+                            routingViewModel.generateCircularRoute(
+                                userLocation: userLoc,
+                                viaPoint: pub.coordinate
+                            )
+                        }
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $showClusterSelectionSheet) {
+            if let cluster = selectedCluster {
+                ClusterPoiSelectionSheet(
+                    cluster: cluster,
+                    userLocation: locationManager.location,
+                    onSelectPoi: { poi in
+                        selectedPOI = poi
+                        showPOIDetailSheet = true
+                    }
+                )
+            }
         }
         .onAppear {
             locationManager.startUpdatingLocation()
