@@ -11,6 +11,257 @@
 		A1000001000000000000003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000004 /* ContentView.swift */; };
 		A1000001000000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000006 /* Assets.xcassets */; };
 		A1000001000000000000007 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000008 /* Preview Assets.xcassets */; };
+		A1000001000000000000101 /* AppDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000100 /* AppDependencies.swift */; };
+		A1000001000000000000103 /* DIContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000102 /* DIContainer.swift */; };
+		A1000001000000000000105 /* DependencyStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000104 /* DependencyStubs.swift */; };
+		A1000001000000000000107 /* Injected.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000106 /* Injected.swift */; };
+		A1000001000000000000109 /* IntegrationExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000108 /* IntegrationExample.swift */; };
+		A1000001000000000000111 /* MockContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000110 /* MockContainer.swift */; };
+		A1000001000000000000113 /* ServiceLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000112 /* ServiceLocator.swift */; };
+		A1000001000000000000115 /* ViewModelFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000114 /* ViewModelFactory.swift */; };
+		A1000001000000000000117 /* DatabaseContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000116 /* DatabaseContainer.swift */; };
+		A1000001000000000000119 /* CachedPoiEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000118 /* CachedPoiEntity.swift */; };
+		A1000001000000000000121 /* DogEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000120 /* DogEntity.swift */; };
+		A1000001000000000000123 /* DogWalkJoin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000122 /* DogWalkJoin.swift */; };
+		A1000001000000000000125 /* PoiEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000124 /* PoiEntity.swift */; };
+		A1000001000000000000127 /* PooBagDropEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000126 /* PooBagDropEntity.swift */; };
+		A1000001000000000000129 /* SyncQueueEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000128 /* SyncQueueEntity.swift */; };
+		A1000001000000000000131 /* TrackPointEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000130 /* TrackPointEntity.swift */; };
+		A1000001000000000000133 /* UserEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000132 /* UserEntity.swift */; };
+		A1000001000000000000135 /* WalkEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000134 /* WalkEntity.swift */; };
+		A1000001000000000000137 /* WalkSessionEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000136 /* WalkSessionEntity.swift */; };
+		A1000001000000000000139 /* WeightLogEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000138 /* WeightLogEntity.swift */; };
+		A1000001000000000000141 /* CachedPoiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000140 /* CachedPoiRepository.swift */; };
+		A1000001000000000000143 /* DogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000142 /* DogRepository.swift */; };
+		A1000001000000000000145 /* PoiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000144 /* PoiRepository.swift */; };
+		A1000001000000000000147 /* PooBagDropRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000146 /* PooBagDropRepository.swift */; };
+		A1000001000000000000149 /* StatsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000148 /* StatsRepository.swift */; };
+		A1000001000000000000151 /* SyncQueueRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000150 /* SyncQueueRepository.swift */; };
+		A1000001000000000000153 /* UserRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000152 /* UserRepository.swift */; };
+		A1000001000000000000155 /* WalkRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000154 /* WalkRepository.swift */; };
+		A1000001000000000000157 /* WalkSessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000156 /* WalkSessionRepository.swift */; };
+		A1000001000000000000159 /* WeightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000158 /* WeightRepository.swift */; };
+		A1000001000000000000161 /* DynamicWorldExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000160 /* DynamicWorldExample.swift */; };
+		A1000001000000000000163 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000162 /* Alert.swift */; };
+		A1000001000000000000165 /* AutoReply.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000164 /* AutoReply.swift */; };
+		A1000001000000000000167 /* Badge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000166 /* Badge.swift */; };
+		A1000001000000000000169 /* ServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000168 /* ServiceProvider.swift */; };
+		A1000001000000000000171 /* MedicationScheduleEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000170 /* MedicationScheduleEntry.swift */; };
+		A1000001000000000000173 /* UnifiedDog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000172 /* UnifiedDog.swift */; };
+		A1000001000000000000175 /* VetDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000174 /* VetDetails.swift */; };
+		A1000001000000000000177 /* DynamicWorldModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000176 /* DynamicWorldModels.swift */; };
+		A1000001000000000000179 /* FeedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000178 /* FeedModels.swift */; };
+		A1000001000000000000181 /* Challenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000180 /* Challenge.swift */; };
+		A1000001000000000000183 /* CharityModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000182 /* CharityModels.swift */; };
+		A1000001000000000000185 /* DogMilestone.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000184 /* DogMilestone.swift */; };
+		A1000001000000000000187 /* LeagueModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000186 /* LeagueModels.swift */; };
+		A1000001000000000000189 /* PersonalBest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000188 /* PersonalBest.swift */; };
+		A1000001000000000000191 /* WalkAchievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000190 /* WalkAchievement.swift */; };
+		A1000001000000000000193 /* WalkColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000192 /* WalkColors.swift */; };
+		A1000001000000000000195 /* WalkComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000194 /* WalkComparison.swift */; };
+		A1000001000000000000197 /* WalkStreak.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000196 /* WalkStreak.swift */; };
+		A1000001000000000000199 /* FieldGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000198 /* FieldGeometry.swift */; };
+		A1000001000000000000201 /* FieldSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000200 /* FieldSignal.swift */; };
+		A1000001000000000000203 /* LivestockField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000202 /* LivestockField.swift */; };
+		A1000001000000000000205 /* LivestockSpecies.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000204 /* LivestockSpecies.swift */; };
+		A1000001000000000000207 /* TileCoord.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000206 /* TileCoord.swift */; };
+		A1000001000000000000209 /* Tour.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000208 /* Tour.swift */; };
+		A1000001000000000000211 /* WalkingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000210 /* WalkingPath.swift */; };
+		A1000001000000000000213 /* LocalEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000212 /* LocalEntities.swift */; };
+		A1000001000000000000215 /* GuidanceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000214 /* GuidanceState.swift */; };
+		A1000001000000000000217 /* NavigationLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000216 /* NavigationLogic.swift */; };
+		A1000001000000000000219 /* NavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000218 /* NavigationManager.swift */; };
+		A1000001000000000000221 /* NavigationProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000220 /* NavigationProgress.swift */; };
+		A1000001000000000000223 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000222 /* Route.swift */; };
+		A1000001000000000000225 /* RouteStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000224 /* RouteStep.swift */; };
+		A1000001000000000000227 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000226 /* Notification.swift */; };
+		A1000001000000000000229 /* POI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000228 /* POI.swift */; };
+		A1000001000000000000231 /* PlannedWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000230 /* PlannedWalk.swift */; };
+		A1000001000000000000233 /* Poi.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000232 /* Poi.swift */; };
+		A1000001000000000000235 /* PooBagDrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000234 /* PooBagDrop.swift */; };
+		A1000001000000000000237 /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000236 /* Post.swift */; };
+		A1000001000000000000239 /* Social.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000238 /* Social.swift */; };
+		A1000001000000000000241 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000240 /* User.swift */; };
+		A1000001000000000000243 /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000242 /* UserSettings.swift */; };
+		A1000001000000000000245 /* Walk.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000244 /* Walk.swift */; };
+		A1000001000000000000247 /* WalkModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000246 /* WalkModels.swift */; };
+		A1000001000000000000249 /* AppNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000248 /* AppNavigator.swift */; };
+		A1000001000000000000251 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000250 /* MainTabView.swift */; };
+		A1000001000000000000253 /* NavigationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000252 /* NavigationViewModel.swift */; };
+		A1000001000000000000255 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000254 /* Route.swift */; };
+		A1000001000000000000257 /* RouteDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000256 /* RouteDestination.swift */; };
+		A1000001000000000000259 /* TabItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000258 /* TabItem.swift */; };
+		A1000001000000000000261 /* ChallengeRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000260 /* ChallengeRepository.swift */; };
+		A1000001000000000000263 /* CharityRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000262 /* CharityRepository.swift */; };
+		A1000001000000000000265 /* DiscoveryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000264 /* DiscoveryRepository.swift */; };
+		A1000001000000000000267 /* LeagueRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000266 /* LeagueRepository.swift */; };
+		A1000001000000000000269 /* LivestockFieldRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000268 /* LivestockFieldRepository.swift */; };
+		A1000001000000000000271 /* MilestoneRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000270 /* MilestoneRepository.swift */; };
+		A1000001000000000000273 /* UserRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000272 /* UserRepository.swift */; };
+		A1000001000000000000275 /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000274 /* AnalyticsService.swift */; };
+		A1000001000000000000277 /* AppUpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000276 /* AppUpdateChecker.swift */; };
+		A1000001000000000000279 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000278 /* AuthService.swift */; };
+		A1000001000000000000281 /* BadgeAwardingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000280 /* BadgeAwardingService.swift */; };
+		A1000001000000000000283 /* DynamicWorldCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000282 /* DynamicWorldCacheManager.swift */; };
+		A1000001000000000000285 /* DynamicWorldService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000284 /* DynamicWorldService.swift */; };
+		A1000001000000000000287 /* GeofenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000286 /* GeofenceManager.swift */; };
+		A1000001000000000000289 /* LocationPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000288 /* LocationPublisher.swift */; };
+		A1000001000000000000291 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000290 /* LocationService.swift */; };
+		A1000001000000000000293 /* LocationTrackingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000292 /* LocationTrackingService.swift */; };
+		A1000001000000000000295 /* DirectionsModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000294 /* DirectionsModels.swift */; };
+		A1000001000000000000297 /* DirectionsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000296 /* DirectionsService.swift */; };
+		A1000001000000000000299 /* FirebaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000298 /* FirebaseService.swift */; };
+		A1000001000000000000301 /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000300 /* NetworkError.swift */; };
+		A1000001000000000000303 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000302 /* NetworkManager.swift */; };
+		A1000001000000000000305 /* OsrmModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000304 /* OsrmModels.swift */; };
+		A1000001000000000000307 /* OsrmService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000306 /* OsrmService.swift */; };
+		A1000001000000000000309 /* OverpassModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000308 /* OverpassModels.swift */; };
+		A1000001000000000000311 /* OverpassService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000310 /* OverpassService.swift */; };
+		A1000001000000000000313 /* OsmPoiCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000312 /* OsmPoiCache.swift */; };
+		A1000001000000000000315 /* OverpassService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000314 /* OverpassService.swift */; };
+		A1000001000000000000317 /* PoiDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000316 /* PoiDatabaseManager.swift */; };
+		A1000001000000000000319 /* PoiManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000318 /* PoiManager.swift */; };
+		A1000001000000000000321 /* PoiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000320 /* PoiRepository.swift */; };
+		A1000001000000000000323 /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000322 /* ShareService.swift */; };
+		A1000001000000000000325 /* WalkTrackingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000324 /* WalkTrackingService.swift */; };
+		A1000001000000000000327 /* WalkingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000326 /* WalkingPath.swift */; };
+		A1000001000000000000329 /* WalkingPathOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000328 /* WalkingPathOverlay.swift */; };
+		A1000001000000000000331 /* WalkingPathRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000330 /* WalkingPathRepository.swift */; };
+		A1000001000000000000333 /* WalkingPathRoutingExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000332 /* WalkingPathRoutingExtension.swift */; };
+		A1000001000000000000335 /* WalkingPathViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000334 /* WalkingPathViewModel.swift */; };
+		A1000001000000000000337 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000336 /* Colors.swift */; };
+		A1000001000000000000339 /* ComponentStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000338 /* ComponentStyles.swift */; };
+		A1000001000000000000341 /* EXAMPLE_USAGE.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000340 /* EXAMPLE_USAGE.swift */; };
+		A1000001000000000000343 /* Icons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000342 /* Icons.swift */; };
+		A1000001000000000000345 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000344 /* Spacing.swift */; };
+		A1000001000000000000347 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000346 /* Theme.swift */; };
+		A1000001000000000000349 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000348 /* Typography.swift */; };
+		A1000001000000000000351 /* InstructionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000350 /* InstructionCard.swift */; };
+		A1000001000000000000353 /* LivestockFieldTourDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000352 /* LivestockFieldTourDemo.swift */; };
+		A1000001000000000000355 /* MapTourDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000354 /* MapTourDemo.swift */; };
+		A1000001000000000000357 /* TourCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000356 /* TourCoordinator.swift */; };
+		A1000001000000000000359 /* TourExampleUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000358 /* TourExampleUsage.swift */; };
+		A1000001000000000000361 /* TourModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000360 /* TourModels.swift */; };
+		A1000001000000000000363 /* TourOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000362 /* TourOverlay.swift */; };
+		A1000001000000000000365 /* TourPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000364 /* TourPersistence.swift */; };
+		A1000001000000000000367 /* TourSpotlightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000366 /* TourSpotlightView.swift */; };
+		A1000001000000000000369 /* BiometricAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000368 /* BiometricAuthManager.swift */; };
+		A1000001000000000000371 /* BirthdayUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000370 /* BirthdayUtils.swift */; };
+		A1000001000000000000373 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000372 /* Constants.swift */; };
+		A1000001000000000000375 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000374 /* Extensions.swift */; };
+		A1000001000000000000377 /* FormatUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000376 /* FormatUtils.swift */; };
+		A1000001000000000000379 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000378 /* KeychainManager.swift */; };
+		A1000001000000000000381 /* LevelCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000380 /* LevelCalculator.swift */; };
+		A1000001000000000000383 /* MapSnapshotCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000382 /* MapSnapshotCache.swift */; };
+		A1000001000000000000385 /* MockData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000384 /* MockData.swift */; };
+		A1000001000000000000387 /* StreakCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000386 /* StreakCalculator.swift */; };
+		A1000001000000000000389 /* WalkPointsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000388 /* WalkPointsCalculator.swift */; };
+		A1000001000000000000391 /* WoofWalkBranding.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000390 /* WoofWalkBranding.swift */; };
+		A1000001000000000000393 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000392 /* AuthViewModel.swift */; };
+		A1000001000000000000395 /* DogProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000394 /* DogProfileViewModel.swift */; };
+		A1000001000000000000397 /* DynamicWorldViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000396 /* DynamicWorldViewModel.swift */; };
+		A1000001000000000000399 /* FeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000398 /* FeedViewModel.swift */; };
+		A1000001000000000000401 /* GuidanceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000400 /* GuidanceViewModel.swift */; };
+		A1000001000000000000403 /* LivestockFieldViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000402 /* LivestockFieldViewModel.swift */; };
+		A1000001000000000000405 /* PoiViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000404 /* PoiViewModel.swift */; };
+		A1000001000000000000407 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000406 /* ProfileViewModel.swift */; };
+		A1000001000000000000409 /* RoutingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000408 /* RoutingViewModel.swift */; };
+		A1000001000000000000411 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000410 /* SettingsViewModel.swift */; };
+		A1000001000000000000413 /* StatsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000412 /* StatsViewModel.swift */; };
+		A1000001000000000000415 /* TourViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000414 /* TourViewModel.swift */; };
+		A1000001000000000000417 /* UnifiedDogFormViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000416 /* UnifiedDogFormViewModel.swift */; };
+		A1000001000000000000419 /* WalkHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000418 /* WalkHistoryViewModel.swift */; };
+		A1000001000000000000421 /* WalkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000420 /* WalkViewModel.swift */; };
+		A1000001000000000000423 /* WalkingPathViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000422 /* WalkingPathViewModel.swift */; };
+		A1000001000000000000425 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000424 /* ForgotPasswordView.swift */; };
+		A1000001000000000000427 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000426 /* LoginView.swift */; };
+		A1000001000000000000429 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000428 /* OnboardingView.swift */; };
+		A1000001000000000000431 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000430 /* SignupView.swift */; };
+		A1000001000000000000433 /* CharityPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000432 /* CharityPickerSheet.swift */; };
+		A1000001000000000000435 /* CharitySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000434 /* CharitySettingsView.swift */; };
+		A1000001000000000000437 /* ChatDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000436 /* ChatDetailScreen.swift */; };
+		A1000001000000000000439 /* ChatListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000438 /* ChatListScreen.swift */; };
+		A1000001000000000000441 /* ChatMessageRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000440 /* ChatMessageRow.swift */; };
+		A1000001000000000000443 /* DateSeparator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000442 /* DateSeparator.swift */; };
+		A1000001000000000000445 /* PhotoMessagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000444 /* PhotoMessagePicker.swift */; };
+		A1000001000000000000447 /* AppUpdateBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000446 /* AppUpdateBanner.swift */; };
+		A1000001000000000000449 /* BackgroundLocationPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000448 /* BackgroundLocationPrompt.swift */; };
+		A1000001000000000000451 /* CustomTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000450 /* CustomTextField.swift */; };
+		A1000001000000000000453 /* ResponsiveLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000452 /* ResponsiveLayout.swift */; };
+		A1000001000000000000455 /* DiscoveryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000454 /* DiscoveryScreen.swift */; };
+		A1000001000000000000457 /* BirthdayCountdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000456 /* BirthdayCountdown.swift */; };
+		A1000001000000000000459 /* DogStatsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000458 /* DogStatsScreen.swift */; };
+		A1000001000000000000461 /* MedicationFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000460 /* MedicationFormView.swift */; };
+		A1000001000000000000463 /* UnifiedDogFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000462 /* UnifiedDogFormView.swift */; };
+		A1000001000000000000465 /* LandCoverChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000464 /* LandCoverChartView.swift */; };
+		A1000001000000000000467 /* CreatePostSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000466 /* CreatePostSheet.swift */; };
+		A1000001000000000000469 /* FeedScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000468 /* FeedScreen.swift */; };
+		A1000001000000000000471 /* PostDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000470 /* PostDetailScreen.swift */; };
+		A1000001000000000000473 /* ReactionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000472 /* ReactionPicker.swift */; };
+		A1000001000000000000475 /* WalkPostCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000474 /* WalkPostCard.swift */; };
+		A1000001000000000000477 /* AchievementRevealCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000476 /* AchievementRevealCard.swift */; };
+		A1000001000000000000479 /* ChallengesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000478 /* ChallengesScreen.swift */; };
+		A1000001000000000000481 /* LeagueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000480 /* LeagueView.swift */; };
+		A1000001000000000000483 /* MilestoneCelebration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000482 /* MilestoneCelebration.swift */; };
+		A1000001000000000000485 /* StreakBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000484 /* StreakBanner.swift */; };
+		A1000001000000000000487 /* WalkCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000486 /* WalkCardView.swift */; };
+		A1000001000000000000489 /* WalkDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000488 /* WalkDetailView.swift */; };
+		A1000001000000000000491 /* WalkHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000490 /* WalkHistoryView.swift */; };
+		A1000001000000000000493 /* FieldDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000492 /* FieldDetailSheet.swift */; };
+		A1000001000000000000495 /* FieldDrawingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000494 /* FieldDrawingMode.swift */; };
+		A1000001000000000000497 /* FieldFormSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000496 /* FieldFormSheet.swift */; };
+		A1000001000000000000499 /* LivestockFieldHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000498 /* LivestockFieldHelpers.swift */; };
+		A1000001000000000000501 /* LivestockFieldOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000500 /* LivestockFieldOverlay.swift */; };
+		A1000001000000000000503 /* LivestockMapIntegration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000502 /* LivestockMapIntegration.swift */; };
+		A1000001000000000000505 /* LivestockModeToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000504 /* LivestockModeToggleButton.swift */; };
+		A1000001000000000000507 /* SpeciesSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000506 /* SpeciesSelector.swift */; };
+		A1000001000000000000509 /* GuidancePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000508 /* GuidancePanel.swift */; };
+		A1000001000000000000511 /* MapAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000510 /* MapAnnotation.swift */; };
+		A1000001000000000000513 /* MapControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000512 /* MapControls.swift */; };
+		A1000001000000000000515 /* MapStyleToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000514 /* MapStyleToggle.swift */; };
+		A1000001000000000000517 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000516 /* MapView.swift */; };
+		A1000001000000000000519 /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000518 /* MapViewModel.swift */; };
+		A1000001000000000000521 /* RouteOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000520 /* RouteOverlay.swift */; };
+		A1000001000000000000523 /* MapScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000522 /* MapScreen.swift */; };
+		A1000001000000000000525 /* NotificationCenterScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000524 /* NotificationCenterScreen.swift */; };
+		A1000001000000000000527 /* AddPoiSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000526 /* AddPoiSheet.swift */; };
+		A1000001000000000000529 /* DeletePoiConfirmation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000528 /* DeletePoiConfirmation.swift */; };
+		A1000001000000000000531 /* NearbyPubsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000530 /* NearbyPubsSheet.swift */; };
+		A1000001000000000000533 /* PoiDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000532 /* PoiDetailView.swift */; };
+		A1000001000000000000535 /* PoiFilterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000534 /* PoiFilterSheet.swift */; };
+		A1000001000000000000537 /* PubDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000536 /* PubDetailSheet.swift */; };
+		A1000001000000000000539 /* QuickAddPoiButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000538 /* QuickAddPoiButtons.swift */; };
+		A1000001000000000000541 /* PlaceholderViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000540 /* PlaceholderViews.swift */; };
+		A1000001000000000000543 /* DogDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000542 /* DogDetailView.swift */; };
+		A1000001000000000000545 /* DogFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000544 /* DogFormView.swift */; };
+		A1000001000000000000547 /* DogProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000546 /* DogProfileSheet.swift */; };
+		A1000001000000000000549 /* DogProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000548 /* DogProfileView.swift */; };
+		A1000001000000000000551 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000550 /* EditProfileView.swift */; };
+		A1000001000000000000553 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000552 /* LeaderboardView.swift */; };
+		A1000001000000000000555 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000554 /* ProfileView.swift */; };
+		A1000001000000000000557 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000556 /* StatsView.swift */; };
+		A1000001000000000000559 /* AlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000558 /* AlertSettingsView.swift */; };
+		A1000001000000000000561 /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000560 /* DataManagementView.swift */; };
+		A1000001000000000000563 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000562 /* PermissionsView.swift */; };
+		A1000001000000000000565 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000564 /* SettingsView.swift */; };
+		A1000001000000000000567 /* SocialHubScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000566 /* SocialHubScreen.swift */; };
+		A1000001000000000000569 /* DogStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000568 /* DogStatsView.swift */; };
+		A1000001000000000000571 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000570 /* StatsView.swift */; };
+		A1000001000000000000573 /* ActiveWalkBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000572 /* ActiveWalkBanner.swift */; };
+		A1000001000000000000575 /* ConfettiEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000574 /* ConfettiEffect.swift */; };
+		A1000001000000000000577 /* DirectionIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000576 /* DirectionIcon.swift */; };
+		A1000001000000000000579 /* ElevationChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000578 /* ElevationChart.swift */; };
+		A1000001000000000000581 /* GuidancePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000580 /* GuidancePanel.swift */; };
+		A1000001000000000000583 /* PersonalBestBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000582 /* PersonalBestBanner.swift */; };
+		A1000001000000000000585 /* PlanningModeOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000584 /* PlanningModeOverlay.swift */; };
+		A1000001000000000000587 /* RouteStartProximitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000586 /* RouteStartProximitySheet.swift */; };
+		A1000001000000000000589 /* SavePlannedWalkDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000588 /* SavePlannedWalkDialog.swift */; };
+		A1000001000000000000591 /* ShareWalkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000590 /* ShareWalkSheet.swift */; };
+		A1000001000000000000593 /* WalkCompletionScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000592 /* WalkCompletionScreen.swift */; };
+		A1000001000000000000595 /* WalkControlPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000594 /* WalkControlPanel.swift */; };
+		A1000001000000000000597 /* WalkProgressCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000596 /* WalkProgressCard.swift */; };
+		A1000001000000000000599 /* WalkReportCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000598 /* WalkReportCardView.swift */; };
+		A1000001000000000000601 /* WalkShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000600 /* WalkShareCard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +271,257 @@
 		A1000001000000000000006 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1000001000000000000008 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		A1000001000000000000010 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1000001000000000000100 /* AppDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDependencies.swift; sourceTree = "<group>"; };
+		A1000001000000000000102 /* DIContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DIContainer.swift; sourceTree = "<group>"; };
+		A1000001000000000000104 /* DependencyStubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyStubs.swift; sourceTree = "<group>"; };
+		A1000001000000000000106 /* Injected.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Injected.swift; sourceTree = "<group>"; };
+		A1000001000000000000108 /* IntegrationExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationExample.swift; sourceTree = "<group>"; };
+		A1000001000000000000110 /* MockContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContainer.swift; sourceTree = "<group>"; };
+		A1000001000000000000112 /* ServiceLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceLocator.swift; sourceTree = "<group>"; };
+		A1000001000000000000114 /* ViewModelFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelFactory.swift; sourceTree = "<group>"; };
+		A1000001000000000000116 /* DatabaseContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseContainer.swift; sourceTree = "<group>"; };
+		A1000001000000000000118 /* CachedPoiEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedPoiEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000120 /* DogEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000122 /* DogWalkJoin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogWalkJoin.swift; sourceTree = "<group>"; };
+		A1000001000000000000124 /* PoiEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000126 /* PooBagDropEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooBagDropEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000128 /* SyncQueueEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncQueueEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000130 /* TrackPointEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPointEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000132 /* UserEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000134 /* WalkEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000136 /* WalkSessionEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSessionEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000138 /* WeightLogEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightLogEntity.swift; sourceTree = "<group>"; };
+		A1000001000000000000140 /* CachedPoiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedPoiRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000142 /* DogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000144 /* PoiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000146 /* PooBagDropRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooBagDropRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000148 /* StatsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000150 /* SyncQueueRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncQueueRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000152 /* UserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000154 /* WalkRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000156 /* WalkSessionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSessionRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000158 /* WeightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000160 /* DynamicWorldExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldExample.swift; sourceTree = "<group>"; };
+		A1000001000000000000162 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
+		A1000001000000000000164 /* AutoReply.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoReply.swift; sourceTree = "<group>"; };
+		A1000001000000000000166 /* Badge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badge.swift; sourceTree = "<group>"; };
+		A1000001000000000000168 /* ServiceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProvider.swift; sourceTree = "<group>"; };
+		A1000001000000000000170 /* MedicationScheduleEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationScheduleEntry.swift; sourceTree = "<group>"; };
+		A1000001000000000000172 /* UnifiedDog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedDog.swift; sourceTree = "<group>"; };
+		A1000001000000000000174 /* VetDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VetDetails.swift; sourceTree = "<group>"; };
+		A1000001000000000000176 /* DynamicWorldModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000178 /* FeedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000180 /* Challenge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Challenge.swift; sourceTree = "<group>"; };
+		A1000001000000000000182 /* CharityModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharityModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000184 /* DogMilestone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogMilestone.swift; sourceTree = "<group>"; };
+		A1000001000000000000186 /* LeagueModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeagueModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000188 /* PersonalBest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalBest.swift; sourceTree = "<group>"; };
+		A1000001000000000000190 /* WalkAchievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkAchievement.swift; sourceTree = "<group>"; };
+		A1000001000000000000192 /* WalkColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkColors.swift; sourceTree = "<group>"; };
+		A1000001000000000000194 /* WalkComparison.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkComparison.swift; sourceTree = "<group>"; };
+		A1000001000000000000196 /* WalkStreak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkStreak.swift; sourceTree = "<group>"; };
+		A1000001000000000000198 /* FieldGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldGeometry.swift; sourceTree = "<group>"; };
+		A1000001000000000000200 /* FieldSignal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldSignal.swift; sourceTree = "<group>"; };
+		A1000001000000000000202 /* LivestockField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockField.swift; sourceTree = "<group>"; };
+		A1000001000000000000204 /* LivestockSpecies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockSpecies.swift; sourceTree = "<group>"; };
+		A1000001000000000000206 /* TileCoord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileCoord.swift; sourceTree = "<group>"; };
+		A1000001000000000000208 /* Tour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tour.swift; sourceTree = "<group>"; };
+		A1000001000000000000210 /* WalkingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPath.swift; sourceTree = "<group>"; };
+		A1000001000000000000212 /* LocalEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalEntities.swift; sourceTree = "<group>"; };
+		A1000001000000000000214 /* GuidanceState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidanceState.swift; sourceTree = "<group>"; };
+		A1000001000000000000216 /* NavigationLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationLogic.swift; sourceTree = "<group>"; };
+		A1000001000000000000218 /* NavigationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
+		A1000001000000000000220 /* NavigationProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationProgress.swift; sourceTree = "<group>"; };
+		A1000001000000000000222 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
+		A1000001000000000000224 /* RouteStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteStep.swift; sourceTree = "<group>"; };
+		A1000001000000000000226 /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
+		A1000001000000000000228 /* POI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POI.swift; sourceTree = "<group>"; };
+		A1000001000000000000230 /* PlannedWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedWalk.swift; sourceTree = "<group>"; };
+		A1000001000000000000232 /* Poi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Poi.swift; sourceTree = "<group>"; };
+		A1000001000000000000234 /* PooBagDrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooBagDrop.swift; sourceTree = "<group>"; };
+		A1000001000000000000236 /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
+		A1000001000000000000238 /* Social.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social.swift; sourceTree = "<group>"; };
+		A1000001000000000000240 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		A1000001000000000000242 /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
+		A1000001000000000000244 /* Walk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Walk.swift; sourceTree = "<group>"; };
+		A1000001000000000000246 /* WalkModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000248 /* AppNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigator.swift; sourceTree = "<group>"; };
+		A1000001000000000000250 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		A1000001000000000000252 /* NavigationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000254 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
+		A1000001000000000000256 /* RouteDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDestination.swift; sourceTree = "<group>"; };
+		A1000001000000000000258 /* TabItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabItem.swift; sourceTree = "<group>"; };
+		A1000001000000000000260 /* ChallengeRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000262 /* CharityRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharityRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000264 /* DiscoveryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000266 /* LeagueRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeagueRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000268 /* LivestockFieldRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockFieldRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000270 /* MilestoneRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestoneRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000272 /* UserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000274 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		A1000001000000000000276 /* AppUpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateChecker.swift; sourceTree = "<group>"; };
+		A1000001000000000000278 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		A1000001000000000000280 /* BadgeAwardingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeAwardingService.swift; sourceTree = "<group>"; };
+		A1000001000000000000282 /* DynamicWorldCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldCacheManager.swift; sourceTree = "<group>"; };
+		A1000001000000000000284 /* DynamicWorldService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldService.swift; sourceTree = "<group>"; };
+		A1000001000000000000286 /* GeofenceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofenceManager.swift; sourceTree = "<group>"; };
+		A1000001000000000000288 /* LocationPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPublisher.swift; sourceTree = "<group>"; };
+		A1000001000000000000290 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		A1000001000000000000292 /* LocationTrackingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationTrackingService.swift; sourceTree = "<group>"; };
+		A1000001000000000000294 /* DirectionsModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectionsModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000296 /* DirectionsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectionsService.swift; sourceTree = "<group>"; };
+		A1000001000000000000298 /* FirebaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseService.swift; sourceTree = "<group>"; };
+		A1000001000000000000300 /* NetworkError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkError.swift; sourceTree = "<group>"; };
+		A1000001000000000000302 /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
+		A1000001000000000000304 /* OsrmModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OsrmModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000306 /* OsrmService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OsrmService.swift; sourceTree = "<group>"; };
+		A1000001000000000000308 /* OverpassModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverpassModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000310 /* OverpassService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverpassService.swift; sourceTree = "<group>"; };
+		A1000001000000000000312 /* OsmPoiCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OsmPoiCache.swift; sourceTree = "<group>"; };
+		A1000001000000000000314 /* OverpassService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverpassService.swift; sourceTree = "<group>"; };
+		A1000001000000000000316 /* PoiDatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiDatabaseManager.swift; sourceTree = "<group>"; };
+		A1000001000000000000318 /* PoiManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiManager.swift; sourceTree = "<group>"; };
+		A1000001000000000000320 /* PoiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000322 /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
+		A1000001000000000000324 /* WalkTrackingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTrackingService.swift; sourceTree = "<group>"; };
+		A1000001000000000000326 /* WalkingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPath.swift; sourceTree = "<group>"; };
+		A1000001000000000000328 /* WalkingPathOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathOverlay.swift; sourceTree = "<group>"; };
+		A1000001000000000000330 /* WalkingPathRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000332 /* WalkingPathRoutingExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathRoutingExtension.swift; sourceTree = "<group>"; };
+		A1000001000000000000334 /* WalkingPathViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000336 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		A1000001000000000000338 /* ComponentStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentStyles.swift; sourceTree = "<group>"; };
+		A1000001000000000000340 /* EXAMPLE_USAGE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EXAMPLE_USAGE.swift; sourceTree = "<group>"; };
+		A1000001000000000000342 /* Icons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Icons.swift; sourceTree = "<group>"; };
+		A1000001000000000000344 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
+		A1000001000000000000346 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A1000001000000000000348 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		A1000001000000000000350 /* InstructionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionCard.swift; sourceTree = "<group>"; };
+		A1000001000000000000352 /* LivestockFieldTourDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockFieldTourDemo.swift; sourceTree = "<group>"; };
+		A1000001000000000000354 /* MapTourDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapTourDemo.swift; sourceTree = "<group>"; };
+		A1000001000000000000356 /* TourCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourCoordinator.swift; sourceTree = "<group>"; };
+		A1000001000000000000358 /* TourExampleUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourExampleUsage.swift; sourceTree = "<group>"; };
+		A1000001000000000000360 /* TourModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourModels.swift; sourceTree = "<group>"; };
+		A1000001000000000000362 /* TourOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourOverlay.swift; sourceTree = "<group>"; };
+		A1000001000000000000364 /* TourPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourPersistence.swift; sourceTree = "<group>"; };
+		A1000001000000000000366 /* TourSpotlightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourSpotlightView.swift; sourceTree = "<group>"; };
+		A1000001000000000000368 /* BiometricAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuthManager.swift; sourceTree = "<group>"; };
+		A1000001000000000000370 /* BirthdayUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayUtils.swift; sourceTree = "<group>"; };
+		A1000001000000000000372 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		A1000001000000000000374 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		A1000001000000000000376 /* FormatUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatUtils.swift; sourceTree = "<group>"; };
+		A1000001000000000000378 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		A1000001000000000000380 /* LevelCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelCalculator.swift; sourceTree = "<group>"; };
+		A1000001000000000000382 /* MapSnapshotCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapSnapshotCache.swift; sourceTree = "<group>"; };
+		A1000001000000000000384 /* MockData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockData.swift; sourceTree = "<group>"; };
+		A1000001000000000000386 /* StreakCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCalculator.swift; sourceTree = "<group>"; };
+		A1000001000000000000388 /* WalkPointsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkPointsCalculator.swift; sourceTree = "<group>"; };
+		A1000001000000000000390 /* WoofWalkBranding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WoofWalkBranding.swift; sourceTree = "<group>"; };
+		A1000001000000000000392 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000394 /* DogProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogProfileViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000396 /* DynamicWorldViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000398 /* FeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000400 /* GuidanceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidanceViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000402 /* LivestockFieldViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockFieldViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000404 /* PoiViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000406 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000408 /* RoutingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000410 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000412 /* StatsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000414 /* TourViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000416 /* UnifiedDogFormViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedDogFormViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000418 /* WalkHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000420 /* WalkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000422 /* WalkingPathViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000424 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
+		A1000001000000000000426 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		A1000001000000000000428 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		A1000001000000000000430 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
+		A1000001000000000000432 /* CharityPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharityPickerSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000434 /* CharitySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharitySettingsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000436 /* ChatDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDetailScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000438 /* ChatListScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000440 /* ChatMessageRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageRow.swift; sourceTree = "<group>"; };
+		A1000001000000000000442 /* DateSeparator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateSeparator.swift; sourceTree = "<group>"; };
+		A1000001000000000000444 /* PhotoMessagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoMessagePicker.swift; sourceTree = "<group>"; };
+		A1000001000000000000446 /* AppUpdateBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateBanner.swift; sourceTree = "<group>"; };
+		A1000001000000000000448 /* BackgroundLocationPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundLocationPrompt.swift; sourceTree = "<group>"; };
+		A1000001000000000000450 /* CustomTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTextField.swift; sourceTree = "<group>"; };
+		A1000001000000000000452 /* ResponsiveLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponsiveLayout.swift; sourceTree = "<group>"; };
+		A1000001000000000000454 /* DiscoveryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000456 /* BirthdayCountdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayCountdown.swift; sourceTree = "<group>"; };
+		A1000001000000000000458 /* DogStatsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogStatsScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000460 /* MedicationFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationFormView.swift; sourceTree = "<group>"; };
+		A1000001000000000000462 /* UnifiedDogFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedDogFormView.swift; sourceTree = "<group>"; };
+		A1000001000000000000464 /* LandCoverChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandCoverChartView.swift; sourceTree = "<group>"; };
+		A1000001000000000000466 /* CreatePostSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePostSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000468 /* FeedScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000470 /* PostDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostDetailScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000472 /* ReactionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionPicker.swift; sourceTree = "<group>"; };
+		A1000001000000000000474 /* WalkPostCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkPostCard.swift; sourceTree = "<group>"; };
+		A1000001000000000000476 /* AchievementRevealCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementRevealCard.swift; sourceTree = "<group>"; };
+		A1000001000000000000478 /* ChallengesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengesScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000480 /* LeagueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeagueView.swift; sourceTree = "<group>"; };
+		A1000001000000000000482 /* MilestoneCelebration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestoneCelebration.swift; sourceTree = "<group>"; };
+		A1000001000000000000484 /* StreakBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakBanner.swift; sourceTree = "<group>"; };
+		A1000001000000000000486 /* WalkCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkCardView.swift; sourceTree = "<group>"; };
+		A1000001000000000000488 /* WalkDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkDetailView.swift; sourceTree = "<group>"; };
+		A1000001000000000000490 /* WalkHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryView.swift; sourceTree = "<group>"; };
+		A1000001000000000000492 /* FieldDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldDetailSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000494 /* FieldDrawingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldDrawingMode.swift; sourceTree = "<group>"; };
+		A1000001000000000000496 /* FieldFormSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldFormSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000498 /* LivestockFieldHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockFieldHelpers.swift; sourceTree = "<group>"; };
+		A1000001000000000000500 /* LivestockFieldOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockFieldOverlay.swift; sourceTree = "<group>"; };
+		A1000001000000000000502 /* LivestockMapIntegration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockMapIntegration.swift; sourceTree = "<group>"; };
+		A1000001000000000000504 /* LivestockModeToggleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockModeToggleButton.swift; sourceTree = "<group>"; };
+		A1000001000000000000506 /* SpeciesSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeciesSelector.swift; sourceTree = "<group>"; };
+		A1000001000000000000508 /* GuidancePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidancePanel.swift; sourceTree = "<group>"; };
+		A1000001000000000000510 /* MapAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapAnnotation.swift; sourceTree = "<group>"; };
+		A1000001000000000000512 /* MapControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapControls.swift; sourceTree = "<group>"; };
+		A1000001000000000000514 /* MapStyleToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapStyleToggle.swift; sourceTree = "<group>"; };
+		A1000001000000000000516 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		A1000001000000000000518 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000520 /* RouteOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOverlay.swift; sourceTree = "<group>"; };
+		A1000001000000000000522 /* MapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000524 /* NotificationCenterScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCenterScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000526 /* AddPoiSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPoiSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000528 /* DeletePoiConfirmation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeletePoiConfirmation.swift; sourceTree = "<group>"; };
+		A1000001000000000000530 /* NearbyPubsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyPubsSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000532 /* PoiDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiDetailView.swift; sourceTree = "<group>"; };
+		A1000001000000000000534 /* PoiFilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiFilterSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000536 /* PubDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubDetailSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000538 /* QuickAddPoiButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddPoiButtons.swift; sourceTree = "<group>"; };
+		A1000001000000000000540 /* PlaceholderViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderViews.swift; sourceTree = "<group>"; };
+		A1000001000000000000542 /* DogDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogDetailView.swift; sourceTree = "<group>"; };
+		A1000001000000000000544 /* DogFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogFormView.swift; sourceTree = "<group>"; };
+		A1000001000000000000546 /* DogProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogProfileSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000548 /* DogProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogProfileView.swift; sourceTree = "<group>"; };
+		A1000001000000000000550 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		A1000001000000000000552 /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
+		A1000001000000000000554 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		A1000001000000000000556 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000558 /* AlertSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSettingsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000560 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
+		A1000001000000000000562 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000564 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000566 /* SocialHubScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialHubScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000568 /* DogStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogStatsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000570 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000572 /* ActiveWalkBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalkBanner.swift; sourceTree = "<group>"; };
+		A1000001000000000000574 /* ConfettiEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiEffect.swift; sourceTree = "<group>"; };
+		A1000001000000000000576 /* DirectionIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectionIcon.swift; sourceTree = "<group>"; };
+		A1000001000000000000578 /* ElevationChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevationChart.swift; sourceTree = "<group>"; };
+		A1000001000000000000580 /* GuidancePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidancePanel.swift; sourceTree = "<group>"; };
+		A1000001000000000000582 /* PersonalBestBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalBestBanner.swift; sourceTree = "<group>"; };
+		A1000001000000000000584 /* PlanningModeOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningModeOverlay.swift; sourceTree = "<group>"; };
+		A1000001000000000000586 /* RouteStartProximitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteStartProximitySheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000588 /* SavePlannedWalkDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavePlannedWalkDialog.swift; sourceTree = "<group>"; };
+		A1000001000000000000590 /* ShareWalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareWalkSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000592 /* WalkCompletionScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkCompletionScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000594 /* WalkControlPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkControlPanel.swift; sourceTree = "<group>"; };
+		A1000001000000000000596 /* WalkProgressCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkProgressCard.swift; sourceTree = "<group>"; };
+		A1000001000000000000598 /* WalkReportCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkReportCardView.swift; sourceTree = "<group>"; };
+		A1000001000000000000600 /* WalkShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkShareCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +557,11 @@
 				A1000001000000000000020 /* Database */,
 				A1000001000000000000021 /* Utils */,
 				A1000001000000000000022 /* Resources */,
+				A1000001000000000000602 /* DI */,
+				A1000001000000000000605 /* Examples */,
+				A1000001000000000000613 /* Navigation */,
+				A1000001000000000000618 /* Theme */,
+				A1000001000000000000619 /* Tour */,
 			);
 			path = WoofWalk;
 			sourceTree = "<group>";
@@ -70,6 +577,28 @@
 		A1000001000000000000015 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000606 /* Discovery */,
+				A1000001000000000000607 /* Dog */,
+				A1000001000000000000608 /* DynamicWorld */,
+				A1000001000000000000609 /* Gamification */,
+				A1000001000000000000610 /* LivestockField */,
+				A1000001000000000000611 /* Navigation */,
+				A1000001000000000000612 /* POI */,
+				A1000001000000000000162 /* Alert.swift */,
+				A1000001000000000000164 /* AutoReply.swift */,
+				A1000001000000000000166 /* Badge.swift */,
+				A1000001000000000000178 /* FeedModels.swift */,
+				A1000001000000000000212 /* LocalEntities.swift */,
+				A1000001000000000000226 /* Notification.swift */,
+				A1000001000000000000230 /* PlannedWalk.swift */,
+				A1000001000000000000232 /* Poi.swift */,
+				A1000001000000000000234 /* PooBagDrop.swift */,
+				A1000001000000000000236 /* Post.swift */,
+				A1000001000000000000238 /* Social.swift */,
+				A1000001000000000000240 /* User.swift */,
+				A1000001000000000000242 /* UserSettings.swift */,
+				A1000001000000000000244 /* Walk.swift */,
+				A1000001000000000000246 /* WalkModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -77,6 +606,27 @@
 		A1000001000000000000016 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000620 /* Auth */,
+				A1000001000000000000621 /* Charity */,
+				A1000001000000000000622 /* Chat */,
+				A1000001000000000000623 /* Components */,
+				A1000001000000000000624 /* Discovery */,
+				A1000001000000000000625 /* Dog */,
+				A1000001000000000000626 /* DynamicWorld */,
+				A1000001000000000000627 /* Feed */,
+				A1000001000000000000628 /* Gamification */,
+				A1000001000000000000629 /* History */,
+				A1000001000000000000630 /* LivestockField */,
+				A1000001000000000000631 /* Map */,
+				A1000001000000000000632 /* Notifications */,
+				A1000001000000000000633 /* POI */,
+				A1000001000000000000634 /* Placeholder */,
+				A1000001000000000000635 /* Profile */,
+				A1000001000000000000636 /* Settings */,
+				A1000001000000000000637 /* Social */,
+				A1000001000000000000638 /* Stats */,
+				A1000001000000000000639 /* Walk */,
+				A1000001000000000000522 /* MapScreen.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -84,6 +634,22 @@
 		A1000001000000000000017 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000392 /* AuthViewModel.swift */,
+				A1000001000000000000394 /* DogProfileViewModel.swift */,
+				A1000001000000000000396 /* DynamicWorldViewModel.swift */,
+				A1000001000000000000398 /* FeedViewModel.swift */,
+				A1000001000000000000400 /* GuidanceViewModel.swift */,
+				A1000001000000000000402 /* LivestockFieldViewModel.swift */,
+				A1000001000000000000404 /* PoiViewModel.swift */,
+				A1000001000000000000406 /* ProfileViewModel.swift */,
+				A1000001000000000000408 /* RoutingViewModel.swift */,
+				A1000001000000000000410 /* SettingsViewModel.swift */,
+				A1000001000000000000412 /* StatsViewModel.swift */,
+				A1000001000000000000414 /* TourViewModel.swift */,
+				A1000001000000000000416 /* UnifiedDogFormViewModel.swift */,
+				A1000001000000000000418 /* WalkHistoryViewModel.swift */,
+				A1000001000000000000420 /* WalkViewModel.swift */,
+				A1000001000000000000422 /* WalkingPathViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -91,6 +657,20 @@
 		A1000001000000000000018 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000614 /* DynamicWorld */,
+				A1000001000000000000615 /* Network */,
+				A1000001000000000000616 /* POI */,
+				A1000001000000000000617 /* WalkingPaths */,
+				A1000001000000000000274 /* AnalyticsService.swift */,
+				A1000001000000000000276 /* AppUpdateChecker.swift */,
+				A1000001000000000000278 /* AuthService.swift */,
+				A1000001000000000000280 /* BadgeAwardingService.swift */,
+				A1000001000000000000286 /* GeofenceManager.swift */,
+				A1000001000000000000288 /* LocationPublisher.swift */,
+				A1000001000000000000290 /* LocationService.swift */,
+				A1000001000000000000292 /* LocationTrackingService.swift */,
+				A1000001000000000000322 /* ShareService.swift */,
+				A1000001000000000000324 /* WalkTrackingService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -98,6 +678,13 @@
 		A1000001000000000000019 /* Repositories */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000260 /* ChallengeRepository.swift */,
+				A1000001000000000000262 /* CharityRepository.swift */,
+				A1000001000000000000264 /* DiscoveryRepository.swift */,
+				A1000001000000000000266 /* LeagueRepository.swift */,
+				A1000001000000000000268 /* LivestockFieldRepository.swift */,
+				A1000001000000000000270 /* MilestoneRepository.swift */,
+				A1000001000000000000272 /* UserRepository.swift */,
 			);
 			path = Repositories;
 			sourceTree = "<group>";
@@ -105,6 +692,9 @@
 		A1000001000000000000020 /* Database */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000603 /* Entities */,
+				A1000001000000000000604 /* Repositories */,
+				A1000001000000000000116 /* DatabaseContainer.swift */,
 			);
 			path = Database;
 			sourceTree = "<group>";
@@ -112,6 +702,18 @@
 		A1000001000000000000021 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000368 /* BiometricAuthManager.swift */,
+				A1000001000000000000370 /* BirthdayUtils.swift */,
+				A1000001000000000000372 /* Constants.swift */,
+				A1000001000000000000374 /* Extensions.swift */,
+				A1000001000000000000376 /* FormatUtils.swift */,
+				A1000001000000000000378 /* KeychainManager.swift */,
+				A1000001000000000000380 /* LevelCalculator.swift */,
+				A1000001000000000000382 /* MapSnapshotCache.swift */,
+				A1000001000000000000384 /* MockData.swift */,
+				A1000001000000000000386 /* StreakCalculator.swift */,
+				A1000001000000000000388 /* WalkPointsCalculator.swift */,
+				A1000001000000000000390 /* WoofWalkBranding.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -131,6 +733,461 @@
 				A1000001000000000000008 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A1000001000000000000602 /* DI */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000100 /* AppDependencies.swift */,
+				A1000001000000000000102 /* DIContainer.swift */,
+				A1000001000000000000104 /* DependencyStubs.swift */,
+				A1000001000000000000106 /* Injected.swift */,
+				A1000001000000000000108 /* IntegrationExample.swift */,
+				A1000001000000000000110 /* MockContainer.swift */,
+				A1000001000000000000112 /* ServiceLocator.swift */,
+				A1000001000000000000114 /* ViewModelFactory.swift */,
+			);
+			path = DI;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000603 /* Entities */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000118 /* CachedPoiEntity.swift */,
+				A1000001000000000000120 /* DogEntity.swift */,
+				A1000001000000000000122 /* DogWalkJoin.swift */,
+				A1000001000000000000124 /* PoiEntity.swift */,
+				A1000001000000000000126 /* PooBagDropEntity.swift */,
+				A1000001000000000000128 /* SyncQueueEntity.swift */,
+				A1000001000000000000130 /* TrackPointEntity.swift */,
+				A1000001000000000000132 /* UserEntity.swift */,
+				A1000001000000000000134 /* WalkEntity.swift */,
+				A1000001000000000000136 /* WalkSessionEntity.swift */,
+				A1000001000000000000138 /* WeightLogEntity.swift */,
+			);
+			path = Entities;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000604 /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000140 /* CachedPoiRepository.swift */,
+				A1000001000000000000142 /* DogRepository.swift */,
+				A1000001000000000000144 /* PoiRepository.swift */,
+				A1000001000000000000146 /* PooBagDropRepository.swift */,
+				A1000001000000000000148 /* StatsRepository.swift */,
+				A1000001000000000000150 /* SyncQueueRepository.swift */,
+				A1000001000000000000152 /* UserRepository.swift */,
+				A1000001000000000000154 /* WalkRepository.swift */,
+				A1000001000000000000156 /* WalkSessionRepository.swift */,
+				A1000001000000000000158 /* WeightRepository.swift */,
+			);
+			path = Repositories;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000605 /* Examples */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000160 /* DynamicWorldExample.swift */,
+			);
+			path = Examples;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000606 /* Discovery */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000168 /* ServiceProvider.swift */,
+			);
+			path = Discovery;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000607 /* Dog */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000170 /* MedicationScheduleEntry.swift */,
+				A1000001000000000000172 /* UnifiedDog.swift */,
+				A1000001000000000000174 /* VetDetails.swift */,
+			);
+			path = Dog;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000608 /* DynamicWorld */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000176 /* DynamicWorldModels.swift */,
+			);
+			path = DynamicWorld;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000609 /* Gamification */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000180 /* Challenge.swift */,
+				A1000001000000000000182 /* CharityModels.swift */,
+				A1000001000000000000184 /* DogMilestone.swift */,
+				A1000001000000000000186 /* LeagueModels.swift */,
+				A1000001000000000000188 /* PersonalBest.swift */,
+				A1000001000000000000190 /* WalkAchievement.swift */,
+				A1000001000000000000192 /* WalkColors.swift */,
+				A1000001000000000000194 /* WalkComparison.swift */,
+				A1000001000000000000196 /* WalkStreak.swift */,
+			);
+			path = Gamification;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000610 /* LivestockField */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000198 /* FieldGeometry.swift */,
+				A1000001000000000000200 /* FieldSignal.swift */,
+				A1000001000000000000202 /* LivestockField.swift */,
+				A1000001000000000000204 /* LivestockSpecies.swift */,
+				A1000001000000000000206 /* TileCoord.swift */,
+				A1000001000000000000208 /* Tour.swift */,
+				A1000001000000000000210 /* WalkingPath.swift */,
+			);
+			path = LivestockField;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000611 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000214 /* GuidanceState.swift */,
+				A1000001000000000000216 /* NavigationLogic.swift */,
+				A1000001000000000000218 /* NavigationManager.swift */,
+				A1000001000000000000220 /* NavigationProgress.swift */,
+				A1000001000000000000222 /* Route.swift */,
+				A1000001000000000000224 /* RouteStep.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000612 /* POI */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000228 /* POI.swift */,
+			);
+			path = POI;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000613 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000248 /* AppNavigator.swift */,
+				A1000001000000000000250 /* MainTabView.swift */,
+				A1000001000000000000252 /* NavigationViewModel.swift */,
+				A1000001000000000000254 /* Route.swift */,
+				A1000001000000000000256 /* RouteDestination.swift */,
+				A1000001000000000000258 /* TabItem.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000614 /* DynamicWorld */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000282 /* DynamicWorldCacheManager.swift */,
+				A1000001000000000000284 /* DynamicWorldService.swift */,
+			);
+			path = DynamicWorld;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000615 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000294 /* DirectionsModels.swift */,
+				A1000001000000000000296 /* DirectionsService.swift */,
+				A1000001000000000000298 /* FirebaseService.swift */,
+				A1000001000000000000300 /* NetworkError.swift */,
+				A1000001000000000000302 /* NetworkManager.swift */,
+				A1000001000000000000304 /* OsrmModels.swift */,
+				A1000001000000000000306 /* OsrmService.swift */,
+				A1000001000000000000308 /* OverpassModels.swift */,
+				A1000001000000000000310 /* OverpassService.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000616 /* POI */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000312 /* OsmPoiCache.swift */,
+				A1000001000000000000314 /* OverpassService.swift */,
+				A1000001000000000000316 /* PoiDatabaseManager.swift */,
+				A1000001000000000000318 /* PoiManager.swift */,
+				A1000001000000000000320 /* PoiRepository.swift */,
+			);
+			path = POI;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000617 /* WalkingPaths */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000326 /* WalkingPath.swift */,
+				A1000001000000000000328 /* WalkingPathOverlay.swift */,
+				A1000001000000000000330 /* WalkingPathRepository.swift */,
+				A1000001000000000000332 /* WalkingPathRoutingExtension.swift */,
+				A1000001000000000000334 /* WalkingPathViewModel.swift */,
+			);
+			path = WalkingPaths;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000618 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000336 /* Colors.swift */,
+				A1000001000000000000338 /* ComponentStyles.swift */,
+				A1000001000000000000340 /* EXAMPLE_USAGE.swift */,
+				A1000001000000000000342 /* Icons.swift */,
+				A1000001000000000000344 /* Spacing.swift */,
+				A1000001000000000000346 /* Theme.swift */,
+				A1000001000000000000348 /* Typography.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000619 /* Tour */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000350 /* InstructionCard.swift */,
+				A1000001000000000000352 /* LivestockFieldTourDemo.swift */,
+				A1000001000000000000354 /* MapTourDemo.swift */,
+				A1000001000000000000356 /* TourCoordinator.swift */,
+				A1000001000000000000358 /* TourExampleUsage.swift */,
+				A1000001000000000000360 /* TourModels.swift */,
+				A1000001000000000000362 /* TourOverlay.swift */,
+				A1000001000000000000364 /* TourPersistence.swift */,
+				A1000001000000000000366 /* TourSpotlightView.swift */,
+			);
+			path = Tour;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000620 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000424 /* ForgotPasswordView.swift */,
+				A1000001000000000000426 /* LoginView.swift */,
+				A1000001000000000000428 /* OnboardingView.swift */,
+				A1000001000000000000430 /* SignupView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000621 /* Charity */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000432 /* CharityPickerSheet.swift */,
+				A1000001000000000000434 /* CharitySettingsView.swift */,
+			);
+			path = Charity;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000622 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000436 /* ChatDetailScreen.swift */,
+				A1000001000000000000438 /* ChatListScreen.swift */,
+				A1000001000000000000440 /* ChatMessageRow.swift */,
+				A1000001000000000000442 /* DateSeparator.swift */,
+				A1000001000000000000444 /* PhotoMessagePicker.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000623 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000446 /* AppUpdateBanner.swift */,
+				A1000001000000000000448 /* BackgroundLocationPrompt.swift */,
+				A1000001000000000000450 /* CustomTextField.swift */,
+				A1000001000000000000452 /* ResponsiveLayout.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000624 /* Discovery */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000454 /* DiscoveryScreen.swift */,
+			);
+			path = Discovery;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000625 /* Dog */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000456 /* BirthdayCountdown.swift */,
+				A1000001000000000000458 /* DogStatsScreen.swift */,
+				A1000001000000000000460 /* MedicationFormView.swift */,
+				A1000001000000000000462 /* UnifiedDogFormView.swift */,
+			);
+			path = Dog;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000626 /* DynamicWorld */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000464 /* LandCoverChartView.swift */,
+			);
+			path = DynamicWorld;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000627 /* Feed */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000466 /* CreatePostSheet.swift */,
+				A1000001000000000000468 /* FeedScreen.swift */,
+				A1000001000000000000470 /* PostDetailScreen.swift */,
+				A1000001000000000000472 /* ReactionPicker.swift */,
+				A1000001000000000000474 /* WalkPostCard.swift */,
+			);
+			path = Feed;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000628 /* Gamification */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000476 /* AchievementRevealCard.swift */,
+				A1000001000000000000478 /* ChallengesScreen.swift */,
+				A1000001000000000000480 /* LeagueView.swift */,
+				A1000001000000000000482 /* MilestoneCelebration.swift */,
+				A1000001000000000000484 /* StreakBanner.swift */,
+			);
+			path = Gamification;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000629 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000486 /* WalkCardView.swift */,
+				A1000001000000000000488 /* WalkDetailView.swift */,
+				A1000001000000000000490 /* WalkHistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000630 /* LivestockField */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000492 /* FieldDetailSheet.swift */,
+				A1000001000000000000494 /* FieldDrawingMode.swift */,
+				A1000001000000000000496 /* FieldFormSheet.swift */,
+				A1000001000000000000498 /* LivestockFieldHelpers.swift */,
+				A1000001000000000000500 /* LivestockFieldOverlay.swift */,
+				A1000001000000000000502 /* LivestockMapIntegration.swift */,
+				A1000001000000000000504 /* LivestockModeToggleButton.swift */,
+				A1000001000000000000506 /* SpeciesSelector.swift */,
+			);
+			path = LivestockField;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000631 /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000508 /* GuidancePanel.swift */,
+				A1000001000000000000510 /* MapAnnotation.swift */,
+				A1000001000000000000512 /* MapControls.swift */,
+				A1000001000000000000514 /* MapStyleToggle.swift */,
+				A1000001000000000000516 /* MapView.swift */,
+				A1000001000000000000518 /* MapViewModel.swift */,
+				A1000001000000000000520 /* RouteOverlay.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000632 /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000524 /* NotificationCenterScreen.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000633 /* POI */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000526 /* AddPoiSheet.swift */,
+				A1000001000000000000528 /* DeletePoiConfirmation.swift */,
+				A1000001000000000000530 /* NearbyPubsSheet.swift */,
+				A1000001000000000000532 /* PoiDetailView.swift */,
+				A1000001000000000000534 /* PoiFilterSheet.swift */,
+				A1000001000000000000536 /* PubDetailSheet.swift */,
+				A1000001000000000000538 /* QuickAddPoiButtons.swift */,
+			);
+			path = POI;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000634 /* Placeholder */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000540 /* PlaceholderViews.swift */,
+			);
+			path = Placeholder;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000635 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000542 /* DogDetailView.swift */,
+				A1000001000000000000544 /* DogFormView.swift */,
+				A1000001000000000000546 /* DogProfileSheet.swift */,
+				A1000001000000000000548 /* DogProfileView.swift */,
+				A1000001000000000000550 /* EditProfileView.swift */,
+				A1000001000000000000552 /* LeaderboardView.swift */,
+				A1000001000000000000554 /* ProfileView.swift */,
+				A1000001000000000000556 /* StatsView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000636 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000558 /* AlertSettingsView.swift */,
+				A1000001000000000000560 /* DataManagementView.swift */,
+				A1000001000000000000562 /* PermissionsView.swift */,
+				A1000001000000000000564 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000637 /* Social */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000566 /* SocialHubScreen.swift */,
+			);
+			path = Social;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000638 /* Stats */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000568 /* DogStatsView.swift */,
+				A1000001000000000000570 /* StatsView.swift */,
+			);
+			path = Stats;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000639 /* Walk */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000572 /* ActiveWalkBanner.swift */,
+				A1000001000000000000574 /* ConfettiEffect.swift */,
+				A1000001000000000000576 /* DirectionIcon.swift */,
+				A1000001000000000000578 /* ElevationChart.swift */,
+				A1000001000000000000580 /* GuidancePanel.swift */,
+				A1000001000000000000582 /* PersonalBestBanner.swift */,
+				A1000001000000000000584 /* PlanningModeOverlay.swift */,
+				A1000001000000000000586 /* RouteStartProximitySheet.swift */,
+				A1000001000000000000588 /* SavePlannedWalkDialog.swift */,
+				A1000001000000000000590 /* ShareWalkSheet.swift */,
+				A1000001000000000000592 /* WalkCompletionScreen.swift */,
+				A1000001000000000000594 /* WalkControlPanel.swift */,
+				A1000001000000000000596 /* WalkProgressCard.swift */,
+				A1000001000000000000598 /* WalkReportCardView.swift */,
+				A1000001000000000000600 /* WalkShareCard.swift */,
+			);
+			path = Walk;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -209,6 +1266,257 @@
 			files = (
 				A1000001000000000000003 /* ContentView.swift in Sources */,
 				A1000001000000000000001 /* WoofWalkApp.swift in Sources */,
+				A1000001000000000000101 /* AppDependencies.swift in Sources */,
+				A1000001000000000000103 /* DIContainer.swift in Sources */,
+				A1000001000000000000105 /* DependencyStubs.swift in Sources */,
+				A1000001000000000000107 /* Injected.swift in Sources */,
+				A1000001000000000000109 /* IntegrationExample.swift in Sources */,
+				A1000001000000000000111 /* MockContainer.swift in Sources */,
+				A1000001000000000000113 /* ServiceLocator.swift in Sources */,
+				A1000001000000000000115 /* ViewModelFactory.swift in Sources */,
+				A1000001000000000000117 /* DatabaseContainer.swift in Sources */,
+				A1000001000000000000119 /* CachedPoiEntity.swift in Sources */,
+				A1000001000000000000121 /* DogEntity.swift in Sources */,
+				A1000001000000000000123 /* DogWalkJoin.swift in Sources */,
+				A1000001000000000000125 /* PoiEntity.swift in Sources */,
+				A1000001000000000000127 /* PooBagDropEntity.swift in Sources */,
+				A1000001000000000000129 /* SyncQueueEntity.swift in Sources */,
+				A1000001000000000000131 /* TrackPointEntity.swift in Sources */,
+				A1000001000000000000133 /* UserEntity.swift in Sources */,
+				A1000001000000000000135 /* WalkEntity.swift in Sources */,
+				A1000001000000000000137 /* WalkSessionEntity.swift in Sources */,
+				A1000001000000000000139 /* WeightLogEntity.swift in Sources */,
+				A1000001000000000000141 /* CachedPoiRepository.swift in Sources */,
+				A1000001000000000000143 /* DogRepository.swift in Sources */,
+				A1000001000000000000145 /* PoiRepository.swift in Sources */,
+				A1000001000000000000147 /* PooBagDropRepository.swift in Sources */,
+				A1000001000000000000149 /* StatsRepository.swift in Sources */,
+				A1000001000000000000151 /* SyncQueueRepository.swift in Sources */,
+				A1000001000000000000153 /* UserRepository.swift in Sources */,
+				A1000001000000000000155 /* WalkRepository.swift in Sources */,
+				A1000001000000000000157 /* WalkSessionRepository.swift in Sources */,
+				A1000001000000000000159 /* WeightRepository.swift in Sources */,
+				A1000001000000000000161 /* DynamicWorldExample.swift in Sources */,
+				A1000001000000000000163 /* Alert.swift in Sources */,
+				A1000001000000000000165 /* AutoReply.swift in Sources */,
+				A1000001000000000000167 /* Badge.swift in Sources */,
+				A1000001000000000000169 /* ServiceProvider.swift in Sources */,
+				A1000001000000000000171 /* MedicationScheduleEntry.swift in Sources */,
+				A1000001000000000000173 /* UnifiedDog.swift in Sources */,
+				A1000001000000000000175 /* VetDetails.swift in Sources */,
+				A1000001000000000000177 /* DynamicWorldModels.swift in Sources */,
+				A1000001000000000000179 /* FeedModels.swift in Sources */,
+				A1000001000000000000181 /* Challenge.swift in Sources */,
+				A1000001000000000000183 /* CharityModels.swift in Sources */,
+				A1000001000000000000185 /* DogMilestone.swift in Sources */,
+				A1000001000000000000187 /* LeagueModels.swift in Sources */,
+				A1000001000000000000189 /* PersonalBest.swift in Sources */,
+				A1000001000000000000191 /* WalkAchievement.swift in Sources */,
+				A1000001000000000000193 /* WalkColors.swift in Sources */,
+				A1000001000000000000195 /* WalkComparison.swift in Sources */,
+				A1000001000000000000197 /* WalkStreak.swift in Sources */,
+				A1000001000000000000199 /* FieldGeometry.swift in Sources */,
+				A1000001000000000000201 /* FieldSignal.swift in Sources */,
+				A1000001000000000000203 /* LivestockField.swift in Sources */,
+				A1000001000000000000205 /* LivestockSpecies.swift in Sources */,
+				A1000001000000000000207 /* TileCoord.swift in Sources */,
+				A1000001000000000000209 /* Tour.swift in Sources */,
+				A1000001000000000000211 /* WalkingPath.swift in Sources */,
+				A1000001000000000000213 /* LocalEntities.swift in Sources */,
+				A1000001000000000000215 /* GuidanceState.swift in Sources */,
+				A1000001000000000000217 /* NavigationLogic.swift in Sources */,
+				A1000001000000000000219 /* NavigationManager.swift in Sources */,
+				A1000001000000000000221 /* NavigationProgress.swift in Sources */,
+				A1000001000000000000223 /* Route.swift in Sources */,
+				A1000001000000000000225 /* RouteStep.swift in Sources */,
+				A1000001000000000000227 /* Notification.swift in Sources */,
+				A1000001000000000000229 /* POI.swift in Sources */,
+				A1000001000000000000231 /* PlannedWalk.swift in Sources */,
+				A1000001000000000000233 /* Poi.swift in Sources */,
+				A1000001000000000000235 /* PooBagDrop.swift in Sources */,
+				A1000001000000000000237 /* Post.swift in Sources */,
+				A1000001000000000000239 /* Social.swift in Sources */,
+				A1000001000000000000241 /* User.swift in Sources */,
+				A1000001000000000000243 /* UserSettings.swift in Sources */,
+				A1000001000000000000245 /* Walk.swift in Sources */,
+				A1000001000000000000247 /* WalkModels.swift in Sources */,
+				A1000001000000000000249 /* AppNavigator.swift in Sources */,
+				A1000001000000000000251 /* MainTabView.swift in Sources */,
+				A1000001000000000000253 /* NavigationViewModel.swift in Sources */,
+				A1000001000000000000255 /* Route.swift in Sources */,
+				A1000001000000000000257 /* RouteDestination.swift in Sources */,
+				A1000001000000000000259 /* TabItem.swift in Sources */,
+				A1000001000000000000261 /* ChallengeRepository.swift in Sources */,
+				A1000001000000000000263 /* CharityRepository.swift in Sources */,
+				A1000001000000000000265 /* DiscoveryRepository.swift in Sources */,
+				A1000001000000000000267 /* LeagueRepository.swift in Sources */,
+				A1000001000000000000269 /* LivestockFieldRepository.swift in Sources */,
+				A1000001000000000000271 /* MilestoneRepository.swift in Sources */,
+				A1000001000000000000273 /* UserRepository.swift in Sources */,
+				A1000001000000000000275 /* AnalyticsService.swift in Sources */,
+				A1000001000000000000277 /* AppUpdateChecker.swift in Sources */,
+				A1000001000000000000279 /* AuthService.swift in Sources */,
+				A1000001000000000000281 /* BadgeAwardingService.swift in Sources */,
+				A1000001000000000000283 /* DynamicWorldCacheManager.swift in Sources */,
+				A1000001000000000000285 /* DynamicWorldService.swift in Sources */,
+				A1000001000000000000287 /* GeofenceManager.swift in Sources */,
+				A1000001000000000000289 /* LocationPublisher.swift in Sources */,
+				A1000001000000000000291 /* LocationService.swift in Sources */,
+				A1000001000000000000293 /* LocationTrackingService.swift in Sources */,
+				A1000001000000000000295 /* DirectionsModels.swift in Sources */,
+				A1000001000000000000297 /* DirectionsService.swift in Sources */,
+				A1000001000000000000299 /* FirebaseService.swift in Sources */,
+				A1000001000000000000301 /* NetworkError.swift in Sources */,
+				A1000001000000000000303 /* NetworkManager.swift in Sources */,
+				A1000001000000000000305 /* OsrmModels.swift in Sources */,
+				A1000001000000000000307 /* OsrmService.swift in Sources */,
+				A1000001000000000000309 /* OverpassModels.swift in Sources */,
+				A1000001000000000000311 /* OverpassService.swift in Sources */,
+				A1000001000000000000313 /* OsmPoiCache.swift in Sources */,
+				A1000001000000000000315 /* OverpassService.swift in Sources */,
+				A1000001000000000000317 /* PoiDatabaseManager.swift in Sources */,
+				A1000001000000000000319 /* PoiManager.swift in Sources */,
+				A1000001000000000000321 /* PoiRepository.swift in Sources */,
+				A1000001000000000000323 /* ShareService.swift in Sources */,
+				A1000001000000000000325 /* WalkTrackingService.swift in Sources */,
+				A1000001000000000000327 /* WalkingPath.swift in Sources */,
+				A1000001000000000000329 /* WalkingPathOverlay.swift in Sources */,
+				A1000001000000000000331 /* WalkingPathRepository.swift in Sources */,
+				A1000001000000000000333 /* WalkingPathRoutingExtension.swift in Sources */,
+				A1000001000000000000335 /* WalkingPathViewModel.swift in Sources */,
+				A1000001000000000000337 /* Colors.swift in Sources */,
+				A1000001000000000000339 /* ComponentStyles.swift in Sources */,
+				A1000001000000000000341 /* EXAMPLE_USAGE.swift in Sources */,
+				A1000001000000000000343 /* Icons.swift in Sources */,
+				A1000001000000000000345 /* Spacing.swift in Sources */,
+				A1000001000000000000347 /* Theme.swift in Sources */,
+				A1000001000000000000349 /* Typography.swift in Sources */,
+				A1000001000000000000351 /* InstructionCard.swift in Sources */,
+				A1000001000000000000353 /* LivestockFieldTourDemo.swift in Sources */,
+				A1000001000000000000355 /* MapTourDemo.swift in Sources */,
+				A1000001000000000000357 /* TourCoordinator.swift in Sources */,
+				A1000001000000000000359 /* TourExampleUsage.swift in Sources */,
+				A1000001000000000000361 /* TourModels.swift in Sources */,
+				A1000001000000000000363 /* TourOverlay.swift in Sources */,
+				A1000001000000000000365 /* TourPersistence.swift in Sources */,
+				A1000001000000000000367 /* TourSpotlightView.swift in Sources */,
+				A1000001000000000000369 /* BiometricAuthManager.swift in Sources */,
+				A1000001000000000000371 /* BirthdayUtils.swift in Sources */,
+				A1000001000000000000373 /* Constants.swift in Sources */,
+				A1000001000000000000375 /* Extensions.swift in Sources */,
+				A1000001000000000000377 /* FormatUtils.swift in Sources */,
+				A1000001000000000000379 /* KeychainManager.swift in Sources */,
+				A1000001000000000000381 /* LevelCalculator.swift in Sources */,
+				A1000001000000000000383 /* MapSnapshotCache.swift in Sources */,
+				A1000001000000000000385 /* MockData.swift in Sources */,
+				A1000001000000000000387 /* StreakCalculator.swift in Sources */,
+				A1000001000000000000389 /* WalkPointsCalculator.swift in Sources */,
+				A1000001000000000000391 /* WoofWalkBranding.swift in Sources */,
+				A1000001000000000000393 /* AuthViewModel.swift in Sources */,
+				A1000001000000000000395 /* DogProfileViewModel.swift in Sources */,
+				A1000001000000000000397 /* DynamicWorldViewModel.swift in Sources */,
+				A1000001000000000000399 /* FeedViewModel.swift in Sources */,
+				A1000001000000000000401 /* GuidanceViewModel.swift in Sources */,
+				A1000001000000000000403 /* LivestockFieldViewModel.swift in Sources */,
+				A1000001000000000000405 /* PoiViewModel.swift in Sources */,
+				A1000001000000000000407 /* ProfileViewModel.swift in Sources */,
+				A1000001000000000000409 /* RoutingViewModel.swift in Sources */,
+				A1000001000000000000411 /* SettingsViewModel.swift in Sources */,
+				A1000001000000000000413 /* StatsViewModel.swift in Sources */,
+				A1000001000000000000415 /* TourViewModel.swift in Sources */,
+				A1000001000000000000417 /* UnifiedDogFormViewModel.swift in Sources */,
+				A1000001000000000000419 /* WalkHistoryViewModel.swift in Sources */,
+				A1000001000000000000421 /* WalkViewModel.swift in Sources */,
+				A1000001000000000000423 /* WalkingPathViewModel.swift in Sources */,
+				A1000001000000000000425 /* ForgotPasswordView.swift in Sources */,
+				A1000001000000000000427 /* LoginView.swift in Sources */,
+				A1000001000000000000429 /* OnboardingView.swift in Sources */,
+				A1000001000000000000431 /* SignupView.swift in Sources */,
+				A1000001000000000000433 /* CharityPickerSheet.swift in Sources */,
+				A1000001000000000000435 /* CharitySettingsView.swift in Sources */,
+				A1000001000000000000437 /* ChatDetailScreen.swift in Sources */,
+				A1000001000000000000439 /* ChatListScreen.swift in Sources */,
+				A1000001000000000000441 /* ChatMessageRow.swift in Sources */,
+				A1000001000000000000443 /* DateSeparator.swift in Sources */,
+				A1000001000000000000445 /* PhotoMessagePicker.swift in Sources */,
+				A1000001000000000000447 /* AppUpdateBanner.swift in Sources */,
+				A1000001000000000000449 /* BackgroundLocationPrompt.swift in Sources */,
+				A1000001000000000000451 /* CustomTextField.swift in Sources */,
+				A1000001000000000000453 /* ResponsiveLayout.swift in Sources */,
+				A1000001000000000000455 /* DiscoveryScreen.swift in Sources */,
+				A1000001000000000000457 /* BirthdayCountdown.swift in Sources */,
+				A1000001000000000000459 /* DogStatsScreen.swift in Sources */,
+				A1000001000000000000461 /* MedicationFormView.swift in Sources */,
+				A1000001000000000000463 /* UnifiedDogFormView.swift in Sources */,
+				A1000001000000000000465 /* LandCoverChartView.swift in Sources */,
+				A1000001000000000000467 /* CreatePostSheet.swift in Sources */,
+				A1000001000000000000469 /* FeedScreen.swift in Sources */,
+				A1000001000000000000471 /* PostDetailScreen.swift in Sources */,
+				A1000001000000000000473 /* ReactionPicker.swift in Sources */,
+				A1000001000000000000475 /* WalkPostCard.swift in Sources */,
+				A1000001000000000000477 /* AchievementRevealCard.swift in Sources */,
+				A1000001000000000000479 /* ChallengesScreen.swift in Sources */,
+				A1000001000000000000481 /* LeagueView.swift in Sources */,
+				A1000001000000000000483 /* MilestoneCelebration.swift in Sources */,
+				A1000001000000000000485 /* StreakBanner.swift in Sources */,
+				A1000001000000000000487 /* WalkCardView.swift in Sources */,
+				A1000001000000000000489 /* WalkDetailView.swift in Sources */,
+				A1000001000000000000491 /* WalkHistoryView.swift in Sources */,
+				A1000001000000000000493 /* FieldDetailSheet.swift in Sources */,
+				A1000001000000000000495 /* FieldDrawingMode.swift in Sources */,
+				A1000001000000000000497 /* FieldFormSheet.swift in Sources */,
+				A1000001000000000000499 /* LivestockFieldHelpers.swift in Sources */,
+				A1000001000000000000501 /* LivestockFieldOverlay.swift in Sources */,
+				A1000001000000000000503 /* LivestockMapIntegration.swift in Sources */,
+				A1000001000000000000505 /* LivestockModeToggleButton.swift in Sources */,
+				A1000001000000000000507 /* SpeciesSelector.swift in Sources */,
+				A1000001000000000000509 /* GuidancePanel.swift in Sources */,
+				A1000001000000000000511 /* MapAnnotation.swift in Sources */,
+				A1000001000000000000513 /* MapControls.swift in Sources */,
+				A1000001000000000000515 /* MapStyleToggle.swift in Sources */,
+				A1000001000000000000517 /* MapView.swift in Sources */,
+				A1000001000000000000519 /* MapViewModel.swift in Sources */,
+				A1000001000000000000521 /* RouteOverlay.swift in Sources */,
+				A1000001000000000000523 /* MapScreen.swift in Sources */,
+				A1000001000000000000525 /* NotificationCenterScreen.swift in Sources */,
+				A1000001000000000000527 /* AddPoiSheet.swift in Sources */,
+				A1000001000000000000529 /* DeletePoiConfirmation.swift in Sources */,
+				A1000001000000000000531 /* NearbyPubsSheet.swift in Sources */,
+				A1000001000000000000533 /* PoiDetailView.swift in Sources */,
+				A1000001000000000000535 /* PoiFilterSheet.swift in Sources */,
+				A1000001000000000000537 /* PubDetailSheet.swift in Sources */,
+				A1000001000000000000539 /* QuickAddPoiButtons.swift in Sources */,
+				A1000001000000000000541 /* PlaceholderViews.swift in Sources */,
+				A1000001000000000000543 /* DogDetailView.swift in Sources */,
+				A1000001000000000000545 /* DogFormView.swift in Sources */,
+				A1000001000000000000547 /* DogProfileSheet.swift in Sources */,
+				A1000001000000000000549 /* DogProfileView.swift in Sources */,
+				A1000001000000000000551 /* EditProfileView.swift in Sources */,
+				A1000001000000000000553 /* LeaderboardView.swift in Sources */,
+				A1000001000000000000555 /* ProfileView.swift in Sources */,
+				A1000001000000000000557 /* StatsView.swift in Sources */,
+				A1000001000000000000559 /* AlertSettingsView.swift in Sources */,
+				A1000001000000000000561 /* DataManagementView.swift in Sources */,
+				A1000001000000000000563 /* PermissionsView.swift in Sources */,
+				A1000001000000000000565 /* SettingsView.swift in Sources */,
+				A1000001000000000000567 /* SocialHubScreen.swift in Sources */,
+				A1000001000000000000569 /* DogStatsView.swift in Sources */,
+				A1000001000000000000571 /* StatsView.swift in Sources */,
+				A1000001000000000000573 /* ActiveWalkBanner.swift in Sources */,
+				A1000001000000000000575 /* ConfettiEffect.swift in Sources */,
+				A1000001000000000000577 /* DirectionIcon.swift in Sources */,
+				A1000001000000000000579 /* ElevationChart.swift in Sources */,
+				A1000001000000000000581 /* GuidancePanel.swift in Sources */,
+				A1000001000000000000583 /* PersonalBestBanner.swift in Sources */,
+				A1000001000000000000585 /* PlanningModeOverlay.swift in Sources */,
+				A1000001000000000000587 /* RouteStartProximitySheet.swift in Sources */,
+				A1000001000000000000589 /* SavePlannedWalkDialog.swift in Sources */,
+				A1000001000000000000591 /* ShareWalkSheet.swift in Sources */,
+				A1000001000000000000593 /* WalkCompletionScreen.swift in Sources */,
+				A1000001000000000000595 /* WalkControlPanel.swift in Sources */,
+				A1000001000000000000597 /* WalkProgressCard.swift in Sources */,
+				A1000001000000000000599 /* WalkReportCardView.swift in Sources */,
+				A1000001000000000000601 /* WalkShareCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
