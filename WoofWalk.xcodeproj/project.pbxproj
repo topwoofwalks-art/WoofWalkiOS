@@ -274,6 +274,39 @@
 		A1000001000000000000599 /* WalkReportCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000598 /* WalkReportCardView.swift */; };
 		A1000001000000000000601 /* WalkShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000600 /* WalkShareCard.swift */; };
 		A1000001000000000000652 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000651 /* GoogleService-Info.plist */; };
+		A1000001000000000000811 /* InstagramStoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000810 /* InstagramStoryAdapter.swift */; };
+		A1000001000000000000813 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000812 /* NotificationService.swift */; };
+		A1000001000000000000815 /* BusinessInboxScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000814 /* BusinessInboxScreen.swift */; };
+		A1000001000000000000817 /* QuickReplySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000816 /* QuickReplySheet.swift */; };
+		A1000001000000000000819 /* LanguageSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000818 /* LanguageSelectionView.swift */; };
+		A1000001000000000000821 /* RainModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000820 /* RainModeSettingsView.swift */; };
+		A1000001000000000000823 /* CompletionMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000822 /* CompletionMapView.swift */; };
+		A1000001000000000000825 /* LiveShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000824 /* LiveShareView.swift */; };
+		A1000001000000000000827 /* PBShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000826 /* PBShareCard.swift */; };
+		A1000001000000000000829 /* StreakCompletionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000828 /* StreakCompletionCard.swift */; };
+		A1000001000000000000831 /* WalkAchievementCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000830 /* WalkAchievementCard.swift */; };
+		A1000001000000000000833 /* HazardReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000832 /* HazardReport.swift */; };
+		A1000001000000000000835 /* OffLeadZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000834 /* OffLeadZone.swift */; };
+		A1000001000000000000837 /* TrailCondition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000836 /* TrailCondition.swift */; };
+		A1000001000000000000839 /* ElevationFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000838 /* ElevationFilter.swift */; };
+		A1000001000000000000841 /* GPSFilterPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000840 /* GPSFilterPipeline.swift */; };
+		A1000001000000000000843 /* KalmanFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000842 /* KalmanFilter.swift */; };
+		A1000001000000000000845 /* HapticFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000844 /* HapticFeedback.swift */; };
+		A1000001000000000000847 /* AnimationModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000846 /* AnimationModifiers.swift */; };
+		A1000001000000000000849 /* HazardAlertBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000848 /* HazardAlertBanner.swift */; };
+		A1000001000000000000851 /* MapScreen+Overlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000850 /* MapScreen+Overlays.swift */; };
+		A1000001000000000000853 /* TrailConditionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000852 /* TrailConditionSheet.swift */; };
+		A1000001000000000000855 /* WalkPolylineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000854 /* WalkPolylineView.swift */; };
+		A1000001000000000000857 /* InWalkMilestonePopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000856 /* InWalkMilestonePopup.swift */; };
+		A1000001000000000000859 /* LevelUpToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000858 /* LevelUpToast.swift */; };
+		A1000001000000000000861 /* WalkPhotoButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000860 /* WalkPhotoButton.swift */; };
+		A1000001000000000000863 /* MedicationSchedulerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000862 /* MedicationSchedulerService.swift */; };
+		A1000001000000000000865 /* BreedAutocomplete.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000864 /* BreedAutocomplete.swift */; };
+		A1000001000000000000867 /* ClusterPoiSelectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000866 /* ClusterPoiSelectionSheet.swift */; };
+		A1000001000000000000869 /* RouteDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000868 /* RouteDetailScreen.swift */; };
+		A1000001000000000000871 /* RouteLibraryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000870 /* RouteLibraryScreen.swift */; };
+		A1000001000000000000873 /* WalkHistoryDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000872 /* WalkHistoryDetailScreen.swift */; };
+		A1000001000000000000875 /* WalkHistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000874 /* WalkHistoryScreen.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -546,6 +579,39 @@
 		A1000001000000000000598 /* WalkReportCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkReportCardView.swift; sourceTree = "<group>"; };
 		A1000001000000000000600 /* WalkShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkShareCard.swift; sourceTree = "<group>"; };
 		A1000001000000000000651 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		A1000001000000000000810 /* InstagramStoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstagramStoryAdapter.swift; sourceTree = "<group>"; };
+		A1000001000000000000812 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		A1000001000000000000814 /* BusinessInboxScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessInboxScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000816 /* QuickReplySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplySheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000818 /* LanguageSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionView.swift; sourceTree = "<group>"; };
+		A1000001000000000000820 /* RainModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainModeSettingsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000822 /* CompletionMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionMapView.swift; sourceTree = "<group>"; };
+		A1000001000000000000824 /* LiveShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveShareView.swift; sourceTree = "<group>"; };
+		A1000001000000000000826 /* PBShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PBShareCard.swift; sourceTree = "<group>"; };
+		A1000001000000000000828 /* StreakCompletionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCompletionCard.swift; sourceTree = "<group>"; };
+		A1000001000000000000830 /* WalkAchievementCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkAchievementCard.swift; sourceTree = "<group>"; };
+		A1000001000000000000832 /* HazardReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardReport.swift; sourceTree = "<group>"; };
+		A1000001000000000000834 /* OffLeadZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffLeadZone.swift; sourceTree = "<group>"; };
+		A1000001000000000000836 /* TrailCondition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailCondition.swift; sourceTree = "<group>"; };
+		A1000001000000000000838 /* ElevationFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevationFilter.swift; sourceTree = "<group>"; };
+		A1000001000000000000840 /* GPSFilterPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSFilterPipeline.swift; sourceTree = "<group>"; };
+		A1000001000000000000842 /* KalmanFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KalmanFilter.swift; sourceTree = "<group>"; };
+		A1000001000000000000844 /* HapticFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedback.swift; sourceTree = "<group>"; };
+		A1000001000000000000846 /* AnimationModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationModifiers.swift; sourceTree = "<group>"; };
+		A1000001000000000000848 /* HazardAlertBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardAlertBanner.swift; sourceTree = "<group>"; };
+		A1000001000000000000850 /* MapScreen+Overlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MapScreen+Overlays.swift"; sourceTree = "<group>"; };
+		A1000001000000000000852 /* TrailConditionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailConditionSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000854 /* WalkPolylineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkPolylineView.swift; sourceTree = "<group>"; };
+		A1000001000000000000856 /* InWalkMilestonePopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InWalkMilestonePopup.swift; sourceTree = "<group>"; };
+		A1000001000000000000858 /* LevelUpToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpToast.swift; sourceTree = "<group>"; };
+		A1000001000000000000860 /* WalkPhotoButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkPhotoButton.swift; sourceTree = "<group>"; };
+		A1000001000000000000862 /* MedicationSchedulerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationSchedulerService.swift; sourceTree = "<group>"; };
+		A1000001000000000000864 /* BreedAutocomplete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreedAutocomplete.swift; sourceTree = "<group>"; };
+		A1000001000000000000866 /* ClusterPoiSelectionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterPoiSelectionSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000868 /* RouteDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDetailScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000870 /* RouteLibraryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteLibraryScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000872 /* WalkHistoryDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryDetailScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000874 /* WalkHistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -609,6 +675,9 @@
 				A1000001000000000000610 /* LivestockField */,
 				A1000001000000000000611 /* Navigation */,
 				A1000001000000000000612 /* POI */,
+				A1000001000000000000800 /* Hazard */,
+				A1000001000000000000801 /* OffLead */,
+				A1000001000000000000802 /* Trail */,
 				A1000001000000000000162 /* Alert.swift */,
 				A1000001000000000000164 /* AutoReply.swift */,
 				A1000001000000000000166 /* Badge.swift */,
@@ -686,6 +755,7 @@
 				A1000001000000000000615 /* Network */,
 				A1000001000000000000616 /* POI */,
 				A1000001000000000000617 /* WalkingPaths */,
+				A1000001000000000000803 /* GPS */,
 				A1000001000000000000274 /* AnalyticsService.swift */,
 				A1000001000000000000276 /* AppUpdateChecker.swift */,
 				A1000001000000000000278 /* AuthService.swift */,
@@ -696,6 +766,9 @@
 				A1000001000000000000292 /* LocationTrackingService.swift */,
 				A1000001000000000000322 /* ShareService.swift */,
 				A1000001000000000000324 /* WalkTrackingService.swift */,
+				A1000001000000000000810 /* InstagramStoryAdapter.swift */,
+				A1000001000000000000812 /* NotificationService.swift */,
+				A1000001000000000000862 /* MedicationSchedulerService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -741,6 +814,7 @@
 				A1000001000000000000388 /* WalkPointsCalculator.swift */,
 				A1000001000000000000390 /* WoofWalkBranding.swift */,
 				A1000001000000000000644 /* ScreenshotAutomation.swift */,
+				A1000001000000000000844 /* HapticFeedback.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1017,6 +1091,8 @@
 				A1000001000000000000440 /* ChatMessageRow.swift */,
 				A1000001000000000000442 /* DateSeparator.swift */,
 				A1000001000000000000444 /* PhotoMessagePicker.swift */,
+				A1000001000000000000814 /* BusinessInboxScreen.swift */,
+				A1000001000000000000816 /* QuickReplySheet.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -1050,6 +1126,7 @@
 				A1000001000000000000458 /* DogStatsScreen.swift */,
 				A1000001000000000000460 /* MedicationFormView.swift */,
 				A1000001000000000000462 /* UnifiedDogFormView.swift */,
+				A1000001000000000000864 /* BreedAutocomplete.swift */,
 			);
 			path = Dog;
 			sourceTree = "<group>";
@@ -1084,6 +1161,7 @@
 				A1000001000000000000480 /* LeagueView.swift */,
 				A1000001000000000000482 /* MilestoneCelebration.swift */,
 				A1000001000000000000484 /* StreakBanner.swift */,
+				A1000001000000000000846 /* AnimationModifiers.swift */,
 			);
 			path = Gamification;
 			sourceTree = "<group>";
@@ -1127,6 +1205,13 @@
 				A1000001000000000000700 /* MapScreen+Controls.swift */,
 				A1000001000000000000702 /* MapScreen+Actions.swift */,
 				A1000001000000000000704 /* MapScreen+Sheets.swift */,
+				A1000001000000000000848 /* HazardAlertBanner.swift */,
+				A1000001000000000000850 /* MapScreen+Overlays.swift */,
+				A1000001000000000000852 /* TrailConditionSheet.swift */,
+				A1000001000000000000854 /* WalkPolylineView.swift */,
+				A1000001000000000000866 /* ClusterPoiSelectionSheet.swift */,
+				A1000001000000000000868 /* RouteDetailScreen.swift */,
+				A1000001000000000000870 /* RouteLibraryScreen.swift */,
 			);
 			path = Map;
 			sourceTree = "<group>";
@@ -1183,6 +1268,8 @@
 				A1000001000000000000560 /* DataManagementView.swift */,
 				A1000001000000000000562 /* PermissionsView.swift */,
 				A1000001000000000000564 /* SettingsView.swift */,
+				A1000001000000000000818 /* LanguageSelectionView.swift */,
+				A1000001000000000000820 /* RainModeSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1222,8 +1309,52 @@
 				A1000001000000000000596 /* WalkProgressCard.swift */,
 				A1000001000000000000598 /* WalkReportCardView.swift */,
 				A1000001000000000000600 /* WalkShareCard.swift */,
+				A1000001000000000000822 /* CompletionMapView.swift */,
+				A1000001000000000000824 /* LiveShareView.swift */,
+				A1000001000000000000826 /* PBShareCard.swift */,
+				A1000001000000000000828 /* StreakCompletionCard.swift */,
+				A1000001000000000000830 /* WalkAchievementCard.swift */,
+				A1000001000000000000856 /* InWalkMilestonePopup.swift */,
+				A1000001000000000000858 /* LevelUpToast.swift */,
+				A1000001000000000000860 /* WalkPhotoButton.swift */,
+				A1000001000000000000872 /* WalkHistoryDetailScreen.swift */,
+				A1000001000000000000874 /* WalkHistoryScreen.swift */,
 			);
 			path = Walk;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000800 /* Hazard */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000832 /* HazardReport.swift */,
+			);
+			path = Hazard;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000801 /* OffLead */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000834 /* OffLeadZone.swift */,
+			);
+			path = OffLead;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000802 /* Trail */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000836 /* TrailCondition.swift */,
+			);
+			path = Trail;
+			sourceTree = "<group>";
+		};
+		A1000001000000000000803 /* GPS */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000838 /* ElevationFilter.swift */,
+				A1000001000000000000840 /* GPSFilterPipeline.swift */,
+				A1000001000000000000842 /* KalmanFilter.swift */,
+			);
+			path = GPS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1565,6 +1696,39 @@
 				A1000001000000000000597 /* WalkProgressCard.swift in Sources */,
 				A1000001000000000000599 /* WalkReportCardView.swift in Sources */,
 				A1000001000000000000601 /* WalkShareCard.swift in Sources */,
+				A1000001000000000000811 /* InstagramStoryAdapter.swift in Sources */,
+				A1000001000000000000813 /* NotificationService.swift in Sources */,
+				A1000001000000000000815 /* BusinessInboxScreen.swift in Sources */,
+				A1000001000000000000817 /* QuickReplySheet.swift in Sources */,
+				A1000001000000000000819 /* LanguageSelectionView.swift in Sources */,
+				A1000001000000000000821 /* RainModeSettingsView.swift in Sources */,
+				A1000001000000000000823 /* CompletionMapView.swift in Sources */,
+				A1000001000000000000825 /* LiveShareView.swift in Sources */,
+				A1000001000000000000827 /* PBShareCard.swift in Sources */,
+				A1000001000000000000829 /* StreakCompletionCard.swift in Sources */,
+				A1000001000000000000831 /* WalkAchievementCard.swift in Sources */,
+				A1000001000000000000833 /* HazardReport.swift in Sources */,
+				A1000001000000000000835 /* OffLeadZone.swift in Sources */,
+				A1000001000000000000837 /* TrailCondition.swift in Sources */,
+				A1000001000000000000839 /* ElevationFilter.swift in Sources */,
+				A1000001000000000000841 /* GPSFilterPipeline.swift in Sources */,
+				A1000001000000000000843 /* KalmanFilter.swift in Sources */,
+				A1000001000000000000845 /* HapticFeedback.swift in Sources */,
+				A1000001000000000000847 /* AnimationModifiers.swift in Sources */,
+				A1000001000000000000849 /* HazardAlertBanner.swift in Sources */,
+				A1000001000000000000851 /* MapScreen+Overlays.swift in Sources */,
+				A1000001000000000000853 /* TrailConditionSheet.swift in Sources */,
+				A1000001000000000000855 /* WalkPolylineView.swift in Sources */,
+				A1000001000000000000857 /* InWalkMilestonePopup.swift in Sources */,
+				A1000001000000000000859 /* LevelUpToast.swift in Sources */,
+				A1000001000000000000861 /* WalkPhotoButton.swift in Sources */,
+				A1000001000000000000863 /* MedicationSchedulerService.swift in Sources */,
+				A1000001000000000000865 /* BreedAutocomplete.swift in Sources */,
+				A1000001000000000000867 /* ClusterPoiSelectionSheet.swift in Sources */,
+				A1000001000000000000869 /* RouteDetailScreen.swift in Sources */,
+				A1000001000000000000871 /* RouteLibraryScreen.swift in Sources */,
+				A1000001000000000000873 /* WalkHistoryDetailScreen.swift in Sources */,
+				A1000001000000000000875 /* WalkHistoryScreen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
