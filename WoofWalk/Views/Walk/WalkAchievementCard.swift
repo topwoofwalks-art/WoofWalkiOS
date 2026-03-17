@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum WalkAchievement: Identifiable {
+enum CompletionAchievement: Identifiable {
     case perfectRoute       // 95%+ adherence
     case routeMaster        // 85%+ adherence
     case speedDemon         // 10%+ faster than average
