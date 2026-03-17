@@ -142,7 +142,7 @@ struct FieldFormSheet: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color(.systemGray4), lineWidth: 1)
                 )
-                .onChange(of: notes) { _, newValue in
+                .onChange(of: notes) { newValue in
                     if newValue.count > 300 {
                         notes = String(newValue.prefix(300))
                     }
@@ -194,7 +194,7 @@ struct FieldFormSheet: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
             }
-            .onChange(of: selectedPhoto) { _, newValue in
+            .onChange(of: selectedPhoto) { newValue in
                 Task {
                     if let data = try? await newValue?.loadTransferable(type: Data.self) {
                         photoData = data

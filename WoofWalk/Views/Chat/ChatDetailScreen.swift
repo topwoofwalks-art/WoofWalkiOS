@@ -19,7 +19,7 @@ struct ChatDetailScreen: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 4) {
-                        ForEach(Array(viewModel.messages.enumerated()), id: \.element.id) { index, message in
+                        ForEach(Array(viewModel.messages.enumerated()), id: \.offset) { index, message in
                             let showDate = shouldShowDateSeparator(at: index)
                             let dateLabel = showDate ? dateLabelFor(message) : nil
 
@@ -29,7 +29,7 @@ struct ChatDetailScreen: View {
                                 showDateSeparator: showDate,
                                 dateLabel: dateLabel
                             )
-                            .id(message.id)
+                            .id(message.id ?? "")
                         }
                     }
                     .padding(.horizontal)

@@ -10,8 +10,7 @@ class WalkingPathViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var error: String?
     @Published var showPathOverlays: Bool = true
-    @Published var filterBySurface: Set<SurfaceType> = Set(SurfaceType.allCases)
-    @Published var filterByDifficulty: Set<Difficulty> = Set(Difficulty.allCases)
+    @Published var filterByPathType: Set<WalkingPath.PathType> = Set(WalkingPath.PathType.allCases)
 
     private var cancellables = Set<AnyCancellable>()
     private let radiusMeters: Double = 5000
@@ -45,7 +44,7 @@ class WalkingPathViewModel: ObservableObject {
         return path.qualityScore / 15.0 // Normalize to 0-1 range
     }
 
-    func getRecommendedPaths(for dogSize: DogSize, maxDifficulty: Difficulty = .moderate) -> [WalkingPath] {
+    func getRecommendedPaths(for dogSize: DogSize, maxPriority: Int = 5) -> [WalkingPath] {
         paths.filter { path in
             let qualityScore = getPathQualityScore(path)
             return qualityScore >= 0.5 && path.isPedestrian
@@ -77,39 +76,21 @@ class WalkingPathViewModel: ObservableObject {
         showPathOverlays.toggle()
     }
 
-    func toggleSurfaceFilter(_ surface: SurfaceType) {
-        if filterBySurface.contains(surface) {
-            filterBySurface.remove(surface)
+    func togglePathTypeFilter(_ pathType: WalkingPath.PathType) {
+        if filterByPathType.contains(pathType) {
+            filterByPathType.remove(pathType)
         } else {
-            filterBySurface.insert(surface)
-        }
-        applyFilters()
-    }
-
-    func toggleDifficultyFilter(_ difficulty: Difficulty) {
-        if filterByDifficulty.contains(difficulty) {
-            filterByDifficulty.remove(difficulty)
-        } else {
-            filterByDifficulty.insert(difficulty)
+            filterByPathType.insert(pathType)
         }
         applyFilters()
     }
 
     func clearFilters() {
-        filterBySurface = Set(SurfaceType.allCases)
-        filterByDifficulty = Set(Difficulty.allCases)
+        filterByPathType = Set(WalkingPath.PathType.allCases)
         applyFilters()
     }
 
     private func applyFilters() {
-    }
-
-    private func getDifficultyLevel(_ difficulty: Difficulty) -> Int {
-        switch difficulty {
-        case .easy: return 1
-        case .moderate: return 2
-        case .hard: return 3
-        }
     }
 
     private func haversineDistance(from: CLLocationCoordinate2D, to: CLLocationCoordinate2D) -> Double {
@@ -135,9 +116,4 @@ enum DogSize: String, Codable {
     case medium = "medium"
     case large = "large"
     case giant = "giant"
-}
-
-struct Coordinate: Codable, Equatable {
-    let lat: Double
-    let lng: Double
 }

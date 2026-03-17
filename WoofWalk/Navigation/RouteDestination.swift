@@ -14,7 +14,7 @@ struct RouteDestination: View {
         case .walkHistory:
             WalkHistoryView()
         case .stats:
-            StatsView()
+            ProfileStatsView()
         case .editProfile:
             EditProfileView(viewModel: ProfileViewModel())
         case .leaderboard:

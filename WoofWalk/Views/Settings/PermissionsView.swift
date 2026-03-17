@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreLocation
 import Photos
+import UserNotifications
 
 struct PermissionsView: View {
     @StateObject private var viewModel = PermissionsViewModel()
@@ -118,6 +119,7 @@ struct PermissionsView: View {
     }
 }
 
+@MainActor
 class PermissionsViewModel: ObservableObject {
     @Published var locationStatus: PermissionStatus = .notDetermined
     @Published var photoStatus: PermissionStatus = .notDetermined

@@ -21,107 +21,98 @@ struct GuidancePanelView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Current direction
-            HStack(spacing: 16) {
-                DirectionIcon(direction: direction, size: 24)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(currentInstruction)
-                        .font(.headline)
-                        .lineLimit(2)
-
-                    if distanceToNext > 0 {
-                        Text("in \(FormatUtils.formatDistance(distanceToNext))")
-                            .font(.subheadline)
-                            .foregroundColor(.turquoise60)
-                    }
-                }
-
-                Spacer()
-
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(16)
-
-            // Progress bar
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Rectangle()
-                        .fill(Color.neutral90)
-                    Rectangle()
-                        .fill(Color.turquoise60)
-                        .frame(width: geo.size.width * progress)
-                }
-            }
-            .frame(height: 4)
-
-            // Stats row
-            HStack(spacing: 20) {
-                VStack {
-                    Text(FormatUtils.formatDistance(remainingDistance))
-                        .font(.callout)
-                        .fontWeight(.bold)
-                    Text("Remaining")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                VStack {
-                    Text(FormatUtils.formatDuration(Int(remainingDuration)))
-                        .font(.callout)
-                        .fontWeight(.bold)
-                    Text("ETA")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-
-                VStack {
-                    Text(FormatUtils.formatDistance(walkDistance))
-                        .font(.callout)
-                        .fontWeight(.bold)
-                    Text("Walked")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                VStack {
-                    Text(FormatUtils.formatDurationCompact(Int(walkDuration)))
-                        .font(.callout)
-                        .fontWeight(.bold)
-                    Text("Time")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(12)
-
-            // Next instruction preview
-            if let next = nextInstruction {
-                Divider()
-                HStack {
-                    Text("Then:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(next)
-                        .font(.caption)
-                        .lineLimit(1)
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.neutral95)
-            }
+            currentDirectionRow
+            progressBar
+            statsRow
+            nextInstructionPreview
         }
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(.regularMaterial)
                 .shadow(radius: 4)
         )
+    }
+
+    // MARK: - Sub-views
+
+    private var currentDirectionRow: some View {
+        HStack(spacing: 16) {
+            DirectionIcon(direction: direction, size: 24)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(currentInstruction)
+                    .font(.headline)
+                    .lineLimit(2)
+
+                if distanceToNext > 0 {
+                    Text("in \(FormatUtils.formatDistance(distanceToNext))")
+                        .font(.subheadline)
+                        .foregroundColor(.turquoise60)
+                }
+            }
+
+            Spacer()
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(16)
+    }
+
+    private var progressBar: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(Color.neutral90)
+                Rectangle()
+                    .fill(Color.turquoise60)
+                    .frame(width: geo.size.width * progress)
+            }
+        }
+        .frame(height: 4)
+    }
+
+    private var statsRow: some View {
+        HStack(spacing: 20) {
+            statItem(value: FormatUtils.formatDistance(remainingDistance), label: "Remaining")
+            statItem(value: FormatUtils.formatDuration(Int(remainingDuration)), label: "ETA")
+            Spacer()
+            statItem(value: FormatUtils.formatDistance(walkDistance), label: "Walked")
+            statItem(value: FormatUtils.formatDurationCompact(Int(walkDuration)), label: "Time")
+        }
+        .padding(12)
+    }
+
+    private func statItem(value: String, label: String) -> some View {
+        VStack {
+            Text(value)
+                .font(.callout)
+                .fontWeight(.bold)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var nextInstructionPreview: some View {
+        if let next = nextInstruction {
+            Divider()
+            HStack {
+                Text("Then:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(next)
+                    .font(.caption)
+                    .lineLimit(1)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color.neutral95)
+        }
     }
 }

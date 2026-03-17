@@ -2,6 +2,7 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import AVFoundation
 
 @available(iOS 17.0, *)
 struct MapView: View {

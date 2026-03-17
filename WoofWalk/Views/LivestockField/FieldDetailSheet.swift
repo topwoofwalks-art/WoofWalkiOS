@@ -154,7 +154,7 @@ struct FieldDetailSheet: View {
                     .padding(8)
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
-                    .onChange(of: notes) { _, newValue in
+                    .onChange(of: notes) { newValue in
                         if newValue.count > 300 {
                             notes = String(newValue.prefix(300))
                         }

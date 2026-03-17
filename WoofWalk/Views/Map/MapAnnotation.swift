@@ -114,6 +114,7 @@ struct AnnotationCluster: Identifiable {
     }
 }
 
+@MainActor
 class AnnotationClusterManager: ObservableObject {
     @Published var clusters: [AnnotationCluster] = []
 

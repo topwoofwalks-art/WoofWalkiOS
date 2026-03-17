@@ -22,7 +22,7 @@ struct MockData {
                 votesDown: 2,
                 signalCount: 17,
                 decayedAt: nil,
-                polygon: [
+                polygonRaw: [
                     [-0.13, 51.50],
                     [-0.12, 51.50],
                     [-0.12, 51.51],
@@ -51,7 +51,7 @@ struct MockData {
                 votesDown: 1,
                 signalCount: 9,
                 decayedAt: nil,
-                polygon: [
+                polygonRaw: [
                     [-0.135, 51.505],
                     [-0.125, 51.505],
                     [-0.125, 51.515],
@@ -62,7 +62,7 @@ struct MockData {
                 osmLanduse: nil,
                 dwGrassProbability: 0.75,
                 dwCropsProbability: 0.1,
-                dwTreesProbabilities: 0.1,
+                dwTreesProbability: 0.1,
                 dwBuiltProbability: 0.02,
                 dwWaterProbability: 0.03,
                 dwLastUpdated: Date().addingTimeInterval(-172800).timeIntervalSince1970 * 1000
@@ -80,7 +80,7 @@ struct MockData {
                 votesDown: 2,
                 signalCount: 5,
                 decayedAt: nil,
-                polygon: [
+                polygonRaw: [
                     [-0.13, 51.50],
                     [-0.12, 51.50],
                     [-0.12, 51.51],

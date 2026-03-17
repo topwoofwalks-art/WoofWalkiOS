@@ -1,6 +1,7 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import AVFoundation
 
 struct MapScreen: View {
     @StateObject private var mapViewModel = MapViewModel()
@@ -919,6 +920,7 @@ struct LostDogInfoSheet: View {
     }
 }
 
+@MainActor
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     @Published var location: CLLocationCoordinate2D?
@@ -945,13 +947,17 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.requestAlwaysAuthorization()
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-        self.location = location.coordinate
+        Task { @MainActor in
+            self.location = location.coordinate
+        }
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
-        bearing = newHeading.trueHeading
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        Task { @MainActor in
+            bearing = newHeading.trueHeading
+        }
     }
 }
 
@@ -1002,6 +1008,7 @@ class RoutingViewModel: ObservableObject {
 }
 #endif
 
+@MainActor
 class WalkTrackingViewModel: ObservableObject {
     @Published var isWalkActive = false
     @Published var walkDistance: Double = 0
@@ -1031,6 +1038,7 @@ class WalkTrackingViewModel: ObservableObject {
     }
 }
 
+@MainActor
 class PooBagDropViewModel: ObservableObject {
     @Published var activeBagDrops: [PooBagDrop] = []
 

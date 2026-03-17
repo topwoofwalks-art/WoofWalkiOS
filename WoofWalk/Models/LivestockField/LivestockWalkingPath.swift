@@ -1,6 +1,12 @@
 import Foundation
 import CoreLocation
 
+/// Coordinate type used by LivestockWalkingPath (distinct from WalkingPath.Coordinate)
+struct Coordinate: Codable, Equatable {
+    let lat: Double
+    let lng: Double
+}
+
 struct LivestockWalkingPath: Identifiable, Codable, Equatable {
     let id: String
     let coordinates: [Coordinate]

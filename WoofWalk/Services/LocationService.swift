@@ -41,6 +41,7 @@ struct LocationUpdate {
     }
 }
 
+@MainActor
 class LocationService: NSObject, ObservableObject {
     static let shared = LocationService()
 
@@ -170,7 +171,7 @@ class LocationService: NSObject, ObservableObject {
 
         return try await withCheckedThrowingContinuation { continuation in
             nonisolated(unsafe) var hasReturned = false
-            var timeoutTask: Task<Void, Never>?
+            nonisolated(unsafe) var timeoutTask: Task<Void, Never>?
 
             let observer = locationUpdatePublisher
                 .first()
@@ -288,41 +289,46 @@ class LocationService: NSObject, ObservableObject {
 // MARK: - CLLocationManagerDelegate
 
 extension LocationService: CLLocationManagerDelegate {
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        updateAuthorizationStatus()
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        Task { @MainActor in
+            updateAuthorizationStatus()
+        }
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+        Task { @MainActor in
+            let coordinate = location.coordinate
+            currentLocation = coordinate
+            lastLocation = location
+            gpsQuality = GPSQuality.from(accuracy: location.horizontalAccuracy)
 
-        let coordinate = location.coordinate
-        currentLocation = coordinate
-        lastLocation = location
-        gpsQuality = GPSQuality.from(accuracy: location.horizontalAccuracy)
+            let update = LocationUpdate(
+                coordinate: coordinate,
+                altitude: location.altitude,
+                accuracy: location.horizontalAccuracy,
+                course: location.course,
+                speed: location.speed,
+                timestamp: location.timestamp
+            )
 
-        let update = LocationUpdate(
-            coordinate: coordinate,
-            altitude: location.altitude,
-            accuracy: location.horizontalAccuracy,
-            course: location.course,
-            speed: location.speed,
-            timestamp: location.timestamp
-        )
+            locationUpdatePublisher.send(update)
 
-        locationUpdatePublisher.send(update)
-
-        print("Location update: lat=\(coordinate.latitude), lng=\(coordinate.longitude), accuracy=\(location.horizontalAccuracy)m, GPS=\(gpsQuality)")
+            print("Location update: lat=\(coordinate.latitude), lng=\(coordinate.longitude), accuracy=\(location.horizontalAccuracy)m, GPS=\(gpsQuality)")
+        }
     }
 
-    func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
-        heading = newHeading
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        Task { @MainActor in
+            heading = newHeading
+        }
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location manager failed with error: \(error.localizedDescription)")
     }
 
-    func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         print("Did enter region: \(region.identifier)")
         NotificationCenter.default.post(
             name: .didEnterRegion,
@@ -331,7 +337,7 @@ extension LocationService: CLLocationManagerDelegate {
         )
     }
 
-    func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
         print("Did exit region: \(region.identifier)")
         NotificationCenter.default.post(
             name: .didExitRegion,
@@ -340,7 +346,7 @@ extension LocationService: CLLocationManagerDelegate {
         )
     }
 
-    func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
+    nonisolated func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
         print("Monitoring failed for region: \(region?.identifier ?? "unknown") - \(error.localizedDescription)")
     }
 }

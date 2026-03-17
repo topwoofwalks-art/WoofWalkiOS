@@ -48,7 +48,7 @@ struct LeaderboardView: View {
     private func leaderboardList(users: [UserProfile]) -> some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(Array(users.enumerated()), id: \.element.id) { index, user in
+                ForEach(Array(users.enumerated()), id: \.offset) { index, user in
                     LeaderboardRow(
                         rank: index + 1,
                         user: user,

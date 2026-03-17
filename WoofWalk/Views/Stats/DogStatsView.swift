@@ -1,3 +1,5 @@
+#if false
+// Disabled: depends on StatsViewModel which is #if false
 import SwiftUI
 import Charts
 
@@ -194,3 +196,4 @@ struct DogStatsView_Previews: PreviewProvider {
         }
     }
 }
+#endif

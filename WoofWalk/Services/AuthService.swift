@@ -44,6 +44,7 @@ enum AuthError: LocalizedError {
     }
 }
 
+@MainActor
 class AuthService: NSObject, ObservableObject {
     static let shared = AuthService()
 

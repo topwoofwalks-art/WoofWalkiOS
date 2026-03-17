@@ -20,105 +20,76 @@ struct PoiFilterSheet: View {
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
 
-                    HStack(spacing: 8) {
-                        Button("Special Places") {
-                            tempSelectedTypes = [.park, .church, .landscape, .dogPark]
-                        }
-                        .buttonStyle(.bordered)
-
-                        Button("Select All") {
-                            tempSelectedTypes = Set(PoiType.allCases)
-                        }
-                        .buttonStyle(.bordered)
-
-                        Button("Clear All") {
-                            tempSelectedTypes = []
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                    .padding(.horizontal)
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Special Places to Visit")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                            .padding(.horizontal)
-
-                        let specialPlaces: [PoiType] = [.park, .church, .landscape, .dogPark]
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            ForEach(specialPlaces, id: \.self) { type in
-                                PoiTypeFilterChip(
-                                    type: type,
-                                    isSelected: tempSelectedTypes.contains(type)
-                                ) {
-                                    toggleSelection(type)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Essential Amenities")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                            .padding(.horizontal)
-
-                        let essentials: [PoiType] = [.bin, .water, .amenity]
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            ForEach(essentials, id: \.self) { type in
-                                PoiTypeFilterChip(
-                                    type: type,
-                                    isSelected: tempSelectedTypes.contains(type)
-                                ) {
-                                    toggleSelection(type)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Safety & Wildlife")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                            .padding(.horizontal)
-
-                        let safety: [PoiType] = [.hazard, .livestock, .wildlife, .accessNote]
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                            ForEach(safety, id: \.self) { type in
-                                PoiTypeFilterChip(
-                                    type: type,
-                                    isSelected: tempSelectedTypes.contains(type)
-                                ) {
-                                    toggleSelection(type)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    Button {
-                        selectedTypes = tempSelectedTypes
-                        dismiss()
-                    } label: {
-                        Text(tempSelectedTypes.isEmpty ? "Show All POIs" : "Apply Filter (\(tempSelectedTypes.count))")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .padding()
+                    quickSelectButtons
+                    filterCategory(title: "Special Places to Visit", types: [.park, .church, .landscape, .dogPark])
+                    filterCategory(title: "Essential Amenities", types: [.bin, .water, .amenity])
+                    filterCategory(title: "Safety & Wildlife", types: [.hazard, .livestock, .wildlife, .accessNote])
+                    applyButton
                 }
             }
             .navigationTitle("Filter POIs")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Cancel") { dismiss() }
                 }
             }
         }
+    }
+
+    // MARK: - Sub-views
+
+    private var quickSelectButtons: some View {
+        HStack(spacing: 8) {
+            Button("Special Places") {
+                tempSelectedTypes = [.park, .church, .landscape, .dogPark]
+            }
+            .buttonStyle(.bordered)
+
+            Button("Select All") {
+                tempSelectedTypes = Set(PoiType.allCases)
+            }
+            .buttonStyle(.bordered)
+
+            Button("Clear All") {
+                tempSelectedTypes = []
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding(.horizontal)
+    }
+
+    private func filterCategory(title: String, types: [PoiType]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.blue)
+                .padding(.horizontal)
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(types, id: \.self) { type in
+                    PoiTypeFilterChip(
+                        type: type,
+                        isSelected: tempSelectedTypes.contains(type)
+                    ) {
+                        toggleSelection(type)
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private var applyButton: some View {
+        Button {
+            selectedTypes = tempSelectedTypes
+            dismiss()
+        } label: {
+            Text(tempSelectedTypes.isEmpty ? "Show All POIs" : "Apply Filter (\(tempSelectedTypes.count))")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .padding()
     }
 
     private func toggleSelection(_ type: PoiType) {

@@ -167,7 +167,7 @@ struct LivestockFieldTourDemo: View {
                 dimOpacity = 0.7
             }
         }
-        .onChange(of: currentStep) { _, newStep in
+        .onChange(of: currentStep) { newStep in
             if newStep < steps.count {
                 let step = steps[newStep]
                 if step.showDrawingPoints && step.pointCount > animatedPointCount {

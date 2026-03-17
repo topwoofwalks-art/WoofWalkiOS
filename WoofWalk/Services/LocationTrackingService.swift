@@ -2,9 +2,11 @@ import Foundation
 import CoreLocation
 import Combine
 import UIKit
+import UserNotifications
 
 /// Service for continuous location tracking during walks
 /// Handles foreground and background location updates
+@MainActor
 class LocationTrackingService: NSObject, ObservableObject {
     // MARK: - Published Properties
     @Published private(set) var currentLocation: CLLocation?
@@ -260,54 +262,58 @@ class LocationTrackingService: NSObject, ObservableObject {
 
 // MARK: - CLLocationManagerDelegate
 extension LocationTrackingService: CLLocationManagerDelegate {
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+        Task { @MainActor in
+            // Filter location
+            guard shouldAcceptLocation(location) else { return }
 
-        // Filter location
-        guard shouldAcceptLocation(location) else { return }
+            // Update properties
+            currentLocation = location
+            lastLocationUpdate = location.timestamp
 
-        // Update properties
-        currentLocation = location
-        lastLocationUpdate = location.timestamp
+            // Publish to subscribers
+            locationSubject.send(location)
 
-        // Publish to subscribers
-        locationSubject.send(location)
-
-        print("Location updated: (\(location.coordinate.latitude), \(location.coordinate.longitude)) - accuracy: \(location.horizontalAccuracy)m")
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location manager error: \(error.localizedDescription)")
-        self.error = error
-    }
-
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        let newStatus = manager.authorizationStatus
-        print("Authorization status changed: \(newStatus.rawValue)")
-
-        authorizationStatus = newStatus
-
-        switch newStatus {
-        case .authorizedAlways, .authorizedWhenInUse:
-            print("Location permission granted")
-        case .denied, .restricted:
-            print("Location permission denied")
-            if isTracking {
-                stopTracking()
-            }
-            error = LocationError.permissionDenied
-        case .notDetermined:
-            print("Location permission not determined")
-        @unknown default:
-            print("Unknown authorization status")
+            print("Location updated: (\(location.coordinate.latitude), \(location.coordinate.longitude)) - accuracy: \(location.horizontalAccuracy)m")
         }
     }
 
-    func locationManagerDidPauseLocationUpdates(_ manager: CLLocationManager) {
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location manager error: \(error.localizedDescription)")
+        Task { @MainActor in
+            self.error = error
+        }
+    }
+
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let newStatus = manager.authorizationStatus
+        print("Authorization status changed: \(newStatus.rawValue)")
+        Task { @MainActor in
+            authorizationStatus = newStatus
+
+            switch newStatus {
+            case .authorizedAlways, .authorizedWhenInUse:
+                print("Location permission granted")
+            case .denied, .restricted:
+                print("Location permission denied")
+                if isTracking {
+                    stopTracking()
+                }
+                error = LocationError.permissionDenied
+            case .notDetermined:
+                print("Location permission not determined")
+            @unknown default:
+                print("Unknown authorization status")
+            }
+        }
+    }
+
+    nonisolated func locationManagerDidPauseLocationUpdates(_ manager: CLLocationManager) {
         print("Location updates paused by system")
     }
 
-    func locationManagerDidResumeLocationUpdates(_ manager: CLLocationManager) {
+    nonisolated func locationManagerDidResumeLocationUpdates(_ manager: CLLocationManager) {
         print("Location updates resumed by system")
     }
 }

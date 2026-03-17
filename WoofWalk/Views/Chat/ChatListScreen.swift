@@ -8,7 +8,7 @@ struct ChatListScreen: View {
     var body: some View {
         NavigationStack {
             List(viewModel.chats) { chat in
-                NavigationLink(value: chat.id) {
+                NavigationLink(value: chat.id ?? "") {
                     ChatListRow(chat: chat, currentUserId: viewModel.currentUserId)
                 }
             }

@@ -31,6 +31,7 @@ struct BadgeWithStatus {
     let targetValue: Int
 }
 
+@MainActor
 class ProfileViewModel: ObservableObject {
     @Published var uiState: ProfileUiState = .loading
     @Published var badges: [BadgeWithStatus] = []
@@ -70,19 +71,15 @@ class ProfileViewModel: ObservableObject {
                         let totalDuration = try await self.statsRepository.getTotalDuration()
                         let totalWalks = try await self.statsRepository.getTotalWalkCount()
 
-                        await MainActor.run {
-                            self.uiState = .success(ProfileData(
-                                user: user,
-                                totalWalks: totalWalks,
-                                totalDistance: Int(totalDistance),
-                                totalTime: Int(totalDuration),
-                                contributions: 0
-                            ))
-                        }
+                        self.uiState = .success(ProfileData(
+                            user: user,
+                            totalWalks: totalWalks,
+                            totalDistance: Int(totalDistance),
+                            totalTime: Int(totalDuration),
+                            contributions: 0
+                        ))
                     } catch {
-                        await MainActor.run {
-                            self.uiState = .error(error.localizedDescription)
-                        }
+                        self.uiState = .error(error.localizedDescription)
                     }
                 }
             }
@@ -124,9 +121,7 @@ class ProfileViewModel: ObservableObject {
                             totalTimeMinutes: 0
                         )
 
-                        await MainActor.run {
-                            self.badges = self.checkBadgeUnlocks(user: user, stats: stats)
-                        }
+                        self.badges = self.checkBadgeUnlocks(user: user, stats: stats)
                     } catch {
                         print("Error observing badge progress: \(error)")
                     }
@@ -235,13 +230,9 @@ class ProfileViewModel: ObservableObject {
                     users = try await userRepository.getFriendsLeaderboard(friendIds: friendIds)
                 }
 
-                await MainActor.run {
-                    self.uiState = .leaderboardLoaded(users)
-                }
+                self.uiState = .leaderboardLoaded(users)
             } catch {
-                await MainActor.run {
-                    self.uiState = .error(error.localizedDescription)
-                }
+                self.uiState = .error(error.localizedDescription)
             }
         }
     }

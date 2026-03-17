@@ -15,7 +15,25 @@ struct WalkShareCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Map snapshot
+            mapSnapshot
+            VStack(spacing: 16) {
+                dogInfoHeader
+                statsRow
+                personalBestsRow
+                charityRow
+                brandingFooter
+            }
+            .padding(16)
+        }
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(radius: 4)
+    }
+
+    // MARK: - Sub-views
+
+    private var mapSnapshot: some View {
+        Group {
             if let mapImage = mapImage {
                 Image(uiImage: mapImage)
                     .resizable()
@@ -31,93 +49,94 @@ struct WalkShareCard: View {
                             .foregroundColor(.turquoise60)
                     }
             }
+        }
+    }
 
-            VStack(spacing: 16) {
-                // Dog names + date
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(dogNames.joined(separator: " & "))
-                            .font(.headline)
-                        Text(date, style: .date)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    if streakDays > 0 {
-                        HStack(spacing: 4) {
-                            Image(systemName: "flame.fill")
-                                .foregroundColor(.orange60)
-                            Text("\(streakDays)")
-                                .fontWeight(.bold)
-                        }
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(Color.orange90))
-                    }
+    private var dogInfoHeader: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(dogNames.joined(separator: " & "))
+                    .font(.headline)
+                Text(date, style: .date)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            if streakDays > 0 {
+                HStack(spacing: 4) {
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(.orange60)
+                    Text("\(streakDays)")
+                        .fontWeight(.bold)
                 }
+                .font(.caption)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Color.orange90))
+            }
+        }
+    }
 
-                // Main stats
-                HStack(spacing: 0) {
-                    shareStatColumn(value: FormatUtils.formatDistance(distance), label: "Distance")
-                    Divider().frame(height: 40)
-                    shareStatColumn(value: FormatUtils.formatDurationCompact(duration), label: "Duration")
-                    Divider().frame(height: 40)
-                    shareStatColumn(value: FormatUtils.formatPace(pace), label: "Pace")
-                    if steps > 0 {
-                        Divider().frame(height: 40)
-                        shareStatColumn(value: "\(steps)", label: "Steps")
-                    }
-                }
+    private var statsRow: some View {
+        HStack(spacing: 0) {
+            shareStatColumn(value: FormatUtils.formatDistance(distance), label: "Distance")
+            Divider().frame(height: 40)
+            shareStatColumn(value: FormatUtils.formatDurationCompact(duration), label: "Duration")
+            Divider().frame(height: 40)
+            shareStatColumn(value: FormatUtils.formatPace(pace), label: "Pace")
+            if steps > 0 {
+                Divider().frame(height: 40)
+                shareStatColumn(value: "\(steps)", label: "Steps")
+            }
+        }
+    }
 
-                // Personal bests
-                if !personalBests.isEmpty {
-                    HStack(spacing: 8) {
-                        ForEach(personalBests, id: \.self) { pb in
-                            HStack(spacing: 4) {
-                                Image(systemName: "trophy.fill")
-                                    .font(.caption2)
-                                    .foregroundColor(.yellow)
-                                Text(pb)
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Capsule().fill(Color.yellow.opacity(0.15)))
-                        }
-                    }
-                }
-
-                // Charity
-                if charityPoints > 0 {
+    @ViewBuilder
+    private var personalBestsRow: some View {
+        if !personalBests.isEmpty {
+            HStack(spacing: 8) {
+                ForEach(personalBests, id: \.self) { pb in
                     HStack(spacing: 4) {
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(.pink)
-                        Text("\(charityPoints) charity points donated")
-                            .font(.caption)
+                        Image(systemName: "trophy.fill")
+                            .font(.caption2)
+                            .foregroundColor(.yellow)
+                        Text(pb)
+                            .font(.caption2)
+                            .fontWeight(.medium)
                     }
-                }
-
-                // Branding
-                HStack {
-                    Spacer()
-                    HStack(spacing: 4) {
-                        Image(systemName: "pawprint.fill")
-                            .font(.caption)
-                            .foregroundColor(.turquoise60)
-                        Text("WoofWalk")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.turquoise60)
-                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.yellow.opacity(0.15)))
                 }
             }
-            .padding(16)
         }
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(radius: 4)
+    }
+
+    @ViewBuilder
+    private var charityRow: some View {
+        if charityPoints > 0 {
+            HStack(spacing: 4) {
+                Image(systemName: "heart.fill")
+                    .foregroundColor(.pink)
+                Text("\(charityPoints) charity points donated")
+                    .font(.caption)
+            }
+        }
+    }
+
+    private var brandingFooter: some View {
+        HStack {
+            Spacer()
+            HStack(spacing: 4) {
+                Image(systemName: "pawprint.fill")
+                    .font(.caption)
+                    .foregroundColor(.turquoise60)
+                Text("WoofWalk")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.turquoise60)
+            }
+        }
     }
 
     private func shareStatColumn(value: String, label: String) -> some View {

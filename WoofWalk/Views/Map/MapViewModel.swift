@@ -2,6 +2,7 @@ import SwiftUI
 import MapKit
 import Combine
 
+@MainActor
 class MapViewModel: ObservableObject {
     @Published var pois: [POI] = []
     @Published var filteredPOIs: [POI] = []
@@ -61,9 +62,7 @@ class MapViewModel: ObservableObject {
         Task {
             do {
                 let loadedPOIs = try await fetchPOIsFromAPI()
-                await MainActor.run {
-                    self.pois = loadedPOIs
-                }
+                self.pois = loadedPOIs
             } catch {
                 print("Failed to load POIs: \(error)")
             }

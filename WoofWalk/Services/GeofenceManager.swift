@@ -23,6 +23,7 @@ struct GeofenceRegion {
     }
 }
 
+@MainActor
 class GeofenceManager: ObservableObject {
     static let shared = GeofenceManager()
 

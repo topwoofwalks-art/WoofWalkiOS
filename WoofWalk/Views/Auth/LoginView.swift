@@ -16,110 +16,13 @@ struct LoginView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     Spacer(minLength: 60)
-
-                    VStack(spacing: 8) {
-                        Text("Welcome to WoofWalk")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-
-                        Text("Sign in to continue your walk")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.bottom, 16)
-
-                    VStack(spacing: 16) {
-                        CustomTextField(
-                            text: Binding(
-                                get: { viewModel.loginUiState.email },
-                                set: { viewModel.updateLoginEmail($0) }
-                            ),
-                            placeholder: "your@email.com",
-                            label: "Email",
-                            icon: "envelope",
-                            keyboardType: .emailAddress,
-                            error: viewModel.loginUiState.emailError
-                        )
-
-                        CustomPasswordField(
-                            text: Binding(
-                                get: { viewModel.loginUiState.password },
-                                set: { viewModel.updateLoginPassword($0) }
-                            ),
-                            placeholder: "Password",
-                            label: "Password",
-                            error: viewModel.loginUiState.passwordError
-                        )
-
-                        if let errorMessage = viewModel.loginUiState.errorMessage {
-                            Text(errorMessage)
-                                .font(.caption)
-                                .foregroundColor(.red)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-
-                        HStack {
-                            Spacer()
-                            Button(action: onNavigateToForgotPassword) {
-                                Text("Forgot password?")
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    VStack(spacing: 12) {
-                        PrimaryButton(
-                            title: "Sign In",
-                            isLoading: viewModel.loginUiState.isLoading,
-                            action: viewModel.login
-                        )
-                        .padding(.horizontal)
-
-                        if showBiometricButton && BiometricAuthManager.shared.hasStoredCredentials() {
-                            BiometricButton(action: {
-                                viewModel.signInWithBiometric()
-                            })
-                            .padding(.horizontal)
-                        }
-                    }
-
+                    loginHeader
+                    loginFormFields
+                    loginButtons
                     DividerWithText(text: "OR")
                         .padding(.horizontal)
-
-                    VStack(spacing: 12) {
-                        GoogleSignInButton(action: {
-                            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                               let rootViewController = windowScene.windows.first?.rootViewController {
-                                viewModel.signInWithGoogle(presentingViewController: rootViewController)
-                            }
-                        })
-                        .padding(.horizontal)
-
-                        AppleSignInButton(
-                            viewModel: viewModel,
-                            onSuccess: {
-                                onLoginSuccess()
-                            }
-                        )
-                        .frame(height: 50)
-                        .padding(.horizontal)
-                    }
-
-                    HStack {
-                        Text("Don't have an account?")
-                            .font(.body)
-                        Button(action: onNavigateToSignup) {
-                            Text("Sign Up")
-                                .font(.body)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    .padding(.top, 8)
-
+                    socialSignInSection
+                    signupLink
                     Spacer(minLength: 40)
                 }
             }
@@ -128,14 +31,117 @@ struct LoginView: View {
                 LoadingOverlay(message: "Signing in...")
             }
         }
-        .onAppear {
-            checkBiometricAvailability()
-        }
+        .onAppear { checkBiometricAvailability() }
         .onChange(of: viewModel.authState) { newState in
-            if case .authenticated = newState {
-                onLoginSuccess()
+            if case .authenticated = newState { onLoginSuccess() }
+        }
+    }
+
+    // MARK: - Sub-views
+
+    private var loginHeader: some View {
+        VStack(spacing: 8) {
+            Text("Welcome to WoofWalk")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(.blue)
+            Text("Sign in to continue your walk")
+                .font(.body)
+                .foregroundColor(.secondary)
+        }
+        .padding(.bottom, 16)
+    }
+
+    private var loginFormFields: some View {
+        VStack(spacing: 16) {
+            CustomTextField(
+                text: Binding(
+                    get: { viewModel.loginUiState.email },
+                    set: { viewModel.updateLoginEmail($0) }
+                ),
+                placeholder: "your@email.com",
+                label: "Email",
+                icon: "envelope",
+                keyboardType: .emailAddress,
+                error: viewModel.loginUiState.emailError
+            )
+
+            CustomPasswordField(
+                text: Binding(
+                    get: { viewModel.loginUiState.password },
+                    set: { viewModel.updateLoginPassword($0) }
+                ),
+                placeholder: "Password",
+                label: "Password",
+                error: viewModel.loginUiState.passwordError
+            )
+
+            if let errorMessage = viewModel.loginUiState.errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            HStack {
+                Spacer()
+                Button(action: onNavigateToForgotPassword) {
+                    Text("Forgot password?")
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
+                }
             }
         }
+        .padding(.horizontal)
+    }
+
+    private var loginButtons: some View {
+        VStack(spacing: 12) {
+            PrimaryButton(
+                title: "Sign In",
+                isLoading: viewModel.loginUiState.isLoading,
+                action: viewModel.login
+            )
+            .padding(.horizontal)
+
+            if showBiometricButton && BiometricAuthManager.shared.hasStoredCredentials() {
+                BiometricButton(action: { viewModel.signInWithBiometric() })
+                    .padding(.horizontal)
+            }
+        }
+    }
+
+    private var socialSignInSection: some View {
+        VStack(spacing: 12) {
+            GoogleSignInButton(action: {
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let rootViewController = windowScene.windows.first?.rootViewController {
+                    viewModel.signInWithGoogle(presentingViewController: rootViewController)
+                }
+            })
+            .padding(.horizontal)
+
+            AppleSignInButton(
+                viewModel: viewModel,
+                onSuccess: { onLoginSuccess() }
+            )
+            .frame(height: 50)
+            .padding(.horizontal)
+        }
+    }
+
+    private var signupLink: some View {
+        HStack {
+            Text("Don't have an account?")
+                .font(.body)
+            Button(action: onNavigateToSignup) {
+                Text("Sign Up")
+                    .font(.body)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.blue)
+            }
+        }
+        .padding(.top, 8)
     }
 
     private func checkBiometricAvailability() {

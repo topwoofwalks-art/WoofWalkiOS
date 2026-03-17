@@ -22,118 +22,7 @@ struct DogFormView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     dogPhotoSection()
-
-                    VStack(spacing: 16) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: "pawprint.fill")
-                                    .foregroundColor(.gray)
-                                    .frame(width: 24)
-                                TextField("Name", text: $name)
-                                    .onChange(of: name) { _ in
-                                        nameError = nil
-                                    }
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(nameError != nil ? Color.red : Color.clear, lineWidth: 1)
-                            )
-
-                            if let error = nameError {
-                                Text(error)
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                            }
-                        }
-
-                        HStack {
-                            Image(systemName: "list.bullet")
-                                .foregroundColor(.gray)
-                                .frame(width: 24)
-                            TextField("Breed (e.g., Golden Retriever)", text: $breed)
-                        }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-
-                        HStack {
-                            Image(systemName: "birthday.cake")
-                                .foregroundColor(.gray)
-                                .frame(width: 24)
-                            TextField("Age (years)", text: $age)
-                                .keyboardType(.numberPad)
-                                .onChange(of: age) { newValue in
-                                    age = newValue.filter { $0.isNumber }
-                                }
-                        }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Temperament")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-
-                            Menu {
-                                ForEach(temperamentOptions, id: \.self) { option in
-                                    Button(option) {
-                                        temperament = option
-                                    }
-                                }
-                            } label: {
-                                HStack {
-                                    Image(systemName: "heart.fill")
-                                        .foregroundColor(.gray)
-                                        .frame(width: 24)
-                                    Text(temperament)
-                                    Spacer()
-                                    Image(systemName: "chevron.down")
-                                        .foregroundColor(.gray)
-                                        .font(.caption)
-                                }
-                                .padding()
-                                .background(Color(.systemGray6))
-                                .cornerRadius(12)
-                            }
-                        }
-
-                        Toggle(isOn: $nervousDog) {
-                            HStack {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.orange)
-                                    .frame(width: 24)
-                                Text("Nervous Dog")
-                            }
-                        }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-
-                        if nervousDog {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Warning Note (Optional)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-
-                                HStack(alignment: .top) {
-                                    Image(systemName: "note.text")
-                                        .foregroundColor(.gray)
-                                        .frame(width: 24)
-                                        .padding(.top, 8)
-                                    TextEditor(text: $warningNote)
-                                        .frame(height: 80)
-                                        .scrollContentBackground(.hidden)
-                                }
-                                .padding()
-                                .background(Color(.systemGray6))
-                                .cornerRadius(12)
-                            }
-                        }
-                    }
+                    formFields
                 }
                 .padding()
             }
@@ -141,15 +30,10 @@ struct DogFormView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Cancel") { dismiss() }
                 }
-
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        saveDog()
-                    }
+                    Button("Save") { saveDog() }
                 }
             }
             .onAppear {
@@ -161,6 +45,138 @@ struct DogFormView: View {
                     nervousDog = dog.nervousDog
                     warningNote = dog.warningNote ?? ""
                 }
+            }
+        }
+    }
+
+    // MARK: - Form Fields
+
+    private var formFields: some View {
+        VStack(spacing: 16) {
+            nameField
+            breedField
+            ageField
+            temperamentPicker
+            nervousDogToggle
+            warningNoteField
+        }
+    }
+
+    private var nameField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "pawprint.fill")
+                    .foregroundColor(.gray)
+                    .frame(width: 24)
+                TextField("Name", text: $name)
+                    .onChange(of: name) { _ in nameError = nil }
+            }
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(nameError != nil ? Color.red : Color.clear, lineWidth: 1)
+            )
+
+            if let error = nameError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
+        }
+    }
+
+    private var breedField: some View {
+        HStack {
+            Image(systemName: "list.bullet")
+                .foregroundColor(.gray)
+                .frame(width: 24)
+            TextField("Breed (e.g., Golden Retriever)", text: $breed)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    private var ageField: some View {
+        HStack {
+            Image(systemName: "birthday.cake")
+                .foregroundColor(.gray)
+                .frame(width: 24)
+            TextField("Age (years)", text: $age)
+                .keyboardType(.numberPad)
+                .onChange(of: age) { newValue in
+                    age = newValue.filter { $0.isNumber }
+                }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    private var temperamentPicker: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Temperament")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Menu {
+                ForEach(temperamentOptions, id: \.self) { option in
+                    Button(option) { temperament = option }
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "heart.fill")
+                        .foregroundColor(.gray)
+                        .frame(width: 24)
+                    Text(temperament)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+            }
+        }
+    }
+
+    private var nervousDogToggle: some View {
+        Toggle(isOn: $nervousDog) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+                    .frame(width: 24)
+                Text("Nervous Dog")
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    @ViewBuilder
+    private var warningNoteField: some View {
+        if nervousDog {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Warning Note (Optional)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack(alignment: .top) {
+                    Image(systemName: "note.text")
+                        .foregroundColor(.gray)
+                        .frame(width: 24)
+                        .padding(.top, 8)
+                    TextEditor(text: $warningNote)
+                        .frame(height: 80)
+                        .scrollContentBackground(.hidden)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
             }
         }
     }

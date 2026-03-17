@@ -1,6 +1,7 @@
 import CoreLocation
 import Combine
 
+@MainActor
 class LocationPublisher {
     private let locationService: LocationService
     private var cancellables = Set<AnyCancellable>()
@@ -53,6 +54,7 @@ class LocationPublisher {
 
 // MARK: - Walk Tracking Publisher
 
+@MainActor
 class WalkTrackingLocationPublisher: ObservableObject {
     private let locationService: LocationService
     private var cancellables = Set<AnyCancellable>()

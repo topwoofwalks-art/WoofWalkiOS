@@ -370,7 +370,7 @@ class PoiEntity {
             voteDown: voteDown,
             regionCode: regionCode,
             expiresAt: nil,
-            access: AccessInfo(public: accessPublic, notes: accessNotes),
+            access: AccessInfo(isPublic: accessPublic, notes: accessNotes),
             streetAddress: streetAddress,
             locality: locality,
             administrativeArea: administrativeArea,
@@ -380,7 +380,7 @@ class PoiEntity {
 
     static func fromDomain(_ poi: Poi) -> PoiEntity {
         return PoiEntity(
-            id: poi.id ?? UUID().uuidString,
+            id: poi.id.isEmpty ? UUID().uuidString : poi.id,
             type: poi.type,
             title: poi.title,
             desc: poi.desc,
@@ -396,7 +396,7 @@ class PoiEntity {
             voteDown: poi.voteDown,
             regionCode: poi.regionCode,
             expiresAt: poi.expiresAt?.dateValue(),
-            accessPublic: poi.access?.public ?? true,
+            accessPublic: poi.access?.isPublic ?? true,
             accessNotes: poi.access?.notes ?? "",
             streetAddress: poi.streetAddress,
             locality: poi.locality,

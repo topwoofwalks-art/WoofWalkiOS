@@ -171,6 +171,7 @@ struct DataManagementView: View {
     }
 }
 
+@MainActor
 class DataManagementViewModel: ObservableObject {
     @Published var totalStorageUsed: Int64 = 0
     @Published var walkDataSize: Int64 = 0

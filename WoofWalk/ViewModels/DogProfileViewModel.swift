@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import Combine
 
+@MainActor
 class DogProfileViewModel: ObservableObject {
     @Published var name: String = ""
     @Published var breed: String = ""
@@ -70,14 +71,10 @@ class DogProfileViewModel: ObservableObject {
                 try await userRepository.addDogProfile(dog: dogProfile)
             }
 
-            await MainActor.run {
-                isLoading = false
-            }
+            isLoading = false
         } catch {
-            await MainActor.run {
-                isLoading = false
-                errorMessage = error.localizedDescription
-            }
+            isLoading = false
+            errorMessage = error.localizedDescription
             throw error
         }
     }
@@ -90,14 +87,10 @@ class DogProfileViewModel: ObservableObject {
 
         do {
             try await userRepository.removeDogProfile(dogId: dogId)
-            await MainActor.run {
-                isLoading = false
-            }
+            isLoading = false
         } catch {
-            await MainActor.run {
-                isLoading = false
-                errorMessage = error.localizedDescription
-            }
+            isLoading = false
+            errorMessage = error.localizedDescription
             throw error
         }
     }
@@ -110,15 +103,11 @@ class DogProfileViewModel: ObservableObject {
             // Simulate upload
             try await Task.sleep(nanoseconds: 1_000_000_000)
 
-            await MainActor.run {
-                self.photoUrl = "https://placeholder.url/\(UUID().uuidString).jpg"
-                isLoading = false
-            }
+            self.photoUrl = "https://placeholder.url/\(UUID().uuidString).jpg"
+            isLoading = false
         } catch {
-            await MainActor.run {
-                isLoading = false
-                errorMessage = "Failed to upload photo"
-            }
+            isLoading = false
+            errorMessage = "Failed to upload photo"
             throw error
         }
     }

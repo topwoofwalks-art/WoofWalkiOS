@@ -1,3 +1,5 @@
+#if false
+// Disabled: depends on StatsViewModel which is #if false
 import SwiftUI
 import Charts
 
@@ -460,3 +462,4 @@ struct StatsView_Previews: PreviewProvider {
         StatsView()
     }
 }
+#endif

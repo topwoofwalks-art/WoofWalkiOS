@@ -17,126 +17,14 @@ struct AddPoiSheet: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Type")
-                        .font(.headline)
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(PoiType.allCases, id: \.self) { type in
-                                PoiTypeChip(
-                                    type: type,
-                                    isSelected: viewModel.selectedType == type
-                                ) {
-                                    viewModel.selectedType = type
-                                }
-                            }
-                        }
-                    }
-
-                    TextField("Title", text: $viewModel.title)
-                        .textFieldStyle(.roundedBorder)
-
-                    VStack(alignment: .leading) {
-                        Text("Description")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-
-                        TextEditor(text: $viewModel.description)
-                            .frame(height: 100)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Photo (Optional)")
-                            .font(.headline)
-
-                        if let selectedImage = viewModel.selectedImage {
-                            ZStack(alignment: .topTrailing) {
-                                Image(uiImage: selectedImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(height: 200)
-                                    .clipped()
-                                    .cornerRadius(8)
-
-                                Button {
-                                    viewModel.selectedImage = nil
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.white)
-                                        .padding(8)
-                                        .background(Color.black.opacity(0.6))
-                                        .clipShape(Circle())
-                                }
-                                .padding(8)
-                            }
-                        } else {
-                            HStack(spacing: 8) {
-                                Button {
-                                    viewModel.showingCamera = true
-                                } label: {
-                                    Label("Camera", systemImage: "camera")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.bordered)
-
-                                PhotosPicker(
-                                    selection: $viewModel.selectedPhotoItem,
-                                    matching: .images
-                                ) {
-                                    Label("Gallery", systemImage: "photo")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Location")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Text(String(format: "%.6f, %.6f", location.latitude, location.longitude))
-                            .font(.body)
-                            .padding(12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
-                    }
-
-                    if let uploadProgress = viewModel.uploadProgress {
-                        VStack(alignment: .leading) {
-                            Text("Uploading photo... \(Int(uploadProgress * 100))%")
-                                .font(.caption)
-                                .foregroundColor(.blue)
-
-                            ProgressView(value: uploadProgress)
-                        }
-                    }
-
-                    if let error = viewModel.error {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                    }
-
-                    Button {
-                        Task {
-                            await viewModel.createPoi()
-                            if viewModel.success {
-                                dismiss()
-                            }
-                        }
-                    } label: {
-                        Text(viewModel.isLoading ? "Submitting..." : "Submit")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isLoading)
+                    typeSelector
+                    titleField
+                    descriptionField
+                    photoSection
+                    locationDisplay
+                    uploadProgress
+                    errorMessage
+                    submitButton
                 }
                 .padding()
             }
@@ -144,15 +32,153 @@ struct AddPoiSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Cancel") { dismiss() }
                 }
             }
             .sheet(isPresented: $viewModel.showingCamera) {
                 CameraPicker(image: $viewModel.selectedImage)
             }
         }
+    }
+
+    // MARK: - Sub-views
+
+    private var typeSelector: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Type")
+                .font(.headline)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(PoiType.allCases, id: \.self) { type in
+                        PoiTypeChip(
+                            type: type,
+                            isSelected: viewModel.selectedType == type
+                        ) {
+                            viewModel.selectedType = type
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var titleField: some View {
+        TextField("Title", text: $viewModel.title)
+            .textFieldStyle(.roundedBorder)
+    }
+
+    private var descriptionField: some View {
+        VStack(alignment: .leading) {
+            Text("Description")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            TextEditor(text: $viewModel.description)
+                .frame(height: 100)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
+        }
+    }
+
+    private var photoSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Photo (Optional)")
+                .font(.headline)
+
+            if let selectedImage = viewModel.selectedImage {
+                ZStack(alignment: .topTrailing) {
+                    Image(uiImage: selectedImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 200)
+                        .clipped()
+                        .cornerRadius(8)
+
+                    Button {
+                        viewModel.selectedImage = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Circle())
+                    }
+                    .padding(8)
+                }
+            } else {
+                HStack(spacing: 8) {
+                    Button {
+                        viewModel.showingCamera = true
+                    } label: {
+                        Label("Camera", systemImage: "camera")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+
+                    PhotosPicker(
+                        selection: $viewModel.selectedPhotoItem,
+                        matching: .images
+                    ) {
+                        Label("Gallery", systemImage: "photo")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+        }
+    }
+
+    private var locationDisplay: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Location")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            Text(String(format: "%.6f, %.6f", location.latitude, location.longitude))
+                .font(.body)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
+        }
+    }
+
+    @ViewBuilder
+    private var uploadProgress: some View {
+        if let progress = viewModel.uploadProgress {
+            VStack(alignment: .leading) {
+                Text("Uploading photo... \(Int(progress * 100))%")
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                ProgressView(value: progress)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var errorMessage: some View {
+        if let error = viewModel.error {
+            Text(error)
+                .font(.caption)
+                .foregroundColor(.red)
+        }
+    }
+
+    private var submitButton: some View {
+        Button {
+            Task {
+                await viewModel.createPoi()
+                if viewModel.success { dismiss() }
+            }
+        } label: {
+            Text(viewModel.isLoading ? "Submitting..." : "Submit")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(viewModel.isLoading)
     }
 }
 

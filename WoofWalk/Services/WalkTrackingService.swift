@@ -19,6 +19,7 @@ struct WalkTrackingState {
     var elevationGainMeters: Double = 0.0
 }
 
+@MainActor
 class WalkTrackingService: ObservableObject {
     static let shared = WalkTrackingService()
 
