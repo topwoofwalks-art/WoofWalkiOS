@@ -47,8 +47,12 @@ jobs:
           APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "WoofWalk.app" -path "*/Debug-iphonesimulator/*" | head -1)
           echo "path=$APP_PATH" >> $GITHUB_OUTPUT
           echo "Found app at: $APP_PATH"
+          ls -la "$APP_PATH" || echo "App not found!"
 
       - name: Boot simulator and capture screenshots
+        env:
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
         run: |
           mkdir -p screenshots
 
@@ -65,26 +69,57 @@ jobs:
             --cellularBars 4 \
             --wifiBars 3
 
-          # Install and launch
+          # Install app
           xcrun simctl install "iPhone 15" "${{ steps.app.outputs.path }}"
           sleep 2
-          xcrun simctl launch "iPhone 15" com.woofwalk.ios
+
+          # Launch in screenshot mode with credentials
+          xcrun simctl launch "iPhone 15" com.woofwalk.ios \
+            -screenshot-mode 2>&1 || true
+
+          # Also set env vars for the app via simctl spawn
+          # Note: simctl launch doesn't pass env vars, so the app reads from UserDefaults instead
+          # Let's use a different approach - write a plist with the creds
+          xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_EMAIL "$TEST_EMAIL"
+          xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_PASSWORD "$TEST_PASSWORD"
+
+          # Relaunch with screenshot mode
+          xcrun simctl terminate "iPhone 15" com.woofwalk.ios 2>/dev/null || true
+          sleep 1
+          xcrun simctl launch "iPhone 15" com.woofwalk.ios -screenshot-mode
+
+          # Wait for app to launch and show login
+          sleep 5
+          xcrun simctl io "iPhone 15" screenshot screenshots/01-login-screen.png
+          echo "Captured: Login screen"
+
+          # Wait for auto-sign-in (automation handles this)
+          sleep 10
+          xcrun simctl io "iPhone 15" screenshot screenshots/02-after-signin.png
+          echo "Captured: After sign-in"
+
+          # Wait for tab navigation (automation cycles through tabs)
           sleep 8
+          xcrun simctl io "iPhone 15" screenshot screenshots/03-map-tab.png
+          echo "Captured: Map tab"
 
-          # Capture screenshots
-          xcrun simctl io "iPhone 15" screenshot screenshots/01-launch.png
-          echo "Captured: Launch/Login screen"
+          sleep 8
+          xcrun simctl io "iPhone 15" screenshot screenshots/04-social-tab.png
+          echo "Captured: Social tab"
 
-          sleep 3
-          xcrun simctl io "iPhone 15" screenshot screenshots/02-after-delay.png
-          echo "Captured: After delay"
+          sleep 8
+          xcrun simctl io "iPhone 15" screenshot screenshots/05-discover-tab.png
+          echo "Captured: Discover tab"
 
-          xcrun simctl launch "iPhone 15" com.woofwalk.ios
-          sleep 3
-          xcrun simctl io "iPhone 15" screenshot screenshots/03-relaunch.png
-          echo "Captured: Relaunch"
+          sleep 8
+          xcrun simctl io "iPhone 15" screenshot screenshots/06-profile-tab.png
+          echo "Captured: Profile tab"
 
-          echo "=== Screenshots ==="
+          sleep 5
+          xcrun simctl io "iPhone 15" screenshot screenshots/07-final.png
+          echo "Captured: Final state"
+
+          echo "=== All screenshots ==="
           ls -la screenshots/
 
       - name: Upload screenshots
