@@ -164,51 +164,15 @@ struct POIFilterSheet: View {
     }
 
     private func displayName(for type: POI.POIType) -> String {
-        switch type {
-        case .bin: return "Dog Bins"
-        case .hazard: return "Hazards"
-        case .water: return "Water"
-        case .dogPark: return "Dog Parks"
-        case .park: return "Parks"
-        case .church: return "Churches"
-        case .landscape: return "Landscapes"
-        case .accessNote: return "Access Notes"
-        case .livestock: return "Livestock"
-        case .wildlife: return "Wildlife"
-        case .amenity: return "Amenities"
-        }
+        type.displayName
     }
 
     private func iconName(for type: POI.POIType) -> String {
-        switch type {
-        case .bin: return "trash.fill"
-        case .hazard: return "exclamationmark.triangle.fill"
-        case .water: return "drop.fill"
-        case .dogPark: return "figure.walk"
-        case .park: return "tree.fill"
-        case .church: return "building.2.fill"
-        case .landscape: return "photo.fill"
-        case .accessNote: return "info.circle.fill"
-        case .livestock: return "leaf.fill"
-        case .wildlife: return "hare.fill"
-        case .amenity: return "mappin.circle.fill"
-        }
+        type.iconName
     }
 
     private func iconColor(for type: POI.POIType) -> Color {
-        switch type {
-        case .bin: return .green
-        case .hazard: return .red
-        case .water: return .blue
-        case .dogPark: return .yellow
-        case .park: return .green.opacity(0.7)
-        case .church: return .pink
-        case .landscape: return .orange
-        case .accessNote: return .orange.opacity(0.7)
-        case .livestock: return .purple
-        case .wildlife: return .pink.opacity(0.8)
-        case .amenity: return .cyan
-        }
+        POIMarkerView.markerColor(for: type)
     }
 }
 

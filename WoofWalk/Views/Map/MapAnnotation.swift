@@ -7,7 +7,7 @@ struct POIMarkerView: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(markerColor)
+                .fill(Self.markerColor(for: poi.poiType))
                 .frame(width: 40, height: 40)
                 .shadow(radius: 3)
 
@@ -17,8 +17,8 @@ struct POIMarkerView: View {
         }
     }
 
-    private var markerColor: Color {
-        switch poi.poiType {
+    static func markerColor(for type: PoiType) -> Color {
+        switch type {
         case .bin:
             return .green
         case .hazard:
