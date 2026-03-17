@@ -20,6 +20,11 @@ class ChallengeRepository {
         return publisher.eraseToAnyPublisher()
     }
 
+    func getChallenge(byId challengeId: String) async throws -> Challenge? {
+        let doc = try await db.collection("challenges").document(challengeId).getDocument()
+        return try? doc.data(as: Challenge.self)
+    }
+
     func joinChallenge(_ challengeId: String) async throws {
         guard let uid = auth.currentUser?.uid else { return }
         let userDoc = try await db.collection("users").document(uid).getDocument()

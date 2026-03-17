@@ -27,6 +27,15 @@ struct UserSettings: Codable {
     var quietHoursStart: Int = 22
     var quietHoursEnd: Int = 7
     var enabledAlertTypes: Set<String> = ["hazard", "wildlife", "livestock"]
+
+    // Rain mode
+    var rainAutoDetection: Bool = true
+    var rainDetectionSensitivity: Int = 3
+    var rainFilterPreset: String = "heavy"
+    var rainTouchFiltering: Bool = true
+
+    // Language
+    var language: String = "en"
 }
 
 enum DistanceUnit: String, Codable, CaseIterable {

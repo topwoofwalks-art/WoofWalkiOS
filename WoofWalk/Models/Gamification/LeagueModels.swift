@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import FirebaseFirestore
 
 enum LeagueTier: String, Codable, CaseIterable {
@@ -11,6 +12,30 @@ enum LeagueTier: String, Codable, CaseIterable {
     case diamond = "DIAMOND"
 
     var displayName: String { rawValue.capitalized }
+
+    var tierEmoji: String {
+        switch self {
+        case .bronze: return "\u{1F949}"
+        case .silver: return "\u{1F948}"
+        case .gold: return "\u{1F947}"
+        case .sapphire: return "\u{1F48E}"
+        case .ruby: return "\u{2764}\u{FE0F}\u{200D}\u{1F525}"
+        case .emerald: return "\u{1F7E2}"
+        case .diamond: return "\u{1F48E}"
+        }
+    }
+
+    var tierGradientColors: [Color] {
+        switch self {
+        case .bronze: return [Color(hex: 0xCD7F32), Color(hex: 0x8B4513)]
+        case .silver: return [Color(hex: 0xC0C0C0), Color(hex: 0x808080)]
+        case .gold: return [Color(hex: 0xFFD700), Color(hex: 0xDAA520)]
+        case .sapphire: return [Color(hex: 0x0F52BA), Color(hex: 0x082567)]
+        case .ruby: return [Color(hex: 0xE0115F), Color(hex: 0x9B111E)]
+        case .emerald: return [Color(hex: 0x50C878), Color(hex: 0x006B3C)]
+        case .diamond: return [Color(hex: 0xB9F2FF), Color(hex: 0x7EC8E3)]
+        }
+    }
 
     var sortOrder: Int {
         switch self {

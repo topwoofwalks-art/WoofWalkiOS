@@ -69,7 +69,25 @@ struct SettingsView: View {
                     Text(theme.displayName).tag(theme)
                 }
             }
+
+            NavigationLink {
+                LanguageSelectionView()
+            } label: {
+                HStack {
+                    Label("Language", systemImage: "globe")
+                    Spacer()
+                    Text(languageDisplayName)
+                        .foregroundColor(.secondary)
+                }
+            }
         }
+    }
+
+    private var languageDisplayName: String {
+        let code = UserDefaults.standard.string(forKey: "appLanguage") ?? "en"
+        let names = ["en": "English", "es": "Spanish", "fr": "French", "de": "German",
+                     "it": "Italian", "pt": "Portuguese", "nl": "Dutch", "cy": "Welsh"]
+        return names[code] ?? "English"
     }
 
     private var walkSettingsSection: some View {
@@ -88,6 +106,12 @@ struct SettingsView: View {
             }
 
             Toggle("Background Tracking", isOn: $viewModel.settings.backgroundTracking)
+
+            NavigationLink {
+                RainModeSettingsView()
+            } label: {
+                Label("Rain Mode", systemImage: "cloud.rain")
+            }
         }
     }
 

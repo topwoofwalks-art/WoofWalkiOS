@@ -3,11 +3,20 @@ import FirebaseAuth
 import FirebaseFirestore
 import Combine
 
+enum FeedMode: String, CaseIterable, Identifiable {
+    case forYou = "For You"
+    case nearby = "Nearby"
+    case following = "Following"
+
+    var id: String { rawValue }
+}
+
 @MainActor
 class FeedViewModel: ObservableObject {
     @Published var posts: [Post] = []
     @Published var isLoading = false
     @Published var selectedPost: Post?
+    @Published var feedMode: FeedMode = .forYou
 
     private let db = Firestore.firestore()
     private let auth = Auth.auth()
@@ -15,32 +24,57 @@ class FeedViewModel: ObservableObject {
 
     init() { loadPosts() }
 
-    func loadPosts() {
-        isLoading = true
-        listener = db.collection("posts")
-            .order(by: "createdAt", descending: true)
-            .limit(to: 50)
-            .addSnapshotListener { [weak self] snapshot, error in
-                guard let self else { return }
-                self.isLoading = false
+    // MARK: - Feed Mode
 
-                if let error {
-                    let nsError = error as NSError
-                    // Firestore error code 9 = FAILED_PRECONDITION (missing index)
-                    if nsError.domain == "FIRFirestoreErrorDomain" && nsError.code == 9 {
-                        print("[Feed] Index missing for ordered query, falling back to client-side sort")
-                        self.loadPostsUnsorted()
-                    } else {
-                        print("[Feed] Snapshot error: \(error.localizedDescription)")
-                    }
-                    return
-                }
-
-                self.posts = (snapshot?.documents ?? []).compactMap { try? $0.data(as: Post.self) }
-            }
+    func switchMode(_ mode: FeedMode) {
+        guard mode != feedMode else { return }
+        feedMode = mode
+        listener?.remove()
+        posts = []
+        loadPosts()
     }
 
-    /// Fallback: fetch without orderBy and sort client-side when the descending index is missing.
+    // MARK: - Loading
+
+    func loadPosts() {
+        isLoading = true
+
+        var query: Query = db.collection("posts")
+            .order(by: "createdAt", descending: true)
+            .limit(to: 50)
+
+        // Future: apply mode-specific filters
+        // For now all modes show the same posts to keep things working
+        switch feedMode {
+        case .forYou:
+            break // default ordering
+        case .nearby:
+            // TODO: filter by geohash proximity once location is available
+            break
+        case .following:
+            // TODO: filter by followed user IDs
+            break
+        }
+
+        listener = query.addSnapshotListener { [weak self] snapshot, error in
+            guard let self else { return }
+            self.isLoading = false
+
+            if let error {
+                let nsError = error as NSError
+                if nsError.domain == "FIRFirestoreErrorDomain" && nsError.code == 9 {
+                    print("[Feed] Index missing for ordered query, falling back to client-side sort")
+                    self.loadPostsUnsorted()
+                } else {
+                    print("[Feed] Snapshot error: \(error.localizedDescription)")
+                }
+                return
+            }
+
+            self.posts = (snapshot?.documents ?? []).compactMap { try? $0.data(as: Post.self) }
+        }
+    }
+
     private func loadPostsUnsorted() {
         listener?.remove()
         listener = db.collection("posts")
@@ -63,6 +97,38 @@ class FeedViewModel: ObservableObject {
         listener?.remove()
         loadPosts()
     }
+
+    // MARK: - Reactions
+
+    func toggleReaction(_ post: Post, type: ReactionType) {
+        guard let uid = auth.currentUser?.uid, let postId = post.id else { return }
+        let key = type.firestoreKey
+        let docRef = db.collection("posts").document(postId)
+
+        Task {
+            let existingReaction = post.reactionBy?[uid]
+
+            if existingReaction == key {
+                // Remove reaction
+                try? await docRef.updateData([
+                    "reactionBy.\(uid)": FieldValue.delete(),
+                    "reactions.\(key)": FieldValue.increment(Int64(-1))
+                ])
+            } else {
+                var updates: [String: Any] = [
+                    "reactionBy.\(uid)": key,
+                    "reactions.\(key)": FieldValue.increment(Int64(1))
+                ]
+                // Decrement previous reaction if switching
+                if let prev = existingReaction {
+                    updates["reactions.\(prev)"] = FieldValue.increment(Int64(-1))
+                }
+                try? await docRef.updateData(updates)
+            }
+        }
+    }
+
+    // MARK: - Legacy like (maps to kudos reaction)
 
     func toggleLike(_ post: Post) {
         guard let uid = auth.currentUser?.uid else { return }

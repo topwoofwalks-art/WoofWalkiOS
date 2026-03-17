@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @State private var showEditProfile = false
+    @State private var showLogoutAlert = false
 
     var body: some View {
         NavigationView {
@@ -16,7 +17,11 @@ struct ProfileView: View {
                     case .success(let data):
                         profileHeader(user: data.user)
 
+                        walkStreakCard(user: data.user)
+
                         statsGrid(data: data)
+
+                        walkHistoryPreview()
 
                         weeklyActivityChart()
 
@@ -25,6 +30,10 @@ struct ProfileView: View {
                         badgesSection()
 
                         gamificationSection()
+
+                        portalLinkCard()
+
+                        logoutButton()
 
                     case .error(let message):
                         VStack(spacing: 16) {
@@ -61,8 +70,18 @@ struct ProfileView: View {
             .sheet(isPresented: $showEditProfile) {
                 EditProfileView(viewModel: viewModel)
             }
+            .alert("Log Out", isPresented: $showLogoutAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Log Out", role: .destructive) {
+                    try? AuthService.shared.signOut()
+                }
+            } message: {
+                Text("Are you sure you want to log out?")
+            }
         }
     }
+
+    // MARK: - Profile Header with League Tier Badge
 
     private func profileHeader(user: UserProfile) -> some View {
         VStack(spacing: 16) {
@@ -98,12 +117,15 @@ struct ProfileView: View {
                             .font(.headline)
                     }
 
-                    HStack(spacing: 4) {
-                        Image(systemName: "pawprint.fill")
-                            .foregroundColor(.orange)
-                        Text("\(user.pawPoints) points")
-                            .font(.headline)
-                    }
+                    // League tier badge
+                    leagueTierBadge(tier: user.leagueTier)
+                }
+
+                HStack(spacing: 4) {
+                    Image(systemName: "pawprint.fill")
+                        .foregroundColor(.orange)
+                    Text("\(user.pawPoints) points")
+                        .font(.headline)
                 }
             }
         }
@@ -113,8 +135,101 @@ struct ProfileView: View {
         .shadow(radius: 2)
     }
 
+    private func leagueTierBadge(tier: String?) -> some View {
+        let resolvedTier = LeagueTier(rawValue: tier ?? "") ?? .bronze
+        let color = leagueTierColor(resolvedTier)
+        let name = resolvedTier.displayName
+
+        return HStack(spacing: 4) {
+            Image(systemName: "shield.fill")
+                .foregroundColor(color)
+            Text(name)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(color)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(color.opacity(0.15))
+        .cornerRadius(8)
+    }
+
+    private func leagueTierColor(_ tier: LeagueTier) -> Color {
+        switch tier {
+        case .bronze: return Color(hex: 0xCD7F32)
+        case .silver: return Color(hex: 0xC0C0C0)
+        case .gold: return Color(hex: 0xFFD700)
+        case .sapphire: return Color(hex: 0x0F52BA)
+        case .ruby: return Color(hex: 0xE0115F)
+        case .emerald: return Color(hex: 0x50C878)
+        case .diamond: return Color(hex: 0xB9F2FF)
+        }
+    }
+
+    // MARK: - Walk Streak Card
+
+    private func walkStreakCard(user: UserProfile) -> some View {
+        let streak = user.walkStreak ?? WalkStreak(currentStreak: 5, longestStreak: 14, freezesAvailable: 2)
+
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Walk Streak")
+                .font(.headline)
+
+            HStack(spacing: 20) {
+                VStack(spacing: 4) {
+                    Text("\u{1F525}")
+                        .font(.title2)
+                    Text("\(streak.currentStreak)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Text("Current")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+
+                VStack(spacing: 4) {
+                    Text("\u{1F3C6}")
+                        .font(.title2)
+                    Text("\(streak.longestStreak)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Text("Best")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+
+                if streak.freezesAvailable > 0 {
+                    VStack(spacing: 4) {
+                        Text("\u{2744}\u{FE0F}")
+                            .font(.title2)
+                        Text("\(streak.freezesAvailable)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Text("Freezes")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.orange.opacity(0.1))
+            )
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(radius: 2)
+    }
+
+    // MARK: - Stats Grid (expanded to 6 items)
+
     private func statsGrid(data: ProfileData) -> some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
             StatCard(
                 title: "Walks",
                 value: "\(data.totalWalks)",
@@ -137,13 +252,100 @@ struct ProfileView: View {
             )
 
             StatCard(
+                title: "Points",
+                value: "\(data.user.pawPoints)",
+                icon: "star.fill",
+                color: .purple
+            )
+
+            StatCard(
                 title: "Contributions",
                 value: "\(data.contributions)",
                 icon: "star",
-                color: .purple
+                color: .pink
+            )
+
+            StatCard(
+                title: "Badges",
+                value: "\(data.user.badges.count)",
+                icon: "rosette",
+                color: .indigo
             )
         }
     }
+
+    // MARK: - Walk History Preview
+
+    private func walkHistoryPreview() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Recent Walks")
+                    .font(.headline)
+                Spacer()
+                NavigationLink(destination: WalkHistoryView()) {
+                    Text("View All")
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
+                }
+            }
+
+            if viewModel.recentWalks.isEmpty {
+                // Placeholder data when no real walks are available
+                ForEach(placeholderWalks, id: \.id) { walk in
+                    walkHistoryMiniCard(
+                        distance: walk.distance,
+                        duration: walk.duration,
+                        date: walk.date
+                    )
+                }
+            } else {
+                ForEach(viewModel.recentWalks.prefix(3), id: \.id) { walk in
+                    walkHistoryMiniCard(
+                        distance: walk.distance,
+                        duration: walk.duration,
+                        date: walk.date
+                    )
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(radius: 2)
+    }
+
+    private func walkHistoryMiniCard(distance: String, duration: String, date: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "pawprint.circle.fill")
+                .font(.title2)
+                .foregroundColor(.blue)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(date)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                HStack(spacing: 12) {
+                    Label(distance, systemImage: "arrow.left.arrow.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Label(duration, systemImage: "clock")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    // MARK: - Weekly Activity Chart
 
     private func weeklyActivityChart() -> some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -174,6 +376,8 @@ struct ProfileView: View {
         .shadow(radius: 2)
     }
 
+    // MARK: - Dogs Section
+
     private func dogsSection(dogs: [DogProfile]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("My Dogs")
@@ -198,6 +402,8 @@ struct ProfileView: View {
         .shadow(radius: 2)
     }
 
+    // MARK: - Badges Section
+
     private func badgesSection() -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Badges")
@@ -220,6 +426,8 @@ struct ProfileView: View {
         .cornerRadius(16)
         .shadow(radius: 2)
     }
+
+    // MARK: - Gamification Section
 
     private func gamificationSection() -> some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -250,10 +458,99 @@ struct ProfileView: View {
         .shadow(radius: 2)
     }
 
+    // MARK: - Portal Link Card
+
+    private func portalLinkCard() -> some View {
+        Button(action: {
+            if let url = URL(string: "https://woofwalk.app") {
+                UIApplication.shared.open(url)
+            }
+        }) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("WoofWalk Portal")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    Text("Manage bookings, invoices & more")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "arrow.up.right.square")
+                    .font(.title2)
+                    .foregroundColor(.blue)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+            )
+            .shadow(radius: 2)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Logout Button
+
+    private func logoutButton() -> some View {
+        Button(action: { showLogoutAlert = true }) {
+            HStack {
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                Text("Log Out")
+            }
+            .foregroundColor(.red)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
+            )
+            .shadow(radius: 2)
+        }
+        .padding(.bottom, 20)
+    }
+
+    // MARK: - Helpers
+
     private func dayAbbreviation(index: Int) -> String {
         ["S", "M", "T", "W", "T", "F", "S"][index]
     }
+
+    // Placeholder walk data for when no real walks exist
+    private var placeholderWalks: [PlaceholderWalk] {
+        [
+            PlaceholderWalk(id: "1", distance: "2.3 km", duration: "35 min", date: "Today"),
+            PlaceholderWalk(id: "2", distance: "1.8 km", duration: "28 min", date: "Yesterday"),
+            PlaceholderWalk(id: "3", distance: "3.1 km", duration: "45 min", date: "Mar 15"),
+        ]
+    }
 }
+
+// MARK: - Placeholder Walk Model
+
+private struct PlaceholderWalk: Identifiable {
+    let id: String
+    let distance: String
+    let duration: String
+    let date: String
+}
+
+// MARK: - Recent Walk Display Model
+
+struct RecentWalkDisplay: Identifiable {
+    let id: String
+    let distance: String
+    let duration: String
+    let date: String
+}
+
+// MARK: - Supporting Views
 
 struct StatCard: View {
     let title: String
@@ -268,15 +565,18 @@ struct StatCard: View {
                 .foregroundColor(color)
 
             Text(value)
-                .font(.title2)
+                .font(.title3)
                 .fontWeight(.bold)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
 
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding()
+        .padding(.vertical, 12)
+        .padding(.horizontal, 4)
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(radius: 2)
@@ -294,13 +594,13 @@ struct DogCard: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
-                    Text("🐕")
+                    Text("\u{1F415}")
                         .font(.largeTitle)
                 }
                 .frame(width: 50, height: 50)
                 .clipShape(Circle())
             } else {
-                Text("🐕")
+                Text("\u{1F415}")
                     .font(.largeTitle)
                     .frame(width: 50, height: 50)
                     .background(Color(.systemGray6))
@@ -311,7 +611,7 @@ struct DogCard: View {
                 Text(dog.name)
                     .font(.headline)
 
-                Text("\(dog.breed) • \(dog.age) years")
+                Text("\(dog.breed) \u{2022} \(dog.age) years")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 

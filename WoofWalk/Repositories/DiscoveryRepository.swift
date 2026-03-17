@@ -22,6 +22,21 @@ class DiscoveryRepository {
 
     func getProviderDetails(id: String) async throws -> ServiceProviderLite? {
         let doc = try await db.collection("businesses").document(id).getDocument()
-        return try? doc.data(as: ServiceProviderLite.self)
+        var provider = try? doc.data(as: ServiceProviderLite.self)
+        provider?.id = doc.documentID
+        return provider
+    }
+
+    func getProviderReviews(providerId: String) async throws -> [ProviderReview] {
+        let snapshot = try await db.collection("businesses").document(providerId)
+            .collection("reviews")
+            .order(by: "date", descending: true)
+            .limit(to: 20)
+            .getDocuments()
+        return snapshot.documents.compactMap { doc in
+            var review = try? doc.data(as: ProviderReview.self)
+            review?.id = doc.documentID
+            return review
+        }
     }
 }

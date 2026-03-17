@@ -6,22 +6,50 @@ struct FeedScreen: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(viewModel.posts) { post in
-                        WalkPostCard(
-                            post: post,
-                            onLike: { viewModel.toggleLike(post) },
-                            onComment: { viewModel.selectedPost = post },
-                            onShare: {}
-                        )
-                    }
-
-                    if viewModel.isLoading {
-                        ProgressView().padding()
+            VStack(spacing: 0) {
+                // Tab picker
+                Picker("Feed", selection: $viewModel.feedMode) {
+                    ForEach(FeedMode.allCases) { mode in
+                        Text(mode.rawValue).tag(mode)
                     }
                 }
+                .pickerStyle(.segmented)
                 .padding(.horizontal)
+                .padding(.vertical, 8)
+                .onChange(of: viewModel.feedMode) { _, newMode in
+                    viewModel.switchMode(newMode)
+                }
+
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(viewModel.posts) { post in
+                            WalkPostCard(
+                                post: post,
+                                onReaction: { type in
+                                    viewModel.toggleReaction(post, type: type)
+                                },
+                                onComment: { viewModel.selectedPost = post },
+                                onShare: {}
+                            )
+                        }
+
+                        if viewModel.isLoading {
+                            ProgressView().padding()
+                        }
+
+                        if !viewModel.isLoading && viewModel.posts.isEmpty {
+                            ContentUnavailableView(
+                                "No Posts Yet",
+                                systemImage: "text.bubble",
+                                description: Text("Be the first to share a walk!")
+                            )
+                            .padding(.top, 60)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)
+                }
+                .refreshable { viewModel.refresh() }
             }
             .navigationTitle("Feed")
             .toolbar {
@@ -40,7 +68,6 @@ struct FeedScreen: View {
             .sheet(item: $viewModel.selectedPost) { post in
                 PostDetailScreen(post: post)
             }
-            .refreshable { viewModel.refresh() }
         }
     }
 }

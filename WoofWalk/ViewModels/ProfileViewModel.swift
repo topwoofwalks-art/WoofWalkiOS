@@ -38,6 +38,7 @@ class ProfileViewModel: ObservableObject {
     @Published var userProfile: UserProfile?
     @Published var friends: [UserProfile] = []
     @Published var weeklyWalkData: [Int] = [0, 0, 0, 0, 0, 0, 0]
+    @Published var recentWalks: [RecentWalkDisplay] = []
 
     private let userRepository: UserRepository
     private let statsRepository: StatsRepository

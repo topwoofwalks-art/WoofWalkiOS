@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 struct WalkCompletionScreen: View {
     let distance: Double
@@ -9,27 +10,84 @@ struct WalkCompletionScreen: View {
     let pointsEarned: Int
     let personalBest: PersonalBestResult?
     let streakDays: Int
+    let freezeCount: Int
     let milestones: [DogMilestone]
+    let achievements: [WalkAchievement]
+    let trackPoints: [CLLocationCoordinate2D]
     let mapImage: UIImage?
     let onShare: () -> Void
     let onDone: () -> Void
 
     @State private var showConfetti = true
     @State private var revealStats = false
+    @State private var displayedPoints: Int = 0
+
+    init(
+        distance: Double,
+        duration: Int,
+        pace: Double,
+        steps: Int,
+        dogNames: [String],
+        pointsEarned: Int,
+        personalBest: PersonalBestResult?,
+        streakDays: Int,
+        freezeCount: Int = 0,
+        milestones: [DogMilestone],
+        achievements: [WalkAchievement] = [],
+        trackPoints: [CLLocationCoordinate2D] = [],
+        mapImage: UIImage?,
+        onShare: @escaping () -> Void,
+        onDone: @escaping () -> Void
+    ) {
+        self.distance = distance
+        self.duration = duration
+        self.pace = pace
+        self.steps = steps
+        self.dogNames = dogNames
+        self.pointsEarned = pointsEarned
+        self.personalBest = personalBest
+        self.streakDays = streakDays
+        self.freezeCount = freezeCount
+        self.milestones = milestones
+        self.achievements = achievements
+        self.trackPoints = trackPoints
+        self.mapImage = mapImage
+        self.onShare = onShare
+        self.onDone = onDone
+    }
 
     var body: some View {
         ZStack {
             ScrollView {
                 VStack(spacing: 24) {
                     completionHeader
-                    pointsBadge
-                    streakBadge
+
+                    if !trackPoints.isEmpty {
+                        CompletionMapSection(trackPoints: trackPoints)
+                    }
+
+                    animatedPointsBadge
+
+                    if streakDays > 0 {
+                        StreakCompletionCard(
+                            streakDays: streakDays,
+                            freezeCount: freezeCount
+                        )
+                    }
+
+                    if !achievements.isEmpty {
+                        achievementsSection
+                    }
+
                     statsCard
                     milestonesList
                     actionButtons
                 }
             }
             confettiOverlay
+        }
+        .onAppear {
+            animatePoints()
         }
     }
 
@@ -49,26 +107,33 @@ struct WalkCompletionScreen: View {
         .padding(.top, 20)
     }
 
-    private var pointsBadge: some View {
+    private var animatedPointsBadge: some View {
         HStack {
             Image(systemName: "pawprint.fill")
                 .foregroundColor(.turquoise60)
-            Text("+\(pointsEarned) Paw Points")
+            Text("+\(displayedPoints) Paw Points")
                 .font(.title3.bold())
                 .foregroundColor(.turquoise60)
+                .contentTransition(.numericText(countsDown: false))
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.turquoise90.opacity(0.3)))
     }
 
-    @ViewBuilder
-    private var streakBadge: some View {
-        if streakDays > 0 {
-            HStack(spacing: 8) {
-                Image(systemName: "flame.fill")
-                    .foregroundColor(.orange)
-                Text("\(streakDays) day streak!")
-                    .font(.headline)
+    private var achievementsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Achievements")
+                .font(.headline)
+                .padding(.horizontal)
+
+            ForEach(Array(achievements.enumerated()), id: \.element.id) { index, achievement in
+                WalkAchievementCard(achievement: achievement)
+                    .padding(.horizontal)
+                    .animation(
+                        .spring(response: 0.5, dampingFraction: 0.6)
+                            .delay(Double(index) * 0.15),
+                        value: achievements.count
+                    )
             }
         }
     }
@@ -135,6 +200,27 @@ struct WalkCompletionScreen: View {
                         withAnimation { showConfetti = false }
                     }
                 }
+        }
+    }
+
+    // MARK: - Animation
+
+    private func animatePoints() {
+        let totalDuration: Double = 0.8
+        let steps = min(pointsEarned, 40)
+        guard steps > 0 else {
+            displayedPoints = pointsEarned
+            return
+        }
+        let interval = totalDuration / Double(steps)
+
+        for i in 1...steps {
+            let value = Int(Double(pointsEarned) * Double(i) / Double(steps))
+            DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i)) {
+                withAnimation(.easeOut(duration: 0.05)) {
+                    displayedPoints = value
+                }
+            }
         }
     }
 }

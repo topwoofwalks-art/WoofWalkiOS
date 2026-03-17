@@ -15,8 +15,42 @@ struct ServiceProviderLite: Identifiable, Codable {
     var acceptingNewClients: Bool
     var isExternal: Bool
 
-    init(id: String = UUID().uuidString, name: String = "", photoUrl: String? = nil, rating: Double? = nil, reviewCount: Int? = nil, priceRange: String? = nil, services: [String] = [], distance: Double? = nil, hasBackgroundCheck: Bool = false, hasInsurance: Bool = false, acceptingNewClients: Bool = true, isExternal: Bool = false) {
-        self.id = id; self.name = name; self.photoUrl = photoUrl; self.rating = rating; self.reviewCount = reviewCount; self.priceRange = priceRange; self.services = services; self.distance = distance; self.hasBackgroundCheck = hasBackgroundCheck; self.hasInsurance = hasInsurance; self.acceptingNewClients = acceptingNewClients; self.isExternal = isExternal
+    // Detail fields
+    var bio: String?
+    var experience: String?
+    var responseTime: String?
+    var phone: String?
+    var email: String?
+    var website: String?
+    var heroPhotoUrl: String?
+    var latitude: Double?
+    var longitude: Double?
+    var isPartner: Bool
+    var availableNow: Bool
+    var servicePricing: [ServicePriceItem]
+
+    init(id: String = UUID().uuidString, name: String = "", photoUrl: String? = nil, rating: Double? = nil, reviewCount: Int? = nil, priceRange: String? = nil, services: [String] = [], distance: Double? = nil, hasBackgroundCheck: Bool = false, hasInsurance: Bool = false, acceptingNewClients: Bool = true, isExternal: Bool = false, bio: String? = nil, experience: String? = nil, responseTime: String? = nil, phone: String? = nil, email: String? = nil, website: String? = nil, heroPhotoUrl: String? = nil, latitude: Double? = nil, longitude: Double? = nil, isPartner: Bool = false, availableNow: Bool = false, servicePricing: [ServicePriceItem] = []) {
+        self.id = id; self.name = name; self.photoUrl = photoUrl; self.rating = rating; self.reviewCount = reviewCount; self.priceRange = priceRange; self.services = services; self.distance = distance; self.hasBackgroundCheck = hasBackgroundCheck; self.hasInsurance = hasInsurance; self.acceptingNewClients = acceptingNewClients; self.isExternal = isExternal; self.bio = bio; self.experience = experience; self.responseTime = responseTime; self.phone = phone; self.email = email; self.website = website; self.heroPhotoUrl = heroPhotoUrl; self.latitude = latitude; self.longitude = longitude; self.isPartner = isPartner; self.availableNow = availableNow; self.servicePricing = servicePricing
+    }
+}
+
+struct ServicePriceItem: Identifiable, Codable, Hashable {
+    var id: String { name }
+    var name: String
+    var price: String
+    var duration: String?
+}
+
+struct ProviderReview: Identifiable, Codable {
+    var id: String
+    var authorName: String
+    var authorPhotoUrl: String?
+    var rating: Double
+    var text: String
+    var date: Date
+
+    init(id: String = UUID().uuidString, authorName: String = "", authorPhotoUrl: String? = nil, rating: Double = 5, text: String = "", date: Date = Date()) {
+        self.id = id; self.authorName = authorName; self.authorPhotoUrl = authorPhotoUrl; self.rating = rating; self.text = text; self.date = date
     }
 }
 
@@ -29,4 +63,12 @@ enum DiscoveryServiceType: String, CaseIterable {
     case daycare = "Daycare"
     case training = "Training"
     case vet = "Vet"
+}
+
+enum DiscoverySortOption: String, CaseIterable {
+    case distance = "Distance"
+    case topRated = "Top Rated"
+    case priceLow = "Price Low→High"
+    case priceHigh = "Price High→Low"
+    case mostReviews = "Most Reviews"
 }

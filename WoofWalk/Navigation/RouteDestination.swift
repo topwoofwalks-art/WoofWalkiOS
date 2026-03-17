@@ -60,19 +60,7 @@ struct RouteDestination: View {
         case .challenges:
             ChallengesScreen()
         case .challengeDetail(let challengeId):
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Challenge")
-                        .font(.largeTitle.bold())
-                    Text("Challenge ID: \(challengeId)")
-                        .foregroundColor(.secondary)
-                    Divider()
-                    Text("Challenge details will load here.")
-                        .foregroundColor(.secondary)
-                }
-                .padding()
-            }
-            .navigationTitle("Challenge")
+            ChallengeDetailScreen(challengeId: challengeId)
         case .league:
             LeagueView()
         case .streaks:
@@ -99,7 +87,7 @@ struct RouteDestination: View {
             }
             .navigationTitle("Streaks")
         case .badgeGallery:
-            PlaceholderView(title: "Badge Gallery", icon: "trophy.fill")
+            BadgeGalleryScreen()
         case .badgeDetail(let badgeId):
             PlaceholderView(title: "Badge Detail", icon: "trophy.circle.fill", detail: badgeId)
         case .walkHistoryDetail(let walkId):
@@ -111,27 +99,7 @@ struct RouteDestination: View {
         case .discovery:
             DiscoveryScreen()
         case .providerDetail(let providerId):
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Image(systemName: "building.2.fill")
-                            .font(.largeTitle)
-                            .foregroundColor(.blue)
-                        VStack(alignment: .leading) {
-                            Text("Provider")
-                                .font(.title2.bold())
-                            Text("ID: \(providerId)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    Divider()
-                    Text("Provider details, services, and reviews will appear here.")
-                        .foregroundColor(.secondary)
-                }
-                .padding()
-            }
-            .navigationTitle("Provider")
+            ProviderDetailScreen(providerId: providerId)
         case .notifications:
             NotificationCenterScreen()
         case .charitySettings:
