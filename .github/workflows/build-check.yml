@@ -7,53 +7,26 @@ on:
 jobs:
   build:
     name: Compile Check
-    runs-on: macos-15
+    runs-on: macos-14
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: List available Xcode versions
-        run: ls /Applications/ | grep Xcode
+      - name: Select Xcode 15.4
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
 
-      - name: Select Xcode
-        run: |
-          # Find the latest available Xcode
-          XCODE_APP=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
-          echo "Using: $XCODE_APP"
-          sudo xcode-select -s "$XCODE_APP"
-
-      - name: Show Xcode and SDK info
-        run: |
-          xcodebuild -version
-          xcodebuild -showsdks | grep -i sim
-          xcrun simctl list runtimes
-
-      - name: Install iOS Simulator runtime if needed
-        run: |
-          # Check if any iOS runtime is available
-          if ! xcrun simctl list runtimes | grep -q "iOS"; then
-            echo "No iOS runtime found, installing..."
-            xcodebuild -downloadPlatform iOS
-          else
-            echo "iOS runtime available"
-          fi
+      - name: Show Xcode version
+        run: xcodebuild -version
 
       - name: Cache CocoaPods
         uses: actions/cache@v4
         with:
           path: Pods
-          key: pods-${{ hashFiles('Podfile.lock') }}
-          restore-keys: pods-
+          key: pods-v2-${{ hashFiles('Podfile') }}
+          restore-keys: pods-v2-
 
       - name: Install CocoaPods
         run: pod install --repo-update
-
-      - name: Find simulator
-        id: sim
-        run: |
-          SIM_NAME=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/^ *//' | cut -d'(' -f1 | xargs)
-          echo "simulator=$SIM_NAME" >> $GITHUB_OUTPUT
-          echo "Using simulator: $SIM_NAME"
 
       - name: Build
         run: |
@@ -62,14 +35,9 @@ jobs:
             -workspace WoofWalk.xcworkspace \
             -scheme WoofWalk \
             -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.simulator }}" \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            DEBUG_INFORMATION_FORMAT=dwarf \
-            GCC_GENERATE_DEBUGGING_SYMBOLS=NO \
-            SWIFT_OPTIMIZATION_LEVEL='-Onone' \
-            -parallelizeTargets \
-            -jobs 2 \
             2>&1 | tee build.log | xcpretty
 
       - name: Upload build log on failure

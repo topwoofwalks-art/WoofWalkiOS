@@ -3,20 +3,20 @@ platform :ios, '16.0'
 use_frameworks!
 
 target 'WoofWalk' do
-  pod 'Firebase/Core'
-  pod 'Firebase/Auth'
-  pod 'Firebase/Firestore'
-  pod 'Firebase/Storage'
-  pod 'Firebase/Messaging'
-  pod 'Firebase/Crashlytics'
-  pod 'Firebase/Analytics'
+  pod 'Firebase/Core', '~> 10.29'
+  pod 'Firebase/Auth', '~> 10.29'
+  pod 'Firebase/Firestore', '~> 10.29'
+  pod 'Firebase/Storage', '~> 10.29'
+  pod 'Firebase/Messaging', '~> 10.29'
+  pod 'Firebase/Crashlytics', '~> 10.29'
+  pod 'Firebase/Analytics', '~> 10.29'
 
-  pod 'GoogleSignIn'
-  pod 'GoogleMaps'
-  pod 'GooglePlaces'
+  pod 'GoogleSignIn', '~> 7.1'
+  pod 'GoogleMaps', '~> 9.0'
+  pod 'GooglePlaces', '~> 9.0'
 
-  pod 'Alamofire'
-  pod 'Kingfisher'
+  pod 'Alamofire', '~> 5.9'
+  pod 'Kingfisher', '~> 7.12'
 end
 
 post_install do |installer|
