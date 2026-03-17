@@ -45,6 +45,11 @@ struct MapScreen: View {
     @AppStorage("hasShownBackgroundLocationPrompt") private var hasShownPrompt = false
 
     var body: some View {
+        mapContent
+    }
+
+    @ViewBuilder
+    private var mapContent: some View {
         ZStack {
             Map(coordinateRegion: $region, showsUserLocation: true)
             .ignoresSafeArea()
