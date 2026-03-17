@@ -485,7 +485,7 @@ struct MapSheetModifiers: ViewModifier {
     @ObservedObject var mapViewModel: MapViewModel
     @ObservedObject var locationManager: LocationManager
     @ObservedObject var walkTrackingViewModel: WalkTrackingViewModel
-    @ObservedObject var routingViewModel: RoutingViewModel
+    var routingViewModel: RoutingViewModel
     @ObservedObject var pooBagDropViewModel: PooBagDropViewModel
 
     let callPhoneNumber: (String) -> Void
@@ -569,7 +569,7 @@ struct MapSheetModifiersGroup2: ViewModifier {
     let selectedLostDog: LostDog?
     @ObservedObject var locationManager: LocationManager
     @ObservedObject var walkTrackingViewModel: WalkTrackingViewModel
-    @ObservedObject var routingViewModel: RoutingViewModel
+    var routingViewModel: RoutingViewModel
     @ObservedObject var pooBagDropViewModel: PooBagDropViewModel
     @ObservedObject var mapViewModel: MapViewModel
     let callPhoneNumber: (String) -> Void
@@ -663,7 +663,7 @@ struct MapAlertModifiers: ViewModifier {
     let clickedLocation: CLLocationCoordinate2D?
     let carLocation: CLLocationCoordinate2D?
     @ObservedObject var locationManager: LocationManager
-    @ObservedObject var routingViewModel: RoutingViewModel
+    var routingViewModel: RoutingViewModel
     let onWalkHere: (CLLocationCoordinate2D) -> Void
     let onClearClickedLocation: () -> Void
     let onClearCarLocation: () -> Void
