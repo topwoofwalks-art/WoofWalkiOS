@@ -31,14 +31,13 @@ struct MainTabView: View {
             }
 
             TabView(selection: $navigator.selectedTab) {
-            NavigationStack(path: $navigator.path) {
-                MapScreen()
+                NavigationStack(path: $navigator.path) {
+                    MapScreen()
                         .navigationDestination(for: AppRoute.self) { route in
                             RouteDestination(route: route)
                         }
                 }
-            }
-            .tabItem {
+                .tabItem {
                 Label(AppTab.map.rawValue, systemImage: AppTab.map.icon)
             }
             .tag(AppTab.map)
@@ -66,8 +65,8 @@ struct MainTabView: View {
                 Label(AppTab.profile.rawValue, systemImage: AppTab.profile.icon)
             }
             .tag(AppTab.profile)
-        }
-        } // VStack
+            }
+        } // TabView
         .task {
             await updateChecker.checkForUpdate()
         }
