@@ -83,7 +83,7 @@ struct MapScreen: View {
             },
             onRouteStartNavigate: { start in
                 if let userLoc = locationManager.location {
-                    routingViewModel.calculateRoute(from: userLoc, to: start)
+                    routingViewModel.generateCircularRoute(userLocation: userLoc, viaPoint: start)
                 }
                 showRouteStartProximity = false
             },
@@ -482,11 +482,11 @@ struct MapSheetModifiers: ViewModifier {
     let selectedLostDog: LostDog?
     let pendingRouteStart: CLLocationCoordinate2D?
 
-    @ObservedObject var mapViewModel: MapViewModel
-    @ObservedObject var locationManager: LocationManager
-    @ObservedObject var walkTrackingViewModel: WalkTrackingViewModel
+    var mapViewModel: MapViewModel
+    var locationManager: LocationManager
+    var walkTrackingViewModel: WalkTrackingViewModel
     var routingViewModel: RoutingViewModel
-    @ObservedObject var pooBagDropViewModel: PooBagDropViewModel
+    var pooBagDropViewModel: PooBagDropViewModel
 
     let callPhoneNumber: (String) -> Void
     let startWalk: () -> Void
@@ -537,7 +537,7 @@ struct MapSheetModifiersGroup1: ViewModifier {
 
     let selectedPOI: POI?
     let selectedPublicDog: PublicDog?
-    @ObservedObject var mapViewModel: MapViewModel
+    var mapViewModel: MapViewModel
 
     func body(content: Content) -> some View {
         content
@@ -567,11 +567,11 @@ struct MapSheetModifiersGroup2: ViewModifier {
     @Binding var selectedBagDrop: PooBagDrop?
 
     let selectedLostDog: LostDog?
-    @ObservedObject var locationManager: LocationManager
-    @ObservedObject var walkTrackingViewModel: WalkTrackingViewModel
+    var locationManager: LocationManager
+    var walkTrackingViewModel: WalkTrackingViewModel
     var routingViewModel: RoutingViewModel
-    @ObservedObject var pooBagDropViewModel: PooBagDropViewModel
-    @ObservedObject var mapViewModel: MapViewModel
+    var pooBagDropViewModel: PooBagDropViewModel
+    var mapViewModel: MapViewModel
     let callPhoneNumber: (String) -> Void
 
     func body(content: Content) -> some View {
@@ -615,9 +615,9 @@ struct MapSheetModifiersGroup2: ViewModifier {
                     },
                     onWalkToBag: {
                         if let userLocation = locationManager.location {
-                            routingViewModel.calculateRoute(
-                                from: userLocation,
-                                to: bagDrop.coordinate
+                            routingViewModel.generateCircularRoute(
+                                userLocation: userLocation,
+                                viaPoint: bagDrop.coordinate
                             )
                             selectedBagDrop = nil
                         }
@@ -631,7 +631,7 @@ struct MapSheetModifiersGroup3: ViewModifier {
     @Binding var showRouteStartProximity: Bool
 
     let pendingRouteStart: CLLocationCoordinate2D?
-    @ObservedObject var locationManager: LocationManager
+    var locationManager: LocationManager
     let onDismiss: () -> Void
     let onNavigate: (CLLocationCoordinate2D) -> Void
     let onStartAnyway: () -> Void
@@ -662,7 +662,7 @@ struct MapAlertModifiers: ViewModifier {
 
     let clickedLocation: CLLocationCoordinate2D?
     let carLocation: CLLocationCoordinate2D?
-    @ObservedObject var locationManager: LocationManager
+    var locationManager: LocationManager
     var routingViewModel: RoutingViewModel
     let onWalkHere: (CLLocationCoordinate2D) -> Void
     let onClearClickedLocation: () -> Void
@@ -687,7 +687,7 @@ struct MapAlertModifiers: ViewModifier {
                 Button("Navigate to Car") {
                     if let userLocation = locationManager.location,
                        let car = carLocation {
-                        routingViewModel.calculateRoute(from: userLocation, to: car)
+                        routingViewModel.generateCircularRoute(userLocation: userLocation, viaPoint: car)
                     }
                 }
                 Button("Clear Location", role: .destructive) {
