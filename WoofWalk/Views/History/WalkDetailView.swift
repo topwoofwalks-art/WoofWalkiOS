@@ -293,8 +293,6 @@ struct ActionButtonsSection: View {
     }
 }
 
-#if false
-// ShareSheet is defined elsewhere - wrapped to avoid invalid redeclaration
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
 
@@ -304,4 +302,3 @@ struct ShareSheet: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
-#endif
