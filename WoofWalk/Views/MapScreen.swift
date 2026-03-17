@@ -48,267 +48,70 @@ struct MapScreen: View {
         mapContent
     }
 
-    @ViewBuilder
+    // MARK: - Main Map Content
+
     private var mapContent: some View {
         ZStack {
-            Map(coordinateRegion: $region, showsUserLocation: true)
-            .ignoresSafeArea()
-
-            VStack {
-                HStack(alignment: .top, spacing: 12) {
-                    Button(action: { showAppGuide = true }) {
-                        Image(systemName: "questionmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Circle().fill(.blue.opacity(0.8)))
-                    }
-
-                    Spacer()
-
-                    topRightControls
+            mapLayer
+            controlsOverlay
+            planningOverlay
+        }
+        .modifier(MapSheetModifiers(
+            showSearchBar: $showSearchBar,
+            showFilterSheet: $showFilterSheet,
+            showPOIDetailSheet: $showPOIDetailSheet,
+            showPublicDogSheet: $showPublicDogSheet,
+            showLostDogSheet: $showLostDogSheet,
+            showAppGuide: $showAppGuide,
+            showBackgroundLocationPrompt: $showBackgroundLocationPrompt,
+            selectedBagDrop: $selectedBagDrop,
+            showRouteStartProximity: $showRouteStartProximity,
+            selectedPOI: selectedPOI,
+            selectedPublicDog: selectedPublicDog,
+            selectedLostDog: selectedLostDog,
+            pendingRouteStart: pendingRouteStart,
+            mapViewModel: mapViewModel,
+            locationManager: locationManager,
+            walkTrackingViewModel: walkTrackingViewModel,
+            routingViewModel: routingViewModel,
+            pooBagDropViewModel: pooBagDropViewModel,
+            callPhoneNumber: callPhoneNumber,
+            startWalk: startWalk,
+            onRouteStartProximityDismiss: {
+                showRouteStartProximity = false
+                pendingRouteStart = nil
+            },
+            onRouteStartNavigate: { start in
+                if let userLoc = locationManager.location {
+                    routingViewModel.calculateRoute(from: userLoc, to: start)
                 }
-                .padding()
-
-                Spacer()
-
-                if let guidanceState = guidanceViewModel.guidanceState,
-                   case .active = guidanceState {
-                    GuidancePanel(
-                        guidanceState: guidanceState,
-                        walkDistance: walkTrackingViewModel.walkDistance,
-                        walkDuration: walkTrackingViewModel.walkDuration,
-                        onDismiss: {
-                            if walkTrackingViewModel.isWalkActive {
-                                stopWalk()
-                            }
-                            guidanceViewModel.stopGuidance()
-                        }
-                    )
-                    .padding(.horizontal)
-                } else if walkTrackingViewModel.isWalkActive {
-                    WalkControlPanel(
-                        isWalking: true,
-                        isPaused: false,
-                        distance: walkTrackingViewModel.walkDistance,
-                        duration: walkTrackingViewModel.walkDuration,
-                        currentPace: 0,
-                        averagePace: 0,
-                        onPause: { },
-                        onResume: { },
-                        onStop: stopWalk,
-                        onAddPhoto: { },
-                        onMarkWaste: { quickAddPooBag() }
-                    )
-                    .padding(.horizontal)
-                }
-
-                Spacer()
-
-                HStack(alignment: .bottom) {
-                    VStack(spacing: 12) {
-                        quickAddButton(
-                            icon: "trash.fill",
-                            color: .green,
-                            action: quickAddBin
-                        )
-
-                        quickAddButton(
-                            icon: "bag.fill",
-                            color: .orange,
-                            action: quickAddPooBag
-                        )
-                    }
-
-                    Spacer()
-
-                    VStack(spacing: 12) {
-                        if walkTrackingViewModel.isWalkActive {
-                            Button(action: mapViewModel.cycleCameraMode) {
-                                Image(systemName: mapViewModel.cameraModeIcon)
-                                    .font(.title3)
-                                    .foregroundColor(.white)
-                                    .padding(12)
-                                    .background(Circle().fill(.blue))
-                            }
-                        }
-
-                        Button(action: addPOI) {
-                            Image(systemName: "plus")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                                .padding(16)
-                                .background(Circle().fill(.blue))
-                        }
-
-                        Button(action: { isPlanningMode.toggle() }) {
-                            Image(systemName: isPlanningMode ? "pencil.circle.fill" : "pencil.circle")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                                .padding(16)
-                                .background(Circle().fill(isPlanningMode ? .orange : .blue.opacity(0.8)))
-                        }
-
-                        Button(action: toggleWalk) {
-                            Image(systemName: walkTrackingViewModel.isWalkActive ? "stop.fill" : "play.fill")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                                .padding(16)
-                                .background(Circle().fill(walkTrackingViewModel.isWalkActive ? .red : .green))
-                        }
-                    }
-                }
-                .padding()
+                showRouteStartProximity = false
+            },
+            onRouteStartAnyway: {
+                showRouteStartProximity = false
+                startWalk()
             }
-
-            if isPlanningMode {
-                PlanningModeOverlay(
-                    isActive: $isPlanningMode,
-                    waypoints: planningWaypoints,
-                    estimatedDistance: 0,
-                    estimatedDuration: 0,
-                    onAddWaypoint: { planningWaypoints.append($0) },
-                    onRemoveLastWaypoint: { if !planningWaypoints.isEmpty { planningWaypoints.removeLast() } },
-                    onSave: { },
-                    onStartWalk: { isPlanningMode = false; startWalk() },
-                    onCancel: { isPlanningMode = false; planningWaypoints.removeAll() }
-                )
-            }
-        }
-        .sheet(isPresented: $showSearchBar) {
-            SearchBarView(viewModel: mapViewModel)
-        }
-        .sheet(isPresented: $showFilterSheet) {
-            POIFilterSheet(viewModel: mapViewModel)
-        }
-        .sheet(isPresented: $showPOIDetailSheet) {
-            if let poi = selectedPOI {
-                POIDetailSheet(poi: poi, viewModel: mapViewModel)
-            }
-        }
-        .sheet(isPresented: $showPublicDogSheet) {
-            if let dog = selectedPublicDog {
-                PublicDogInfoSheet(publicDog: dog)
-            }
-        }
-        .sheet(isPresented: $showLostDogSheet) {
-            if let dog = selectedLostDog {
-                LostDogInfoSheet(
-                    lostDog: dog,
-                    userLocation: locationManager.location,
-                    onContact: {
-                        if let phone = dog.reporterPhone {
-                            callPhoneNumber(phone)
-                        }
-                    }
-                )
-            }
-        }
-        .sheet(isPresented: $showAppGuide) {
-            AppGuideView()
-        }
-        .sheet(isPresented: $showBackgroundLocationPrompt) {
-            BackgroundLocationPrompt(
-                isPresented: $showBackgroundLocationPrompt,
-                onEnable: {
-                    locationManager.requestAlwaysAuthorization()
-                    walkTrackingViewModel.startWalk()
-                    mapViewModel.startWalkTracking()
-                },
-                onSkip: {
-                    walkTrackingViewModel.startWalk()
-                    mapViewModel.startWalkTracking()
-                }
-            )
-        }
-        .sheet(item: $selectedBagDrop) { bagDrop in
-            PooBagBottomSheet(
-                bagDrop: bagDrop,
-                onCollected: {
-                    pooBagDropViewModel.markAsCollected(bagDrop.id)
-                    selectedBagDrop = nil
-                },
-                onWalkToBag: {
-                    if let userLocation = locationManager.location {
-                        routingViewModel.calculateRoute(
-                            from: userLocation,
-                            to: bagDrop.coordinate
-                        )
-                        selectedBagDrop = nil
-                    }
-                }
-            )
-        }
-        .alert("What would you like to do?", isPresented: $showMapClickDialog) {
-            Button("Walk Here") {
-                if let location = clickedLocation {
-                    pendingRouteStart = location
-                    showRouteStartProximity = true
-                }
-            }
-            Button("Create Random Walk") {
-                showPOISelectionDialog = true
-            }
-            Button("Cancel", role: .cancel) {
-                clickedLocation = nil
-            }
-        }
-        .alert("Car Location", isPresented: $showCarOptionsDialog) {
-            Button("Navigate to Car") {
-                if let userLocation = locationManager.location,
-                   let car = carLocation {
-                    routingViewModel.calculateRoute(from: userLocation, to: car)
-                }
-            }
-            Button("Clear Location", role: .destructive) {
-                carLocation = nil
-            }
-            Button("Cancel", role: .cancel) {}
-        }
-        .fullScreenCover(isPresented: $showWalkSummary) {
-            WalkCompletionScreen(
-                distance: completedDistance,
-                duration: completedDuration,
-                pace: completedDistance > 0 ? (Double(completedDuration) / 60.0) / (completedDistance / 1000.0) : 0,
-                steps: 0,
-                dogNames: [],
-                pointsEarned: WalkPointsCalculator.calculatePoints(
-                    distanceKm: completedDistance / 1000.0,
-                    durationSec: completedDuration,
-                    streakDays: 0,
-                    charityEnabled: false
-                ).totalPoints,
-                personalBest: nil,
-                streakDays: 0,
-                milestones: [],
-                mapImage: nil,
-                onShare: { showWalkSummary = false },
-                onDone: { showWalkSummary = false }
-            )
-        }
-        .sheet(isPresented: $showRouteStartProximity) {
-            if let start = pendingRouteStart {
-                RouteStartProximitySheet(
-                    routeStartLocation: start,
-                    userLocation: locationManager.location,
-                    routeName: "Planned Walk",
-                    onNavigateToStart: {
-                        if let userLoc = locationManager.location {
-                            routingViewModel.calculateRoute(from: userLoc, to: start)
-                        }
-                        showRouteStartProximity = false
-                    },
-                    onStartAnyway: {
-                        showRouteStartProximity = false
-                        startWalk()
-                    },
-                    onCancel: {
-                        showRouteStartProximity = false
-                        pendingRouteStart = nil
-                    }
-                )
-            }
-        }
+        ))
+        .modifier(MapAlertModifiers(
+            showMapClickDialog: $showMapClickDialog,
+            showCarOptionsDialog: $showCarOptionsDialog,
+            showPOISelectionDialog: $showPOISelectionDialog,
+            clickedLocation: clickedLocation,
+            carLocation: carLocation,
+            locationManager: locationManager,
+            routingViewModel: routingViewModel,
+            onWalkHere: { location in
+                pendingRouteStart = location
+                showRouteStartProximity = true
+            },
+            onClearClickedLocation: { clickedLocation = nil },
+            onClearCarLocation: { carLocation = nil }
+        ))
+        .modifier(MapFullScreenModifiers(
+            showWalkSummary: $showWalkSummary,
+            completedDistance: completedDistance,
+            completedDuration: completedDuration
+        ))
         .onAppear {
             mapViewModel.loadPOIs()
             locationManager.startUpdatingLocation()
@@ -318,6 +121,177 @@ struct MapScreen: View {
                 mapViewModel.updateWalkPolyline(with: location)
                 walkTrackingViewModel.updateLocation(location)
             }
+        }
+    }
+
+    // MARK: - Map Layer
+
+    private var mapLayer: some View {
+        Map(coordinateRegion: $region, showsUserLocation: true)
+            .ignoresSafeArea()
+    }
+
+    // MARK: - Controls Overlay
+
+    private var controlsOverlay: some View {
+        VStack {
+            topControls
+            Spacer()
+            guidanceOrWalkPanel
+            Spacer()
+            bottomControls
+        }
+    }
+
+    // MARK: - Top Controls
+
+    private var topControls: some View {
+        HStack(alignment: .top, spacing: 12) {
+            helpButton
+            Spacer()
+            topRightControls
+        }
+        .padding()
+    }
+
+    @ViewBuilder
+    private var helpButton: some View {
+        Button(action: { showAppGuide = true }) {
+            Image(systemName: "questionmark.circle.fill")
+                .font(.title2)
+                .foregroundColor(.white)
+                .padding(10)
+                .background(Circle().fill(.blue.opacity(0.8)))
+        }
+    }
+
+    // MARK: - Guidance / Walk Panel
+
+    @ViewBuilder
+    private var guidanceOrWalkPanel: some View {
+        if let guidanceState = guidanceViewModel.guidanceState,
+           case .active = guidanceState {
+            GuidancePanel(
+                guidanceState: guidanceState,
+                walkDistance: walkTrackingViewModel.walkDistance,
+                walkDuration: walkTrackingViewModel.walkDuration,
+                onDismiss: {
+                    if walkTrackingViewModel.isWalkActive {
+                        stopWalk()
+                    }
+                    guidanceViewModel.stopGuidance()
+                }
+            )
+            .padding(.horizontal)
+        } else if walkTrackingViewModel.isWalkActive {
+            WalkControlPanel(
+                isWalking: true,
+                isPaused: false,
+                distance: walkTrackingViewModel.walkDistance,
+                duration: walkTrackingViewModel.walkDuration,
+                currentPace: 0,
+                averagePace: 0,
+                onPause: { },
+                onResume: { },
+                onStop: stopWalk,
+                onAddPhoto: { },
+                onMarkWaste: { quickAddPooBag() }
+            )
+            .padding(.horizontal)
+        }
+    }
+
+    // MARK: - Bottom Controls
+
+    private var bottomControls: some View {
+        HStack(alignment: .bottom) {
+            bottomLeftButtons
+            Spacer()
+            bottomRightButtons
+        }
+        .padding()
+    }
+
+    private var bottomLeftButtons: some View {
+        VStack(spacing: 12) {
+            quickAddButton(
+                icon: "trash.fill",
+                color: .green,
+                action: quickAddBin
+            )
+            quickAddButton(
+                icon: "bag.fill",
+                color: .orange,
+                action: quickAddPooBag
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var bottomRightButtons: some View {
+        VStack(spacing: 12) {
+            if walkTrackingViewModel.isWalkActive {
+                Button(action: mapViewModel.cycleCameraMode) {
+                    Image(systemName: mapViewModel.cameraModeIcon)
+                        .font(.title3)
+                        .foregroundColor(.white)
+                        .padding(12)
+                        .background(Circle().fill(.blue))
+                }
+            }
+
+            addPOIButton
+            planningModeButton
+            walkToggleButton
+        }
+    }
+
+    private var addPOIButton: some View {
+        Button(action: addPOI) {
+            Image(systemName: "plus")
+                .font(.title2)
+                .foregroundColor(.white)
+                .padding(16)
+                .background(Circle().fill(.blue))
+        }
+    }
+
+    private var planningModeButton: some View {
+        Button(action: { isPlanningMode.toggle() }) {
+            Image(systemName: isPlanningMode ? "pencil.circle.fill" : "pencil.circle")
+                .font(.title2)
+                .foregroundColor(.white)
+                .padding(16)
+                .background(Circle().fill(isPlanningMode ? .orange : .blue.opacity(0.8)))
+        }
+    }
+
+    private var walkToggleButton: some View {
+        Button(action: toggleWalk) {
+            Image(systemName: walkTrackingViewModel.isWalkActive ? "stop.fill" : "play.fill")
+                .font(.title2)
+                .foregroundColor(.white)
+                .padding(16)
+                .background(Circle().fill(walkTrackingViewModel.isWalkActive ? .red : .green))
+        }
+    }
+
+    // MARK: - Planning Overlay
+
+    @ViewBuilder
+    private var planningOverlay: some View {
+        if isPlanningMode {
+            PlanningModeOverlay(
+                isActive: $isPlanningMode,
+                waypoints: planningWaypoints,
+                estimatedDistance: 0,
+                estimatedDuration: 0,
+                onAddWaypoint: { planningWaypoints.append($0) },
+                onRemoveLastWaypoint: { if !planningWaypoints.isEmpty { planningWaypoints.removeLast() } },
+                onSave: { },
+                onStartWalk: { isPlanningMode = false; startWalk() },
+                onCancel: { isPlanningMode = false; planningWaypoints.removeAll() }
+            )
         }
     }
 
@@ -485,6 +459,274 @@ extension View {
             .foregroundColor(.primary)
             .padding(8)
             .background(Circle().fill(.regularMaterial))
+    }
+}
+
+// MARK: - Sheet Modifiers
+
+struct MapSheetModifiers: ViewModifier {
+    @Binding var showSearchBar: Bool
+    @Binding var showFilterSheet: Bool
+    @Binding var showPOIDetailSheet: Bool
+    @Binding var showPublicDogSheet: Bool
+    @Binding var showLostDogSheet: Bool
+    @Binding var showAppGuide: Bool
+    @Binding var showBackgroundLocationPrompt: Bool
+    @Binding var selectedBagDrop: PooBagDrop?
+    @Binding var showRouteStartProximity: Bool
+
+    let selectedPOI: POI?
+    let selectedPublicDog: PublicDog?
+    let selectedLostDog: LostDog?
+    let pendingRouteStart: CLLocationCoordinate2D?
+
+    @ObservedObject var mapViewModel: MapViewModel
+    @ObservedObject var locationManager: LocationManager
+    @ObservedObject var walkTrackingViewModel: WalkTrackingViewModel
+    @ObservedObject var routingViewModel: RoutingViewModel
+    @ObservedObject var pooBagDropViewModel: PooBagDropViewModel
+
+    let callPhoneNumber: (String) -> Void
+    let startWalk: () -> Void
+    let onRouteStartProximityDismiss: () -> Void
+    let onRouteStartNavigate: (CLLocationCoordinate2D) -> Void
+    let onRouteStartAnyway: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .modifier(MapSheetModifiersGroup1(
+                showSearchBar: $showSearchBar,
+                showFilterSheet: $showFilterSheet,
+                showPOIDetailSheet: $showPOIDetailSheet,
+                showPublicDogSheet: $showPublicDogSheet,
+                selectedPOI: selectedPOI,
+                selectedPublicDog: selectedPublicDog,
+                mapViewModel: mapViewModel
+            ))
+            .modifier(MapSheetModifiersGroup2(
+                showLostDogSheet: $showLostDogSheet,
+                showAppGuide: $showAppGuide,
+                showBackgroundLocationPrompt: $showBackgroundLocationPrompt,
+                selectedBagDrop: $selectedBagDrop,
+                selectedLostDog: selectedLostDog,
+                locationManager: locationManager,
+                walkTrackingViewModel: walkTrackingViewModel,
+                routingViewModel: routingViewModel,
+                pooBagDropViewModel: pooBagDropViewModel,
+                mapViewModel: mapViewModel,
+                callPhoneNumber: callPhoneNumber
+            ))
+            .modifier(MapSheetModifiersGroup3(
+                showRouteStartProximity: $showRouteStartProximity,
+                pendingRouteStart: pendingRouteStart,
+                locationManager: locationManager,
+                onDismiss: onRouteStartProximityDismiss,
+                onNavigate: onRouteStartNavigate,
+                onStartAnyway: onRouteStartAnyway
+            ))
+    }
+}
+
+struct MapSheetModifiersGroup1: ViewModifier {
+    @Binding var showSearchBar: Bool
+    @Binding var showFilterSheet: Bool
+    @Binding var showPOIDetailSheet: Bool
+    @Binding var showPublicDogSheet: Bool
+
+    let selectedPOI: POI?
+    let selectedPublicDog: PublicDog?
+    @ObservedObject var mapViewModel: MapViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showSearchBar) {
+                SearchBarView(viewModel: mapViewModel)
+            }
+            .sheet(isPresented: $showFilterSheet) {
+                POIFilterSheet(viewModel: mapViewModel)
+            }
+            .sheet(isPresented: $showPOIDetailSheet) {
+                if let poi = selectedPOI {
+                    POIDetailSheet(poi: poi, viewModel: mapViewModel)
+                }
+            }
+            .sheet(isPresented: $showPublicDogSheet) {
+                if let dog = selectedPublicDog {
+                    PublicDogInfoSheet(publicDog: dog)
+                }
+            }
+    }
+}
+
+struct MapSheetModifiersGroup2: ViewModifier {
+    @Binding var showLostDogSheet: Bool
+    @Binding var showAppGuide: Bool
+    @Binding var showBackgroundLocationPrompt: Bool
+    @Binding var selectedBagDrop: PooBagDrop?
+
+    let selectedLostDog: LostDog?
+    @ObservedObject var locationManager: LocationManager
+    @ObservedObject var walkTrackingViewModel: WalkTrackingViewModel
+    @ObservedObject var routingViewModel: RoutingViewModel
+    @ObservedObject var pooBagDropViewModel: PooBagDropViewModel
+    @ObservedObject var mapViewModel: MapViewModel
+    let callPhoneNumber: (String) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showLostDogSheet) {
+                if let dog = selectedLostDog {
+                    LostDogInfoSheet(
+                        lostDog: dog,
+                        userLocation: locationManager.location,
+                        onContact: {
+                            if let phone = dog.reporterPhone {
+                                callPhoneNumber(phone)
+                            }
+                        }
+                    )
+                }
+            }
+            .sheet(isPresented: $showAppGuide) {
+                AppGuideView()
+            }
+            .sheet(isPresented: $showBackgroundLocationPrompt) {
+                BackgroundLocationPrompt(
+                    isPresented: $showBackgroundLocationPrompt,
+                    onEnable: {
+                        locationManager.requestAlwaysAuthorization()
+                        walkTrackingViewModel.startWalk()
+                        mapViewModel.startWalkTracking()
+                    },
+                    onSkip: {
+                        walkTrackingViewModel.startWalk()
+                        mapViewModel.startWalkTracking()
+                    }
+                )
+            }
+            .sheet(item: $selectedBagDrop) { bagDrop in
+                PooBagBottomSheet(
+                    bagDrop: bagDrop,
+                    onCollected: {
+                        pooBagDropViewModel.markAsCollected(bagDrop.id)
+                        selectedBagDrop = nil
+                    },
+                    onWalkToBag: {
+                        if let userLocation = locationManager.location {
+                            routingViewModel.calculateRoute(
+                                from: userLocation,
+                                to: bagDrop.coordinate
+                            )
+                            selectedBagDrop = nil
+                        }
+                    }
+                )
+            }
+    }
+}
+
+struct MapSheetModifiersGroup3: ViewModifier {
+    @Binding var showRouteStartProximity: Bool
+
+    let pendingRouteStart: CLLocationCoordinate2D?
+    @ObservedObject var locationManager: LocationManager
+    let onDismiss: () -> Void
+    let onNavigate: (CLLocationCoordinate2D) -> Void
+    let onStartAnyway: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $showRouteStartProximity) {
+                if let start = pendingRouteStart {
+                    RouteStartProximitySheet(
+                        routeStartLocation: start,
+                        userLocation: locationManager.location,
+                        routeName: "Planned Walk",
+                        onNavigateToStart: { onNavigate(start) },
+                        onStartAnyway: onStartAnyway,
+                        onCancel: onDismiss
+                    )
+                }
+            }
+    }
+}
+
+// MARK: - Alert Modifiers
+
+struct MapAlertModifiers: ViewModifier {
+    @Binding var showMapClickDialog: Bool
+    @Binding var showCarOptionsDialog: Bool
+    @Binding var showPOISelectionDialog: Bool
+
+    let clickedLocation: CLLocationCoordinate2D?
+    let carLocation: CLLocationCoordinate2D?
+    @ObservedObject var locationManager: LocationManager
+    @ObservedObject var routingViewModel: RoutingViewModel
+    let onWalkHere: (CLLocationCoordinate2D) -> Void
+    let onClearClickedLocation: () -> Void
+    let onClearCarLocation: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .alert("What would you like to do?", isPresented: $showMapClickDialog) {
+                Button("Walk Here") {
+                    if let location = clickedLocation {
+                        onWalkHere(location)
+                    }
+                }
+                Button("Create Random Walk") {
+                    showPOISelectionDialog = true
+                }
+                Button("Cancel", role: .cancel) {
+                    onClearClickedLocation()
+                }
+            }
+            .alert("Car Location", isPresented: $showCarOptionsDialog) {
+                Button("Navigate to Car") {
+                    if let userLocation = locationManager.location,
+                       let car = carLocation {
+                        routingViewModel.calculateRoute(from: userLocation, to: car)
+                    }
+                }
+                Button("Clear Location", role: .destructive) {
+                    onClearCarLocation()
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+    }
+}
+
+// MARK: - Full Screen Modifiers
+
+struct MapFullScreenModifiers: ViewModifier {
+    @Binding var showWalkSummary: Bool
+
+    let completedDistance: Double
+    let completedDuration: Int
+
+    func body(content: Content) -> some View {
+        content
+            .fullScreenCover(isPresented: $showWalkSummary) {
+                WalkCompletionScreen(
+                    distance: completedDistance,
+                    duration: completedDuration,
+                    pace: completedDistance > 0 ? (Double(completedDuration) / 60.0) / (completedDistance / 1000.0) : 0,
+                    steps: 0,
+                    dogNames: [],
+                    pointsEarned: WalkPointsCalculator.calculatePoints(
+                        distanceKm: completedDistance / 1000.0,
+                        durationSec: completedDuration,
+                        streakDays: 0,
+                        charityEnabled: false
+                    ).totalPoints,
+                    personalBest: nil,
+                    streakDays: 0,
+                    milestones: [],
+                    mapImage: nil,
+                    onShare: { showWalkSummary = false },
+                    onDone: { showWalkSummary = false }
+                )
+            }
     }
 }
 
