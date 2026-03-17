@@ -32,13 +32,7 @@ struct MainTabView: View {
 
             TabView(selection: $navigator.selectedTab) {
             NavigationStack(path: $navigator.path) {
-                if #available(iOS 17.0, *) {
-                    MapScreen()
-                        .navigationDestination(for: AppRoute.self) { route in
-                            RouteDestination(route: route)
-                        }
-                } else {
-                    MapScreenLegacy()
+                MapScreen()
                         .navigationDestination(for: AppRoute.self) { route in
                             RouteDestination(route: route)
                         }

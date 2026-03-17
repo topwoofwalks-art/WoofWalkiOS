@@ -2,7 +2,6 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-@available(iOS 17.0, *)
 struct MapScreen: View {
     @StateObject private var mapViewModel = MapViewModel()
     @StateObject private var routingViewModel = RoutingViewModel()
@@ -29,7 +28,10 @@ struct MapScreen: View {
     @State private var clickedLocation: CLLocationCoordinate2D?
     @State private var isTorchOn = false
     @State private var carLocation: CLLocationCoordinate2D?
-    @State private var cameraPosition: MapCameraPosition = .automatic
+    @State private var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 51.5, longitude: -0.1),
+        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+    )
     @State private var showRoutePreview = false
     @State private var routePreview: RoutePreview?
     @State private var completedDistance: Double = 0
@@ -44,8 +46,7 @@ struct MapScreen: View {
 
     var body: some View {
         ZStack {
-            Map(position: $cameraPosition) {
-                UserAnnotation()
+            Map(coordinateRegion: $region, showsUserLocation: true) {
             }
             .ignoresSafeArea()
 
