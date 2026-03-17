@@ -255,7 +255,8 @@ class LocationTrackingService: NSObject, ObservableObject {
 
     // MARK: - Cleanup
     deinit {
-        stopTracking()
+        locationManager.stopUpdatingLocation()
+        locationManager.stopUpdatingHeading()
         NotificationCenter.default.removeObserver(self)
     }
 }
