@@ -89,6 +89,13 @@ jobs:
           xcrun simctl install "iPhone 15" "${{ steps.app.outputs.path }}"
           sleep 2
 
+          # Grant all permissions before launch
+          xcrun simctl privacy "iPhone 15" grant all com.woofwalk.ios
+          xcrun simctl privacy "iPhone 15" grant location-always com.woofwalk.ios
+          xcrun simctl privacy "iPhone 15" grant photos com.woofwalk.ios
+          xcrun simctl privacy "iPhone 15" grant camera com.woofwalk.ios
+          xcrun simctl privacy "iPhone 15" grant notifications com.woofwalk.ios
+
           # Write test credentials to app UserDefaults
           xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_EMAIL "${TEST_EMAIL:-}" || true
           xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_PASSWORD "${TEST_PASSWORD:-}" || true
