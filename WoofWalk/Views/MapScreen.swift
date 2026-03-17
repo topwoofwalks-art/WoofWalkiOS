@@ -45,6 +45,8 @@ struct MapScreen: View {
     @State var pendingRouteStart: CLLocationCoordinate2D?
     @State var showLivestockMode = false
     @State var showWalkingPaths = false
+    @State var dismissedHazardIds: Set<String> = []
+    @State var showTrailConditionSheet = false
     @AppStorage("hasShownBackgroundLocationPrompt") var hasShownPrompt = false
     @AppStorage("walkStreak") var walkStreak: Int = 0
 
@@ -58,6 +60,7 @@ struct MapScreen: View {
         ZStack {
             mapLayer
             controlsOverlay
+            hazardAlertOverlay
             planningOverlay
         }
         .modifier(MapSheetModifiers(
@@ -116,6 +119,25 @@ struct MapScreen: View {
             completedDistance: completedDistance,
             completedDuration: completedDuration
         ))
+        .sheet(isPresented: $showTrailConditionSheet) {
+            TrailConditionSheet(
+                userLocation: locationManager.location,
+                onSubmit: { type, severity, note in
+                    guard let location = locationManager.location else { return }
+                    let condition = TrailCondition(
+                        type: type.rawValue,
+                        severity: severity,
+                        note: note,
+                        lat: location.latitude,
+                        lng: location.longitude,
+                        reportedBy: "",
+                        voteUp: 0,
+                        voteDown: 0
+                    )
+                    mapViewModel.trailConditions.append(condition)
+                }
+            )
+        }
         .onAppear {
             locationManager.startUpdatingLocation()
             mapViewModel.loadPOIs(near: locationManager.location)
@@ -178,6 +200,21 @@ struct MapScreen: View {
             ))
         }
 
+        // Hazard reports
+        items.append(contentsOf: hazardMarkerItems)
+
+        // Trail conditions
+        items.append(contentsOf: trailConditionMarkerItems)
+
+        // Off-lead zone labels (center markers)
+        for zone in mapViewModel.offLeadZones {
+            items.append(MapMarkerItem(
+                id: "zone-\(zone.id)",
+                coordinate: zone.center,
+                kind: .offLeadZoneLabel(zone)
+            ))
+        }
+
         return items
     }
 
@@ -224,6 +261,12 @@ struct MapScreen: View {
                         .padding(8)
                         .background(Circle().fill(.cyan))
                         .shadow(radius: 3)
+                case .hazard(let hazard):
+                    hazardMarkerView(for: hazard)
+                case .trailCondition(let condition):
+                    trailConditionMarkerView(for: condition)
+                case .offLeadZoneLabel(let zone):
+                    offLeadZoneLabelView(for: zone)
                 }
             }
         }
@@ -406,6 +449,9 @@ struct MapMarkerItem: Identifiable {
         case publicDog(PublicDog)
         case lostDog(LostDog)
         case car
+        case hazard(HazardReport)
+        case trailCondition(TrailCondition)
+        case offLeadZoneLabel(OffLeadZone)
     }
 }
 

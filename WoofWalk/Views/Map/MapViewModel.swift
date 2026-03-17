@@ -21,6 +21,9 @@ class MapViewModel: ObservableObject {
     @Published var showLivestockOverlays: Bool = true
     @Published var showWalkingPathOverlays: Bool = true
     @Published var isInDrawingMode: Bool = false
+    @Published var hazardReports: [HazardReport] = []
+    @Published var trailConditions: [TrailCondition] = []
+    @Published var offLeadZones: [OffLeadZone] = []
 
     private var cancellables = Set<AnyCancellable>()
     private var walkStartTime: Date?
