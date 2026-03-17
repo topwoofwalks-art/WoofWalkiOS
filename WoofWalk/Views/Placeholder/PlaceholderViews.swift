@@ -24,10 +24,10 @@ struct SocialHubView: View {
             Text("Social Hub")
                 .font(.largeTitle)
             Button("View Chats") {
-                navigationViewModel.navigate(to: .chats)
+                navigationViewModel.navigate(to: .chatList)
             }
             Button("Lost Dogs Feed") {
-                navigationViewModel.navigate(to: .lostDogsFeed)
+                navigationViewModel.navigate(to: .feed)
             }
         }
         .navigationTitle("Social")
@@ -54,10 +54,10 @@ struct ChatListView: View {
     var body: some View {
         List {
             Button("Chat 1") {
-                navigationViewModel.navigate(to: .chatMessage(chatId: "chat1"))
+                navigationViewModel.navigate(to: .chatDetail(chatId: "chat1"))
             }
             Button("Chat 2") {
-                navigationViewModel.navigate(to: .chatMessage(chatId: "chat2"))
+                navigationViewModel.navigate(to: .chatDetail(chatId: "chat2"))
             }
         }
         .navigationTitle("Chats")
@@ -86,7 +86,7 @@ struct LostDogsFeedView: View {
             Text("Lost Dogs Feed")
                 .font(.largeTitle)
             Button("Report Lost Dog") {
-                navigationViewModel.navigate(to: .reportLostDog)
+                navigationViewModel.navigate(to: .map)
             }
         }
         .navigationTitle("Lost Dogs")

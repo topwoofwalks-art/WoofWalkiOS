@@ -44,17 +44,9 @@ struct MapScreen: View {
 
     var body: some View {
         ZStack {
-            MapView(
-                viewModel: mapViewModel,
-                locationManager: locationManager,
-                cameraPosition: $cameraPosition,
-                onMapTap: handleMapTap,
-                onPOITap: handlePOITap,
-                onBagDropTap: handleBagDropTap,
-                onPublicDogTap: handlePublicDogTap,
-                onLostDogTap: handleLostDogTap,
-                carLocation: carLocation
-            )
+            Map(position: $cameraPosition) {
+                UserAnnotation()
+            }
             .ignoresSafeArea()
 
             VStack {
@@ -235,7 +227,7 @@ struct MapScreen: View {
                     if let userLocation = locationManager.location {
                         routingViewModel.calculateRoute(
                             from: userLocation,
-                            to: bagDrop.toLatLng()
+                            to: bagDrop.coordinate
                         )
                         selectedBagDrop = nil
                     }
@@ -505,7 +497,7 @@ struct PooBagBottomSheet: View {
                     .font(.title2)
                     .fontWeight(.bold)
 
-                Text("Dropped \(bagDrop.getAgeMinutes()) minutes ago")
+                Text("Dropped \(bagDrop.ageMinutes()) minutes ago")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
@@ -554,8 +546,7 @@ struct PublicDogInfoSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 12) {
-                        if let photoUrl = publicDog.dogPhotoUrl,
-                           let url = URL(string: photoUrl) {
+                        if let url = publicDog.photoURL {
                             AsyncImage(url: url) { image in
                                 image
                                     .resizable()
@@ -568,10 +559,10 @@ struct PublicDogInfoSheet: View {
                         }
 
                         VStack(alignment: .leading) {
-                            Text(publicDog.dogName)
+                            Text(publicDog.name)
                                 .font(.title2)
                                 .fontWeight(.bold)
-                            Text(publicDog.dogBreed)
+                            Text(publicDog.breed)
                                 .font(.body)
                             Text("Owner: \(publicDog.ownerName)")
                                 .font(.caption)
@@ -579,7 +570,7 @@ struct PublicDogInfoSheet: View {
                         }
                     }
 
-                    if publicDog.nervousDog {
+                    if publicDog.isNervous {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundColor(.red)
@@ -618,8 +609,7 @@ struct LostDogInfoSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 12) {
-                        if let photoUrl = lostDog.dogPhotoUrl,
-                           let url = URL(string: photoUrl) {
+                        if let url = lostDog.photoURL {
                             AsyncImage(url: url) { image in
                                 image
                                     .resizable()
@@ -632,11 +622,11 @@ struct LostDogInfoSheet: View {
                         }
 
                         VStack(alignment: .leading) {
-                            Text("LOST: \(lostDog.dogName)")
+                            Text("LOST: \(lostDog.name)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.red)
-                            Text(lostDog.dogBreed)
+                            Text(lostDog.breed)
                                 .font(.body)
                             Text("Reporter: \(lostDog.reporterName)")
                                 .font(.caption)

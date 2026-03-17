@@ -254,13 +254,8 @@ class MapViewModel: ObservableObject {
     }
 
     func generateCircularRoute(from origin: CLLocationCoordinate2D, via viaPoint: CLLocationCoordinate2D) {
-        let waypoints = CircularRouteGenerator.generateWaypoints(
-            from: origin,
-            via: viaPoint,
-            desiredDistance: 5000
-        )
-
-        routePolyline = waypoints
+        // Simple circular route: origin -> via -> origin
+        routePolyline = [origin, viaPoint, origin]
     }
 
     func onCameraChange(_ region: MKCoordinateRegion) {

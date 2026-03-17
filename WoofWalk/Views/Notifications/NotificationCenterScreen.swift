@@ -9,7 +9,17 @@ struct NotificationCenterScreen: View {
         NavigationStack {
             List {
                 if viewModel.notifications.isEmpty && !viewModel.isLoading {
-                    ContentUnavailableView("No Notifications", systemImage: "bell.slash", description: Text("You're all caught up!"))
+                    VStack(spacing: 12) {
+                        Image(systemName: "bell.slash")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No Notifications")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        Text("You're all caught up!")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 ForEach(viewModel.notifications) { notification in
