@@ -68,12 +68,12 @@ class FeedViewModel: ObservableObject {
         guard let uid = auth.currentUser?.uid else { return }
         Task {
             if post.likedBy.contains(uid) {
-                try? await db.collection("posts").document(post.id).updateData([
+                try? await db.collection("posts").document(post.id ?? "").updateData([
                     "likedBy": FieldValue.arrayRemove([uid]),
                     "likeCount": FieldValue.increment(Int64(-1))
                 ])
             } else {
-                try? await db.collection("posts").document(post.id).updateData([
+                try? await db.collection("posts").document(post.id ?? "").updateData([
                     "likedBy": FieldValue.arrayUnion([uid]),
                     "likeCount": FieldValue.increment(Int64(1))
                 ])
@@ -95,13 +95,13 @@ class FeedViewModel: ObservableObject {
                 authorAvatar: userAvatar,
                 type: "TEXT",
                 text: text,
-                photoUrl: photoUrl,
                 createdAt: Timestamp(),
-                likeCount: 0,
                 commentCount: 0,
+                photoUrl: photoUrl,
+                likeCount: 0,
                 likedBy: []
             )
-            try? db.collection("posts").document(post.id).setData(from: post)
+            try? db.collection("posts").document(post.id ?? "").setData(from: post)
         }
     }
 

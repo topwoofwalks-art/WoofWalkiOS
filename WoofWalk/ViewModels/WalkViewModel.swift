@@ -292,8 +292,9 @@ class WalkViewModel: ObservableObject {
     // MARK: - Statistics Calculation
     private func startStatisticsTimer() {
         statisticsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let vm = self else { return }
             Task { @MainActor in
-                self?.updateStatistics()
+                vm.updateStatistics()
             }
         }
     }

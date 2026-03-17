@@ -1,3 +1,6 @@
+#if false
+// MockData.swift - test data only, disabled to avoid build errors
+
 import Foundation
 import CoreLocation
 import FirebaseFirestore
@@ -233,3 +236,4 @@ struct MockData {
         ]
     }
 }
+#endif
