@@ -1,11 +1,18 @@
 import SwiftUI
 
+enum AppMode: String, CaseIterable {
+    case `public` = "Public"
+    case business = "Business"
+    case client = "Client"
+}
+
 @MainActor
 class AppNavigator: ObservableObject {
     static let shared = AppNavigator()
 
     @Published var path = NavigationPath()
     @Published var selectedTab: AppTab = .map
+    @Published var currentMode: AppMode = .public
 
     func navigate(to route: AppRoute) {
         path.append(route)
@@ -21,6 +28,20 @@ class AppNavigator: ObservableObject {
 
     func switchTab(_ tab: AppTab) {
         selectedTab = tab
+    }
+
+    func switchMode(_ mode: AppMode) {
+        currentMode = mode
+        path = NavigationPath()
+        // Reset to appropriate default tab for each mode
+        switch mode {
+        case .public:
+            selectedTab = .map
+        case .business:
+            selectedTab = .map
+        case .client:
+            selectedTab = .map
+        }
     }
 }
 

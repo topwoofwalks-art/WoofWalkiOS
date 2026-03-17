@@ -14,6 +14,20 @@ enum PoiType: String, CaseIterable, Codable {
     case livestock = "LIVESTOCK"
     case wildlife = "WILDLIFE"
     case amenity = "AMENITY"
+    case bench = "BENCH"
+    case picnicSite = "PICNIC_SITE"
+    case picnicTable = "PICNIC_TABLE"
+    case attraction = "ATTRACTION"
+    case viewpoint = "VIEWPOINT"
+    case dogFriendlyPub = "DOG_FRIENDLY_PUB"
+    case dogFriendlyCafe = "DOG_FRIENDLY_CAFE"
+    case dogFriendlyRestaurant = "DOG_FRIENDLY_RESTAURANT"
+    case vet = "VET"
+    case toilet = "TOILET"
+    case fountain = "FOUNTAIN"
+    case waterfall = "WATERFALL"
+    case shelter = "SHELTER"
+    case other = "OTHER"
 
     var displayName: String {
         switch self {
@@ -28,6 +42,20 @@ enum PoiType: String, CaseIterable, Codable {
         case .livestock: return "Livestock"
         case .wildlife: return "Wildlife"
         case .amenity: return "Amenity"
+        case .bench: return "Bench"
+        case .picnicSite: return "Picnic Site"
+        case .picnicTable: return "Picnic Table"
+        case .attraction: return "Attraction"
+        case .viewpoint: return "Viewpoint"
+        case .dogFriendlyPub: return "Dog Friendly Pub"
+        case .dogFriendlyCafe: return "Dog Friendly Cafe"
+        case .dogFriendlyRestaurant: return "Dog Friendly Restaurant"
+        case .vet: return "Vet"
+        case .toilet: return "Toilet"
+        case .fountain: return "Fountain"
+        case .waterfall: return "Waterfall"
+        case .shelter: return "Shelter"
+        case .other: return "Other"
         }
     }
 
@@ -44,6 +72,20 @@ enum PoiType: String, CaseIterable, Codable {
         case .livestock: return "hare.fill"
         case .wildlife: return "hare"
         case .amenity: return "storefront"
+        case .bench: return "chair.fill"
+        case .picnicSite: return "tent.fill"
+        case .picnicTable: return "tablecells"
+        case .attraction: return "star.fill"
+        case .viewpoint: return "binoculars.fill"
+        case .dogFriendlyPub: return "mug.fill"
+        case .dogFriendlyCafe: return "cup.and.saucer.fill"
+        case .dogFriendlyRestaurant: return "fork.knife"
+        case .vet: return "cross.case.fill"
+        case .toilet: return "figure.stand"
+        case .fountain: return "drop.triangle.fill"
+        case .waterfall: return "water.waves"
+        case .shelter: return "house.fill"
+        case .other: return "mappin"
         }
     }
 

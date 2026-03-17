@@ -30,7 +30,7 @@ struct POIMarkerView: View {
         case .park:
             return .green.opacity(0.7)
         case .church:
-            return .pink
+            return Color(hex: 0x9E9E9E)
         case .landscape:
             return .orange
         case .accessNote:
@@ -40,7 +40,35 @@ struct POIMarkerView: View {
         case .wildlife:
             return .pink.opacity(0.8)
         case .amenity:
-            return .cyan
+            return Color(hex: 0x607D8B)
+        case .bench:
+            return Color(hex: 0x03A9F4)
+        case .picnicSite:
+            return Color(hex: 0x4CAF50)
+        case .picnicTable:
+            return Color(hex: 0x4CAF50)
+        case .attraction:
+            return Color(hex: 0xFFC107)
+        case .viewpoint:
+            return Color(hex: 0xFF9800)
+        case .dogFriendlyPub:
+            return Color(hex: 0xFF8F00)
+        case .dogFriendlyCafe:
+            return Color(hex: 0x795548)
+        case .dogFriendlyRestaurant:
+            return Color(hex: 0xE53935)
+        case .vet:
+            return Color(hex: 0xD32F2F)
+        case .toilet:
+            return Color(hex: 0x1976D2)
+        case .fountain:
+            return Color(hex: 0x29B6F6)
+        case .waterfall:
+            return Color(hex: 0x00BCD4)
+        case .shelter:
+            return Color(hex: 0x6D4C41)
+        case .other:
+            return Color(hex: 0x9E9E9E)
         }
     }
 
@@ -68,6 +96,34 @@ struct POIMarkerView: View {
             return "hare.fill"
         case .amenity:
             return "mappin.circle.fill"
+        case .bench:
+            return "chair.fill"
+        case .picnicSite:
+            return "tent.fill"
+        case .picnicTable:
+            return "tablecells"
+        case .attraction:
+            return "star.fill"
+        case .viewpoint:
+            return "binoculars.fill"
+        case .dogFriendlyPub:
+            return "mug.fill"
+        case .dogFriendlyCafe:
+            return "cup.and.saucer.fill"
+        case .dogFriendlyRestaurant:
+            return "fork.knife"
+        case .vet:
+            return "cross.case.fill"
+        case .toilet:
+            return "figure.stand"
+        case .fountain:
+            return "drop.triangle.fill"
+        case .waterfall:
+            return "water.waves"
+        case .shelter:
+            return "house.fill"
+        case .other:
+            return "mappin"
         }
     }
 }
@@ -198,6 +254,20 @@ struct MapPOI: Identifiable {
         case livestock
         case wildlife
         case amenity
+        case bench
+        case picnicSite
+        case picnicTable
+        case attraction
+        case viewpoint
+        case dogFriendlyPub
+        case dogFriendlyCafe
+        case dogFriendlyRestaurant
+        case vet
+        case toilet
+        case fountain
+        case waterfall
+        case shelter
+        case other
     }
 }
 
