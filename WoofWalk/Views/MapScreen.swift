@@ -46,8 +46,7 @@ struct MapScreen: View {
 
     var body: some View {
         ZStack {
-            Map(coordinateRegion: $region, showsUserLocation: true) {
-            }
+            Map(coordinateRegion: $region, showsUserLocation: true)
             .ignoresSafeArea()
 
             VStack {
@@ -445,11 +444,9 @@ struct MapScreen: View {
 
     private func centerOnUser() {
         if let location = locationManager.location {
-            cameraPosition = .camera(
-                MapCamera(
-                    centerCoordinate: location,
-                    distance: 1000
-                )
+            region = MKCoordinateRegion(
+                center: location,
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
         }
     }
