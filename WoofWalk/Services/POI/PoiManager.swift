@@ -10,7 +10,7 @@ struct CacheStats {
 class PoiManager {
     static let shared = PoiManager()
 
-    private let overpassService = OverpassService()
+    private let overpassService = PoiOverpassService()
     private let memoryCache = OsmPoiCache()
     private let databaseManager = PoiDatabaseManager.shared
 
@@ -71,7 +71,7 @@ class PoiManager {
 
         print("Cache MISS: Fetching from Overpass API (lat=\(lat), lng=\(lng), radius=\(radiusKm)km)")
 
-        let query = OverpassService.buildDogFriendlyQuery(
+        let query = PoiOverpassService.buildDogFriendlyQuery(
             lat: lat,
             lng: lng,
             radiusMeters: radiusMeters
@@ -83,7 +83,7 @@ class PoiManager {
             CachedPoi(
                 osmId: "osm_\(element.id)",
                 name: element.tags?["name"] ?? "",
-                type: OverpassService.mapOsmTypeToPoiType(tags: element.tags),
+                type: PoiOverpassService.mapOsmTypeToPoiType(tags: element.tags),
                 latitude: element.lat,
                 longitude: element.lon,
                 tags: element.tags?.map { "\($0.key)=\($0.value)" }.joined(separator: ";") ?? "",

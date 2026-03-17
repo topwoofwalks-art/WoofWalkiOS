@@ -60,7 +60,7 @@ struct QuickAddPoiButtons: View {
         )
 
         do {
-            _ = try await PoiRepository.shared.createPoi(poi)
+            _ = try await PoiServiceRepository.shared.createPoi(poi)
             addedType = type
             showingSuccess = true
             onPoiAdded()

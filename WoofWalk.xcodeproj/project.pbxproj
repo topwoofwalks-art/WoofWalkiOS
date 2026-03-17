@@ -37,7 +37,7 @@
 		A1000001000000000000147 /* PooBagDropRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000146 /* PooBagDropRepository.swift */; };
 		A1000001000000000000149 /* StatsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000148 /* StatsRepository.swift */; };
 		A1000001000000000000151 /* SyncQueueRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000150 /* SyncQueueRepository.swift */; };
-		A1000001000000000000153 /* UserRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000152 /* UserRepository.swift */; };
+		A1000001000000000000153 /* LocalUserRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000152 /* LocalUserRepository.swift */; };
 		A1000001000000000000155 /* WalkRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000154 /* WalkRepository.swift */; };
 		A1000001000000000000157 /* WalkSessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000156 /* WalkSessionRepository.swift */; };
 		A1000001000000000000159 /* WeightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000158 /* WeightRepository.swift */; };
@@ -66,13 +66,13 @@
 		A1000001000000000000205 /* LivestockSpecies.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000204 /* LivestockSpecies.swift */; };
 		A1000001000000000000207 /* TileCoord.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000206 /* TileCoord.swift */; };
 		A1000001000000000000209 /* Tour.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000208 /* Tour.swift */; };
-		A1000001000000000000211 /* WalkingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000210 /* WalkingPath.swift */; };
+		A1000001000000000000211 /* LivestockWalkingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000210 /* LivestockWalkingPath.swift */; };
 		A1000001000000000000213 /* LocalEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000212 /* LocalEntities.swift */; };
 		A1000001000000000000215 /* GuidanceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000214 /* GuidanceState.swift */; };
 		A1000001000000000000217 /* NavigationLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000216 /* NavigationLogic.swift */; };
 		A1000001000000000000219 /* NavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000218 /* NavigationManager.swift */; };
 		A1000001000000000000221 /* NavigationProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000220 /* NavigationProgress.swift */; };
-		A1000001000000000000223 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000222 /* Route.swift */; };
+		A1000001000000000000223 /* NavRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000222 /* NavRoute.swift */; };
 		A1000001000000000000225 /* RouteStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000224 /* RouteStep.swift */; };
 		A1000001000000000000227 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000226 /* Notification.swift */; };
 		A1000001000000000000229 /* POI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000228 /* POI.swift */; };
@@ -118,17 +118,17 @@
 		A1000001000000000000309 /* OverpassModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000308 /* OverpassModels.swift */; };
 		A1000001000000000000311 /* OverpassService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000310 /* OverpassService.swift */; };
 		A1000001000000000000313 /* OsmPoiCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000312 /* OsmPoiCache.swift */; };
-		A1000001000000000000315 /* OverpassService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000314 /* OverpassService.swift */; };
+		A1000001000000000000315 /* PoiOverpassService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000314 /* PoiOverpassService.swift */; };
 		A1000001000000000000317 /* PoiDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000316 /* PoiDatabaseManager.swift */; };
 		A1000001000000000000319 /* PoiManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000318 /* PoiManager.swift */; };
-		A1000001000000000000321 /* PoiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000320 /* PoiRepository.swift */; };
+		A1000001000000000000321 /* PoiServiceRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000320 /* PoiServiceRepository.swift */; };
 		A1000001000000000000323 /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000322 /* ShareService.swift */; };
 		A1000001000000000000325 /* WalkTrackingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000324 /* WalkTrackingService.swift */; };
 		A1000001000000000000327 /* WalkingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000326 /* WalkingPath.swift */; };
 		A1000001000000000000329 /* WalkingPathOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000328 /* WalkingPathOverlay.swift */; };
 		A1000001000000000000331 /* WalkingPathRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000330 /* WalkingPathRepository.swift */; };
 		A1000001000000000000333 /* WalkingPathRoutingExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000332 /* WalkingPathRoutingExtension.swift */; };
-		A1000001000000000000335 /* WalkingPathViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000334 /* WalkingPathViewModel.swift */; };
+		A1000001000000000000335 /* WalkPathVM.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000334 /* WalkPathVM.swift */; };
 		A1000001000000000000337 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000336 /* Colors.swift */; };
 		A1000001000000000000339 /* ComponentStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000338 /* ComponentStyles.swift */; };
 		A1000001000000000000341 /* EXAMPLE_USAGE.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000340 /* EXAMPLE_USAGE.swift */; };
@@ -239,7 +239,7 @@
 		A1000001000000000000551 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000550 /* EditProfileView.swift */; };
 		A1000001000000000000553 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000552 /* LeaderboardView.swift */; };
 		A1000001000000000000555 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000554 /* ProfileView.swift */; };
-		A1000001000000000000557 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000556 /* StatsView.swift */; };
+		A1000001000000000000557 /* ProfileStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000556 /* ProfileStatsView.swift */; };
 		A1000001000000000000559 /* AlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000558 /* AlertSettingsView.swift */; };
 		A1000001000000000000561 /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000560 /* DataManagementView.swift */; };
 		A1000001000000000000563 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000562 /* PermissionsView.swift */; };
@@ -251,7 +251,7 @@
 		A1000001000000000000575 /* ConfettiEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000574 /* ConfettiEffect.swift */; };
 		A1000001000000000000577 /* DirectionIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000576 /* DirectionIcon.swift */; };
 		A1000001000000000000579 /* ElevationChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000578 /* ElevationChart.swift */; };
-		A1000001000000000000581 /* GuidancePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000580 /* GuidancePanel.swift */; };
+		A1000001000000000000581 /* WalkGuidancePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000580 /* WalkGuidancePanel.swift */; };
 		A1000001000000000000583 /* PersonalBestBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000582 /* PersonalBestBanner.swift */; };
 		A1000001000000000000585 /* PlanningModeOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000584 /* PlanningModeOverlay.swift */; };
 		A1000001000000000000587 /* RouteStartProximitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000586 /* RouteStartProximitySheet.swift */; };
@@ -297,7 +297,7 @@
 		A1000001000000000000146 /* PooBagDropRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooBagDropRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000148 /* StatsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000150 /* SyncQueueRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncQueueRepository.swift; sourceTree = "<group>"; };
-		A1000001000000000000152 /* UserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000152 /* LocalUserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalUserRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000154 /* WalkRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000156 /* WalkSessionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSessionRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000158 /* WeightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightRepository.swift; sourceTree = "<group>"; };
@@ -326,13 +326,13 @@
 		A1000001000000000000204 /* LivestockSpecies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockSpecies.swift; sourceTree = "<group>"; };
 		A1000001000000000000206 /* TileCoord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileCoord.swift; sourceTree = "<group>"; };
 		A1000001000000000000208 /* Tour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tour.swift; sourceTree = "<group>"; };
-		A1000001000000000000210 /* WalkingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPath.swift; sourceTree = "<group>"; };
+		A1000001000000000000210 /* LivestockWalkingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockWalkingPath.swift; sourceTree = "<group>"; };
 		A1000001000000000000212 /* LocalEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalEntities.swift; sourceTree = "<group>"; };
 		A1000001000000000000214 /* GuidanceState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidanceState.swift; sourceTree = "<group>"; };
 		A1000001000000000000216 /* NavigationLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationLogic.swift; sourceTree = "<group>"; };
 		A1000001000000000000218 /* NavigationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
 		A1000001000000000000220 /* NavigationProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationProgress.swift; sourceTree = "<group>"; };
-		A1000001000000000000222 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
+		A1000001000000000000222 /* NavRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavRoute.swift; sourceTree = "<group>"; };
 		A1000001000000000000224 /* RouteStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteStep.swift; sourceTree = "<group>"; };
 		A1000001000000000000226 /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
 		A1000001000000000000228 /* POI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POI.swift; sourceTree = "<group>"; };
@@ -378,17 +378,17 @@
 		A1000001000000000000308 /* OverpassModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverpassModels.swift; sourceTree = "<group>"; };
 		A1000001000000000000310 /* OverpassService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverpassService.swift; sourceTree = "<group>"; };
 		A1000001000000000000312 /* OsmPoiCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OsmPoiCache.swift; sourceTree = "<group>"; };
-		A1000001000000000000314 /* OverpassService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverpassService.swift; sourceTree = "<group>"; };
+		A1000001000000000000314 /* PoiOverpassService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiOverpassService.swift; sourceTree = "<group>"; };
 		A1000001000000000000316 /* PoiDatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiDatabaseManager.swift; sourceTree = "<group>"; };
 		A1000001000000000000318 /* PoiManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiManager.swift; sourceTree = "<group>"; };
-		A1000001000000000000320 /* PoiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000320 /* PoiServiceRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiServiceRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000322 /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
 		A1000001000000000000324 /* WalkTrackingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTrackingService.swift; sourceTree = "<group>"; };
 		A1000001000000000000326 /* WalkingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPath.swift; sourceTree = "<group>"; };
 		A1000001000000000000328 /* WalkingPathOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathOverlay.swift; sourceTree = "<group>"; };
 		A1000001000000000000330 /* WalkingPathRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000332 /* WalkingPathRoutingExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathRoutingExtension.swift; sourceTree = "<group>"; };
-		A1000001000000000000334 /* WalkingPathViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPathViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000000334 /* WalkPathVM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkPathVM.swift; sourceTree = "<group>"; };
 		A1000001000000000000336 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		A1000001000000000000338 /* ComponentStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentStyles.swift; sourceTree = "<group>"; };
 		A1000001000000000000340 /* EXAMPLE_USAGE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EXAMPLE_USAGE.swift; sourceTree = "<group>"; };
@@ -499,7 +499,7 @@
 		A1000001000000000000550 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		A1000001000000000000552 /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		A1000001000000000000554 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		A1000001000000000000556 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000556 /* ProfileStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStatsView.swift; sourceTree = "<group>"; };
 		A1000001000000000000558 /* AlertSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSettingsView.swift; sourceTree = "<group>"; };
 		A1000001000000000000560 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
 		A1000001000000000000562 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
@@ -511,7 +511,7 @@
 		A1000001000000000000574 /* ConfettiEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiEffect.swift; sourceTree = "<group>"; };
 		A1000001000000000000576 /* DirectionIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectionIcon.swift; sourceTree = "<group>"; };
 		A1000001000000000000578 /* ElevationChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevationChart.swift; sourceTree = "<group>"; };
-		A1000001000000000000580 /* GuidancePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidancePanel.swift; sourceTree = "<group>"; };
+		A1000001000000000000580 /* WalkGuidancePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkGuidancePanel.swift; sourceTree = "<group>"; };
 		A1000001000000000000582 /* PersonalBestBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalBestBanner.swift; sourceTree = "<group>"; };
 		A1000001000000000000584 /* PlanningModeOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningModeOverlay.swift; sourceTree = "<group>"; };
 		A1000001000000000000586 /* RouteStartProximitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteStartProximitySheet.swift; sourceTree = "<group>"; };
@@ -777,7 +777,7 @@
 				A1000001000000000000146 /* PooBagDropRepository.swift */,
 				A1000001000000000000148 /* StatsRepository.swift */,
 				A1000001000000000000150 /* SyncQueueRepository.swift */,
-				A1000001000000000000152 /* UserRepository.swift */,
+				A1000001000000000000152 /* LocalUserRepository.swift */,
 				A1000001000000000000154 /* WalkRepository.swift */,
 				A1000001000000000000156 /* WalkSessionRepository.swift */,
 				A1000001000000000000158 /* WeightRepository.swift */,
@@ -844,7 +844,7 @@
 				A1000001000000000000204 /* LivestockSpecies.swift */,
 				A1000001000000000000206 /* TileCoord.swift */,
 				A1000001000000000000208 /* Tour.swift */,
-				A1000001000000000000210 /* WalkingPath.swift */,
+				A1000001000000000000210 /* LivestockWalkingPath.swift */,
 			);
 			path = LivestockField;
 			sourceTree = "<group>";
@@ -856,7 +856,7 @@
 				A1000001000000000000216 /* NavigationLogic.swift */,
 				A1000001000000000000218 /* NavigationManager.swift */,
 				A1000001000000000000220 /* NavigationProgress.swift */,
-				A1000001000000000000222 /* Route.swift */,
+				A1000001000000000000222 /* NavRoute.swift */,
 				A1000001000000000000224 /* RouteStep.swift */,
 			);
 			path = Navigation;
@@ -912,10 +912,10 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000312 /* OsmPoiCache.swift */,
-				A1000001000000000000314 /* OverpassService.swift */,
+				A1000001000000000000314 /* PoiOverpassService.swift */,
 				A1000001000000000000316 /* PoiDatabaseManager.swift */,
 				A1000001000000000000318 /* PoiManager.swift */,
-				A1000001000000000000320 /* PoiRepository.swift */,
+				A1000001000000000000320 /* PoiServiceRepository.swift */,
 			);
 			path = POI;
 			sourceTree = "<group>";
@@ -927,7 +927,7 @@
 				A1000001000000000000328 /* WalkingPathOverlay.swift */,
 				A1000001000000000000330 /* WalkingPathRepository.swift */,
 				A1000001000000000000332 /* WalkingPathRoutingExtension.swift */,
-				A1000001000000000000334 /* WalkingPathViewModel.swift */,
+				A1000001000000000000334 /* WalkPathVM.swift */,
 			);
 			path = WalkingPaths;
 			sourceTree = "<group>";
@@ -1135,7 +1135,7 @@
 				A1000001000000000000550 /* EditProfileView.swift */,
 				A1000001000000000000552 /* LeaderboardView.swift */,
 				A1000001000000000000554 /* ProfileView.swift */,
-				A1000001000000000000556 /* StatsView.swift */,
+				A1000001000000000000556 /* ProfileStatsView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -1175,7 +1175,7 @@
 				A1000001000000000000574 /* ConfettiEffect.swift */,
 				A1000001000000000000576 /* DirectionIcon.swift */,
 				A1000001000000000000578 /* ElevationChart.swift */,
-				A1000001000000000000580 /* GuidancePanel.swift */,
+				A1000001000000000000580 /* WalkGuidancePanel.swift */,
 				A1000001000000000000582 /* PersonalBestBanner.swift */,
 				A1000001000000000000584 /* PlanningModeOverlay.swift */,
 				A1000001000000000000586 /* RouteStartProximitySheet.swift */,

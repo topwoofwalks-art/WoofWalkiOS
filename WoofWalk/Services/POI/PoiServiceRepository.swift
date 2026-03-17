@@ -4,8 +4,8 @@ import FirebaseFirestore
 import CoreLocation
 import Combine
 
-class PoiRepository {
-    static let shared = PoiRepository()
+class PoiServiceRepository {
+    static let shared = PoiServiceRepository()
 
     private let db = Firestore.firestore()
     private let auth = Auth.auth()
@@ -15,7 +15,7 @@ class PoiRepository {
 
     func createPoi(_ poi: POI) async throws -> String {
         guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "PoiRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+            throw NSError(domain: "PoiServiceRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
         let geohash = Geohash.encode(latitude: poi.lat, longitude: poi.lng, precision: 9)
@@ -40,7 +40,7 @@ class PoiRepository {
 
     func updatePoi(poiId: String, updates: [String: Any]) async throws {
         guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "PoiRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+            throw NSError(domain: "PoiServiceRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
         let poiDoc = try await db.collection("pois").document(poiId).getDocument()
@@ -48,7 +48,7 @@ class PoiRepository {
         guard let poiData = poiDoc.data(),
               let createdBy = poiData["createdBy"] as? String,
               createdBy == userId else {
-            throw NSError(domain: "PoiRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to update this POI"])
+            throw NSError(domain: "PoiServiceRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to update this POI"])
         }
 
         try await db.collection("pois").document(poiId).updateData(updates)
@@ -57,7 +57,7 @@ class PoiRepository {
 
     func votePoi(poiId: String, upvote: Bool) async throws {
         guard auth.currentUser?.uid != nil else {
-            throw NSError(domain: "PoiRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+            throw NSError(domain: "PoiServiceRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
         let field = upvote ? "voteUp" : "voteDown"
@@ -156,7 +156,7 @@ class PoiRepository {
 
     func addComment(poiId: String, text: String) async throws -> String {
         guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "PoiRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+            throw NSError(domain: "PoiServiceRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
         let userName = auth.currentUser?.displayName ?? "Anonymous"
@@ -201,7 +201,7 @@ class PoiRepository {
 
     func reportPoi(poiId: String, reason: String) async throws {
         guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "PoiRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+            throw NSError(domain: "PoiServiceRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
         let report: [String: Any] = [
@@ -217,7 +217,7 @@ class PoiRepository {
 
     func reportPoiMissing(poiId: String) async throws {
         guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "PoiRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+            throw NSError(domain: "PoiServiceRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
         try await db.collection("pois").document(poiId).updateData([

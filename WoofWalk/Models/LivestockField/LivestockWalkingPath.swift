@@ -1,7 +1,7 @@
 import Foundation
 import CoreLocation
 
-struct WalkingPath: Identifiable, Codable, Equatable {
+struct LivestockWalkingPath: Identifiable, Codable, Equatable {
     let id: String
     let coordinates: [Coordinate]
     let surfaceType: SurfaceType

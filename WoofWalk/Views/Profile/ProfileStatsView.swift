@@ -1,7 +1,7 @@
 import SwiftUI
 import Charts
 
-struct StatsView: View {
+struct ProfileStatsView: View {
     @StateObject private var viewModel = ProfileViewModel()
 
     var body: some View {
@@ -136,21 +136,21 @@ struct StatsView: View {
                 .font(.headline)
 
             VStack(spacing: 8) {
-                AchievementRow(
+                ProfileAchievementRow(
                     icon: "trophy.fill",
                     title: "10 Walks Completed",
                     date: "2 days ago",
                     color: .yellow
                 )
 
-                AchievementRow(
+                ProfileAchievementRow(
                     icon: "flame.fill",
                     title: "5 Day Streak",
                     date: "Yesterday",
                     color: .orange
                 )
 
-                AchievementRow(
+                ProfileAchievementRow(
                     icon: "map.fill",
                     title: "5km Distance Milestone",
                     date: "Last week",
@@ -250,7 +250,7 @@ struct ProgressBar: View {
     }
 }
 
-struct AchievementRow: View {
+struct ProfileAchievementRow: View {
     let icon: String
     let title: String
     let date: String
@@ -286,8 +286,8 @@ struct AchievementRow: View {
     }
 }
 
-struct StatsView_Previews: PreviewProvider {
+struct ProfileStatsView_Previews: PreviewProvider {
     static var previews: some View {
-        StatsView()
+        ProfileStatsView()
     }
 }

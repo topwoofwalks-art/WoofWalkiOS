@@ -18,7 +18,7 @@ class PoiViewModel: ObservableObject {
     @Published var success: Bool = false
 
     private let location: CLLocationCoordinate2D
-    private let repository = PoiRepository.shared
+    private let repository = PoiServiceRepository.shared
 
     init(location: CLLocationCoordinate2D) {
         self.location = location
@@ -126,7 +126,7 @@ class PoiDetailViewModel: ObservableObject {
     @Published var error: String?
 
     private let poi: POI
-    private let repository = PoiRepository.shared
+    private let repository = PoiServiceRepository.shared
     private var cancellables = Set<AnyCancellable>()
 
     init(poi: POI) {

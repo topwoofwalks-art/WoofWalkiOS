@@ -1,7 +1,7 @@
 import Foundation
 import CoreLocation
 
-struct OverpassElement: Codable {
+struct PoiOverpassElement: Codable {
     let type: String
     let id: Int64
     let lat: Double
@@ -9,11 +9,11 @@ struct OverpassElement: Codable {
     let tags: [String: String]?
 }
 
-struct OverpassResponse: Codable {
-    let elements: [OverpassElement]
+struct PoiOverpassResponse: Codable {
+    let elements: [PoiOverpassElement]
 }
 
-class OverpassService {
+class PoiOverpassService {
     static let baseURL = "https://overpass-api.de/api/"
 
     static func buildDogFriendlyQuery(lat: Double, lng: Double, radiusMeters: Int = 1500) -> String {
@@ -43,7 +43,7 @@ class OverpassService {
         """
     }
 
-    func query(_ queryString: String) async throws -> OverpassResponse {
+    func query(_ queryString: String) async throws -> PoiOverpassResponse {
         guard let url = URL(string: "\(Self.baseURL)interpreter") else {
             throw URLError(.badURL)
         }
@@ -61,7 +61,7 @@ class OverpassService {
         }
 
         let decoder = JSONDecoder()
-        return try decoder.decode(OverpassResponse.self, from: data)
+        return try decoder.decode(PoiOverpassResponse.self, from: data)
     }
 
     static func mapOsmTypeToPoiType(tags: [String: String]?) -> String {

@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 import Combine
 
-struct WalkingPathUiState {
+struct WalkPathUiState {
     var isPathLayerEnabled: Bool = false
     var paths: [WalkingPath] = []
     var isLoading: Bool = false
@@ -10,8 +10,8 @@ struct WalkingPathUiState {
 }
 
 @MainActor
-class WalkingPathViewModel: ObservableObject {
-    @Published var uiState = WalkingPathUiState()
+class WalkPathVM: ObservableObject {
+    @Published var uiState = WalkPathUiState()
 
     private let repository = WalkingPathRepository.shared
 
