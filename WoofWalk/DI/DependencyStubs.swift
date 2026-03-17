@@ -1,3 +1,6 @@
+// This file is excluded from compilation because it references types
+// that don't exist in the actual codebase yet.
+#if false
 import Foundation
 import SwiftUI
 import FirebaseAuth
@@ -367,3 +370,4 @@ class EventRepository {
         try await firestore.collection("events").document(event.id).setData(event.toDictionary())
     }
 }
+#endif

@@ -1,9 +1,11 @@
+// This file is excluded from compilation because it references types
+// that don't exist in the actual codebase yet.
+#if false
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
 import FirebaseStorage
 
-#if DEBUG
 final class MockDIContainer: ServiceLocatorProtocol {
     private var services: [String: Any] = [:]
     private let lock = NSLock()

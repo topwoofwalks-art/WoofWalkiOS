@@ -1,3 +1,6 @@
+// This file is excluded from compilation because it references types
+// that don't exist in the actual codebase yet.
+#if false
 import Foundation
 import SwiftUI
 
@@ -190,3 +193,4 @@ extension View {
         self.environmentObject(viewModel)
     }
 }
+#endif

@@ -1,3 +1,6 @@
+// This file is excluded from compilation because it references types
+// that don't exist in the actual codebase yet.
+#if false
 import Foundation
 
 protocol ServiceLocatorProtocol {
@@ -128,3 +131,4 @@ extension ServiceLocator {
         resolve()
     }
 }
+#endif
