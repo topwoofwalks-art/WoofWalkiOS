@@ -172,14 +172,17 @@ struct MapScreen: View {
         if let guidanceState = guidanceViewModel.guidanceState,
            case .active = guidanceState {
             GuidancePanel(
-                guidanceState: guidanceState,
-                walkDistance: walkTrackingViewModel.walkDistance,
-                walkDuration: walkTrackingViewModel.walkDuration,
-                onDismiss: {
+                viewModel: guidanceViewModel,
+                onStop: {
                     if walkTrackingViewModel.isWalkActive {
                         stopWalk()
                     }
                     guidanceViewModel.stopGuidance()
+                },
+                onReroute: {
+                    if let userLocation = locationManager.location {
+                        guidanceViewModel.requestReroute(from: userLocation)
+                    }
                 }
             )
             .padding(.horizontal)
@@ -1046,3 +1049,11 @@ struct RoutePreview {
 #endif
 
 import AVFoundation
+
+// MARK: - CLLocationCoordinate2D Equatable
+
+extension CLLocationCoordinate2D: @retroactive Equatable {
+    public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
+        lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
+}
