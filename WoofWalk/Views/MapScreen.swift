@@ -169,8 +169,7 @@ struct MapScreen: View {
 
     @ViewBuilder
     private var guidanceOrWalkPanel: some View {
-        if let guidanceState = guidanceViewModel.guidanceState,
-           case .active = guidanceState {
+        if case .active = guidanceViewModel.guidanceState {
             GuidancePanel(
                 viewModel: guidanceViewModel,
                 onStop: {
@@ -379,7 +378,7 @@ struct MapScreen: View {
     }
 
     private func startWalk() {
-        guard guidanceViewModel.guidanceState == nil else {
+        guard guidanceViewModel.guidanceState == .idle else {
             return
         }
         if !hasShownPrompt {
@@ -1052,7 +1051,7 @@ import AVFoundation
 
 // MARK: - CLLocationCoordinate2D Equatable
 
-extension CLLocationCoordinate2D: @retroactive Equatable {
+extension CLLocationCoordinate2D: Equatable {
     public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
         lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
     }
