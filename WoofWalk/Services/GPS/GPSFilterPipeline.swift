@@ -124,8 +124,8 @@ final class GPSFilterPipeline {
 }
 
 // MARK: - Numeric Helpers
+// degreesToRadians is defined in LivestockFieldRepository.swift
 
 private extension Double {
-    var degreesToRadians: Double { self * .pi / 180 }
     var radiansToDegrees: Double { self * 180 / .pi }
 }
