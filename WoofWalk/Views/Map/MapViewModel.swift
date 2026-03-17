@@ -1,6 +1,7 @@
 import SwiftUI
 import MapKit
 import Combine
+import CoreLocation
 
 @MainActor
 class MapViewModel: ObservableObject {
@@ -24,6 +25,7 @@ class MapViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var walkStartTime: Date?
     private var walkTimer: Timer?
+    private let poiService = PoiServiceRepository.shared
 
     enum CameraMode {
         case free
@@ -58,19 +60,23 @@ class MapViewModel: ObservableObject {
             .assign(to: &$filteredPOIs)
     }
 
-    func loadPOIs() {
-        Task {
-            do {
-                let loadedPOIs = try await fetchPOIsFromAPI()
-                self.pois = loadedPOIs
-            } catch {
-                print("Failed to load POIs: \(error)")
-            }
-        }
-    }
+    func loadPOIs(near center: CLLocationCoordinate2D? = nil) {
+        let queryCenter = center ?? CLLocationCoordinate2D(latitude: 51.5, longitude: -0.1)
 
-    private func fetchPOIsFromAPI() async throws -> [POI] {
-        return []
+        poiService.getPoisNearby(center: queryCenter, radiusKm: 5.0)
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case .failure(let error) = completion {
+                        print("[MapViewModel] Failed to load POIs: \(error.localizedDescription)")
+                    }
+                },
+                receiveValue: { [weak self] pois in
+                    self?.pois = pois
+                    print("[MapViewModel] Loaded \(pois.count) POIs from Firestore")
+                }
+            )
+            .store(in: &cancellables)
     }
 
     func togglePOIType(_ type: POI.POIType) {
@@ -87,9 +93,8 @@ class MapViewModel: ObservableObject {
 
     func addPOI(type: POI.POIType, at coordinate: CLLocationCoordinate2D) {
         let newPOI = POI(
-            id: UUID().uuidString,
             type: type.rawValue,
-            title: "New \(type.rawValue)",
+            title: "New \(type.displayName)",
             desc: "User added POI",
             lat: coordinate.latitude,
             lng: coordinate.longitude
@@ -98,29 +103,16 @@ class MapViewModel: ObservableObject {
 
         Task {
             do {
-                try await savePOIToAPI(newPOI)
+                let docId = try await poiService.createPoi(newPOI)
+                print("[MapViewModel] POI saved: \(docId)")
             } catch {
-                print("Failed to save POI: \(error)")
+                print("[MapViewModel] Failed to save POI: \(error.localizedDescription)")
             }
         }
-    }
-
-    private func savePOIToAPI(_ poi: POI) async throws {
     }
 
     func removePOI(_ poi: POI) {
         pois.removeAll { $0.id == poi.id }
-
-        Task {
-            do {
-                try await deletePOIFromAPI(poi.id)
-            } catch {
-                print("Failed to delete POI: \(error)")
-            }
-        }
-    }
-
-    private func deletePOIFromAPI(_ id: String) async throws {
     }
 
     func addPooBagDrop(at coordinate: CLLocationCoordinate2D) {

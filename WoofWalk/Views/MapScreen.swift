@@ -114,8 +114,8 @@ struct MapScreen: View {
             completedDuration: completedDuration
         ))
         .onAppear {
-            mapViewModel.loadPOIs()
             locationManager.startUpdatingLocation()
+            mapViewModel.loadPOIs(near: locationManager.location)
         }
         .onChange(of: locationManager.location) { newLocation in
             if let location = newLocation {
@@ -127,9 +127,104 @@ struct MapScreen: View {
 
     // MARK: - Map Layer
 
+    private var mapAnnotations: [MapMarkerItem] {
+        var items: [MapMarkerItem] = []
+
+        // POIs
+        for poi in mapViewModel.filteredPOIs {
+            items.append(MapMarkerItem(
+                id: "poi-\(poi.id)",
+                coordinate: poi.coordinate,
+                kind: .poi(poi)
+            ))
+        }
+
+        // Poo bag drops
+        for bag in mapViewModel.activeBagDrops {
+            items.append(MapMarkerItem(
+                id: "bag-\(bag.id)",
+                coordinate: bag.coordinate,
+                kind: .pooBag(bag)
+            ))
+        }
+
+        // Public dogs
+        for dog in mapViewModel.publicDogs {
+            items.append(MapMarkerItem(
+                id: "dog-\(dog.id)",
+                coordinate: dog.coordinate,
+                kind: .publicDog(dog)
+            ))
+        }
+
+        // Lost dogs
+        for dog in mapViewModel.lostDogs {
+            items.append(MapMarkerItem(
+                id: "lost-\(dog.id)",
+                coordinate: dog.coordinate,
+                kind: .lostDog(dog)
+            ))
+        }
+
+        // Car location
+        if let car = carLocation {
+            items.append(MapMarkerItem(
+                id: "car",
+                coordinate: car,
+                kind: .car
+            ))
+        }
+
+        return items
+    }
+
     private var mapLayer: some View {
-        Map(coordinateRegion: $region, showsUserLocation: true)
-            .ignoresSafeArea()
+        Map(coordinateRegion: $region, showsUserLocation: true, annotationItems: mapAnnotations) { item in
+            MapAnnotation(coordinate: item.coordinate) {
+                switch item.kind {
+                case .poi(let poi):
+                    POIMarkerView(poi: poi)
+                        .onTapGesture { handlePOITap(poi) }
+                case .pooBag(let bag):
+                    Image(systemName: "bag.fill")
+                        .foregroundColor(.white)
+                        .font(.system(size: 16))
+                        .padding(8)
+                        .background(Circle().fill(.orange))
+                        .shadow(radius: 3)
+                        .onTapGesture { handleBagDropTap(bag) }
+                case .publicDog(let dog):
+                    Image(systemName: dog.isNervous ? "exclamationmark.triangle.fill" : "pawprint.fill")
+                        .foregroundColor(.white)
+                        .font(.system(size: 16))
+                        .padding(8)
+                        .background(Circle().fill(dog.isNervous ? .orange : .blue))
+                        .shadow(radius: 3)
+                        .onTapGesture { handlePublicDogTap(dog) }
+                case .lostDog(let dog):
+                    VStack(spacing: 2) {
+                        Image(systemName: "exclamationmark.octagon.fill")
+                            .foregroundColor(.white)
+                            .font(.system(size: 16))
+                            .padding(8)
+                            .background(Circle().fill(.red))
+                            .shadow(radius: 3)
+                        Text("LOST")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.red)
+                    }
+                    .onTapGesture { handleLostDogTap(dog) }
+                case .car:
+                    Image(systemName: "car.fill")
+                        .foregroundColor(.white)
+                        .font(.system(size: 16))
+                        .padding(8)
+                        .background(Circle().fill(.cyan))
+                        .shadow(radius: 3)
+                }
+            }
+        }
+        .ignoresSafeArea()
     }
 
     // MARK: - Controls Overlay
@@ -430,6 +525,7 @@ struct MapScreen: View {
                 center: location,
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
+            mapViewModel.loadPOIs(near: location)
         }
     }
 
@@ -1056,6 +1152,22 @@ struct RoutePreview {
 #endif
 
 import AVFoundation
+
+// MARK: - Map Marker Item
+
+struct MapMarkerItem: Identifiable {
+    let id: String
+    let coordinate: CLLocationCoordinate2D
+    let kind: Kind
+
+    enum Kind {
+        case poi(POI)
+        case pooBag(PooBagDrop)
+        case publicDog(PublicDog)
+        case lostDog(LostDog)
+        case car
+    }
+}
 
 // MARK: - CLLocationCoordinate2D Equatable
 
