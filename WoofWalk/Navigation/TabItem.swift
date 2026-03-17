@@ -24,11 +24,11 @@ enum TabItem: String, CaseIterable {
         }
     }
 
-    var route: Route {
+    var route: AppRoute {
         switch self {
         case .map: return .map
         case .feed: return .feed
-        case .social: return .social
+        case .social: return .socialHub
         case .profile: return .profile
         }
     }

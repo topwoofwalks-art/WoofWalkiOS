@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 import Combine
+import UserNotifications
 
 struct GeofenceRegion {
     let identifier: String
@@ -120,7 +121,7 @@ class GeofenceManager: ObservableObject {
         let nearbyPOIs = pois.filter { poi in
             let distance = locationService.calculateDistance(
                 from: userLocation,
-                to: CLLocationCoordinate2D(latitude: poi.latitude, longitude: poi.longitude)
+                to: CLLocationCoordinate2D(latitude: poi.lat, longitude: poi.lng)
             )
             return distance <= maxDistance
         }
@@ -128,11 +129,11 @@ class GeofenceManager: ObservableObject {
         let sortedPOIs = nearbyPOIs.sorted { poi1, poi2 in
             let dist1 = locationService.calculateDistance(
                 from: userLocation,
-                to: CLLocationCoordinate2D(latitude: poi1.latitude, longitude: poi1.longitude)
+                to: CLLocationCoordinate2D(latitude: poi1.lat, longitude: poi1.lng)
             )
             let dist2 = locationService.calculateDistance(
                 from: userLocation,
-                to: CLLocationCoordinate2D(latitude: poi2.latitude, longitude: poi2.longitude)
+                to: CLLocationCoordinate2D(latitude: poi2.lat, longitude: poi2.lng)
             )
             return dist1 < dist2
         }
@@ -147,8 +148,8 @@ class GeofenceManager: ObservableObject {
                 let result = registerGeofence(
                     identifier: identifier,
                     coordinate: CLLocationCoordinate2D(
-                        latitude: poi.latitude,
-                        longitude: poi.longitude
+                        latitude: poi.lat,
+                        longitude: poi.lng
                     ),
                     radius: defaultRadius,
                     title: poi.title,
@@ -217,15 +218,7 @@ class GeofenceManager: ObservableObject {
     }
 }
 
-// MARK: - POI Model (Placeholder)
-
-struct POI {
-    let id: String
-    let latitude: Double
-    let longitude: Double
-    let title: String
-    let type: String
-}
+// POI model is defined in Models/POI/POI.swift
 
 // MARK: - Errors
 
@@ -280,7 +273,9 @@ extension GeofenceManager {
     }
 }
 
+#if false
 // MARK: - Helper Extensions
+// CLLocationCoordinate2D Equatable/Hashable conformance defined elsewhere - wrapped to avoid invalid redeclaration
 
 extension CLLocationCoordinate2D: Equatable {
     public static func == (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
@@ -294,3 +289,4 @@ extension CLLocationCoordinate2D: Hashable {
         hasher.combine(longitude)
     }
 }
+#endif

@@ -372,7 +372,7 @@ struct DashboardView: View {
 
                 Spacer()
 
-                Badge(count: 3)
+                CountBadge(count: 3)
             }
 
             HStack(spacing: Spacing.lg) {

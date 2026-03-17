@@ -76,7 +76,46 @@ struct AccessInfo: Codable {
     }
 }
 
+// Typealias so code using POI (uppercase) still compiles against Poi (lowercase) from Models/Poi.swift
+typealias POI = Poi
+
+extension Poi {
+    typealias POIType = PoiType
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: lat, longitude: lng)
+    }
+
+    var poiType: PoiType {
+        PoiType.from(string: type) ?? .bin
+    }
+
+    var poiStatus: PoiStatus {
+        PoiStatus(rawValue: status) ?? .active
+    }
+
+    var isExpired: Bool {
+        guard let expiresAt = expiresAt else { return false }
+        return expiresAt.dateValue() < Date()
+    }
+
+    var displayLocation: String {
+        if !formattedAddress.isEmpty {
+            return formattedAddress
+        }
+        if !streetAddress.isEmpty {
+            return streetAddress
+        }
+        return String(format: "%.6f, %.6f", lat, lng)
+    }
+}
+
+#if false
+// DISABLED: Duplicate POI struct - the Poi struct is in Models/Poi.swift
+// Keeping enums and AccessInfo above since they are used throughout the codebase.
 struct POI: Identifiable, Codable {
+    typealias POIType = PoiType
+
     var id: String = ""
     var type: String = PoiType.bin.rawValue
     var title: String = ""
@@ -184,3 +223,4 @@ struct CachedPoi: Codable {
         )
     }
 }
+#endif

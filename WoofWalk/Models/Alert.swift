@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate LostDog, PublicDog, Notification types - real versions in MapAnnotation.swift etc.
 import Foundation
 import FirebaseFirestore
 
@@ -125,7 +127,7 @@ struct PublicDog: Identifiable, Codable {
     }
 }
 
-struct Notification: Identifiable, Codable {
+struct AppNotification: Identifiable, Codable {
     @DocumentID var id: String?
     var userId: String
     var type: String
@@ -178,3 +180,4 @@ enum NotificationType: String, Codable {
     case lostDogAlert = "LOST_DOG_ALERT"
     case chatMessage = "CHAT_MESSAGE"
 }
+#endif

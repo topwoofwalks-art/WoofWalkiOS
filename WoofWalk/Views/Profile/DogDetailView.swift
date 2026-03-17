@@ -54,7 +54,7 @@ struct DogDetailView: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
-                    Text("=")
+                    Text("\u{1F415}")
                         .font(.system(size: 80))
                 }
                 .frame(width: 150, height: 150)
@@ -68,7 +68,7 @@ struct DogDetailView: View {
                     .fill(Color.blue.opacity(0.1))
                     .frame(width: 150, height: 150)
                     .overlay(
-                        Text("=")
+                        Text("\u{1F415}")
                             .font(.system(size: 80))
                     )
                     .overlay(

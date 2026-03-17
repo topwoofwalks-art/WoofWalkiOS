@@ -410,8 +410,4 @@ class GuidanceViewModel: ObservableObject {
     }
 }
 
-extension Double {
-    fileprivate func toRadians() -> Double {
-        return self * .pi / 180
-    }
-}
+// toRadians() is defined in RoutingViewModel.swift

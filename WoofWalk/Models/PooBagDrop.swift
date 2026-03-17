@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate SwiftData model - real PooBagDrop is defined elsewhere
 import Foundation
 import CoreLocation
 import SwiftData
@@ -36,3 +38,4 @@ class PooBagDrop: Identifiable {
         return Int(Date().timeIntervalSince(timestamp) / 60)
     }
 }
+#endif

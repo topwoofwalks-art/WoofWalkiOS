@@ -44,7 +44,7 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showExportDialog) {
                 if let url = exportURL {
-                    ShareSheet(items: [url])
+                    SettingsShareSheet(items: [url])
                 }
             }
         }
@@ -215,7 +215,7 @@ struct SettingsView: View {
     }
 }
 
-struct ShareSheet: UIViewControllerRepresentable {
+struct SettingsShareSheet: UIViewControllerRepresentable {
     let items: [Any]
 
     func makeUIViewController(context: Context) -> UIActivityViewController {

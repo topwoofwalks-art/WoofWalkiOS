@@ -174,7 +174,7 @@ struct DogFormView: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {
-                        Text("=")
+                        Text("\u{1F415}")
                             .font(.system(size: 50))
                     }
                     .frame(width: 80, height: 80)
@@ -185,7 +185,7 @@ struct DogFormView: View {
                         .fill(Color(.systemGray5))
                         .frame(width: 80, height: 80)
                         .overlay(
-                            Text("=")
+                            Text("\u{1F415}")
                                 .font(.system(size: 50))
                         )
                 }
@@ -240,15 +240,7 @@ struct DogFormView: View {
     }
 }
 
-struct DogProfileSheet: View {
-    let dog: DogProfile?
-    let onDismiss: () -> Void
-    let onSave: (DogProfile) -> Void
-
-    var body: some View {
-        DogFormView(dog: dog, onSave: onSave)
-    }
-}
+// DogProfileSheet is defined in DogProfileSheet.swift
 
 struct DogFormView_Previews: PreviewProvider {
     static var previews: some View {

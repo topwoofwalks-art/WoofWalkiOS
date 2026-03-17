@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate RouteStep/CodableValue - conflicts with RoutingViewModel.swift
 import Foundation
 import CoreLocation
 
@@ -149,3 +151,4 @@ enum CodableValue: Codable {
         }
     }
 }
+#endif

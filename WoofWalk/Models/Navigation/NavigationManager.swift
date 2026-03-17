@@ -1,3 +1,5 @@
+#if false
+// DISABLED: References ambiguous Route/RouteStep - duplicates handled in RoutingViewModel.swift
 import Foundation
 import CoreLocation
 import Combine
@@ -284,3 +286,4 @@ class NavigationManager: ObservableObject {
         guidanceState.isOffRoute && !isRerouting
     }
 }
+#endif

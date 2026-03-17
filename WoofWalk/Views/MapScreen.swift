@@ -2,6 +2,7 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
+@available(iOS 17.0, *)
 struct MapScreen: View {
     @StateObject private var mapViewModel = MapViewModel()
     @StateObject private var routingViewModel = RoutingViewModel()
@@ -733,6 +734,8 @@ class TorchManager {
     }
 }
 
+#if false
+// DISABLED: Duplicate RoutingViewModel stub - real version in ViewModels/RoutingViewModel.swift
 class RoutingViewModel: ObservableObject {
     @Published var routePreview: RoutePreview?
     @Published var isCalculating = false
@@ -760,6 +763,7 @@ class RoutingViewModel: ObservableObject {
         }
     }
 }
+#endif
 
 class WalkTrackingViewModel: ObservableObject {
     @Published var isWalkActive = false
@@ -798,9 +802,12 @@ class PooBagDropViewModel: ObservableObject {
     }
 }
 
+#if false
+// DISABLED: Duplicate RoutePreview stub - real version in ViewModels/RoutingViewModel.swift
 struct RoutePreview {
     let route: MKRoute
     let destination: CLLocationCoordinate2D
 }
+#endif
 
 import AVFoundation

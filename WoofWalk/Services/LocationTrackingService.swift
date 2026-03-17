@@ -312,23 +312,7 @@ extension LocationTrackingService: CLLocationManagerDelegate {
     }
 }
 
-// MARK: - Location Error
-enum LocationError: LocalizedError {
-    case permissionDenied
-    case locationUnavailable
-    case trackingFailed
-
-    var errorDescription: String? {
-        switch self {
-        case .permissionDenied:
-            return "Location access is required to track walks. Please enable location permissions in Settings."
-        case .locationUnavailable:
-            return "Unable to determine your location"
-        case .trackingFailed:
-            return "Location tracking failed"
-        }
-    }
-}
+// LocationError is defined in LocationService.swift
 
 // MARK: - CLAuthorizationStatus Extension
 extension CLAuthorizationStatus {

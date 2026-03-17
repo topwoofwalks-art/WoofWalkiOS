@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate SwiftData entities - real versions are in Database/Entities/ and Models/WalkModels.swift
 import Foundation
 import SwiftData
 import FirebaseFirestore
@@ -403,3 +405,4 @@ class PoiEntity {
         )
     }
 }
+#endif

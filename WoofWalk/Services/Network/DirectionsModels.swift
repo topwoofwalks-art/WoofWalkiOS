@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate Direction types - Distance/Duration conflict with RoutingViewModel.swift
 import Foundation
 
 struct DirectionsResponse: Codable {
@@ -135,3 +137,4 @@ struct Bounds: Codable {
         self.southwest = southwest
     }
 }
+#endif

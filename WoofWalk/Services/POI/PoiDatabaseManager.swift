@@ -124,6 +124,10 @@ class PoiDatabaseManager {
 
 @objc(CachedPoiEntity)
 class CachedPoiEntity: NSManagedObject {
+    @nonobjc class func fetchRequest() -> NSFetchRequest<CachedPoiEntity> {
+        return NSFetchRequest<CachedPoiEntity>(entityName: "CachedPoiEntity")
+    }
+
     @NSManaged var osmId: String?
     @NSManaged var name: String?
     @NSManaged var type: String?

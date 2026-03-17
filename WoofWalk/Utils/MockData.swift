@@ -191,14 +191,14 @@ struct MockData {
         ]
     }
 
-    static func sampleTours() -> [Tour] {
+    static func sampleTours() -> [GuidedTour] {
         [
-            Tour(
+            GuidedTour(
                 id: "onboarding_tour",
                 title: "Welcome to WoofWalk",
                 description: "Learn the basics of using WoofWalk",
                 steps: [
-                    TourStep(
+                    GuidedTourStep(
                         id: "step_1",
                         title: "Welcome",
                         message: "Welcome to WoofWalk! Let's get started with a quick tour.",
@@ -207,7 +207,7 @@ struct MockData {
                         order: 0,
                         isCompleted: false
                     ),
-                    TourStep(
+                    GuidedTourStep(
                         id: "step_2",
                         title: "Map Navigation",
                         message: "Use your fingers to pan and zoom the map.",
@@ -216,7 +216,7 @@ struct MockData {
                         order: 1,
                         isCompleted: false
                     ),
-                    TourStep(
+                    GuidedTourStep(
                         id: "step_3",
                         title: "Start Walking",
                         message: "Tap the start button to begin tracking your walk.",

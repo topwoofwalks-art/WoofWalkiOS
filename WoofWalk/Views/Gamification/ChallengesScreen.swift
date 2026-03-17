@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct ChallengesScreen: View {
     @StateObject private var viewModel = ChallengesViewModel()

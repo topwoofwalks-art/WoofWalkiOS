@@ -207,8 +207,8 @@ extension View {
     }
 }
 
-// MARK: - Badge
-struct Badge: View {
+// MARK: - Badge (renamed to avoid conflict with Models/Badge.swift)
+struct CountBadge: View {
     @Environment(\.woofWalkTheme) var theme
     let count: Int
 

@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate Badge types - real versions defined elsewhere
 import Foundation
 import SwiftUI
 
@@ -136,3 +138,4 @@ struct BadgeDefinitions {
         allBadges.first { $0.id == id }
     }
 }
+#endif

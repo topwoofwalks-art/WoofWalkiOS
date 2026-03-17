@@ -1,3 +1,5 @@
+#if false
+// DISABLED: References ambiguous RouteStep - duplicates handled in RoutingViewModel.swift
 import Foundation
 
 struct NavigationProgress: Codable, Equatable {
@@ -78,3 +80,4 @@ struct NavigationProgress: Codable, Equatable {
         }
     }
 }
+#endif

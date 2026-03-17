@@ -362,6 +362,6 @@ class PolylineEncoder {
 
 // MARK: - Notification Names
 
-extension Notification.Name {
-    static let walkAutoPaused = Notification.Name("walkAutoPaused")
+extension NSNotification.Name {
+    static let walkAutoPaused = NSNotification.Name("walkAutoPaused")
 }

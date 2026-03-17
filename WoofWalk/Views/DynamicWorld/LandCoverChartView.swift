@@ -248,16 +248,16 @@ struct DynamicWorldDetailView: View {
             Text("Field Details")
                 .font(.headline)
 
-            DetailRow(label: "Dominant Class", value: data.dominantClass.capitalized)
-            DetailRow(label: "Latitude", value: String(format: "%.6f", data.centerLat))
-            DetailRow(label: "Longitude", value: String(format: "%.6f", data.centerLng))
+            LandCoverDetailRow(label: "Dominant Class", value: data.dominantClass.capitalized)
+            LandCoverDetailRow(label: "Latitude", value: String(format: "%.6f", data.centerLat))
+            LandCoverDetailRow(label: "Longitude", value: String(format: "%.6f", data.centerLng))
 
             if let radius = data.radiusMeters {
-                DetailRow(label: "Radius", value: String(format: "%.0f meters", radius))
+                LandCoverDetailRow(label: "Radius", value: String(format: "%.0f meters", radius))
             }
 
-            DetailRow(label: "Fetched", value: formatFullDate(data.fetchedAt))
-            DetailRow(label: "Expires", value: formatFullDate(data.expiresAt))
+            LandCoverDetailRow(label: "Fetched", value: formatFullDate(data.fetchedAt))
+            LandCoverDetailRow(label: "Expires", value: formatFullDate(data.expiresAt))
         }
         .padding()
         .background(Color(.systemBackground))
@@ -287,7 +287,7 @@ struct DynamicWorldDetailView: View {
     }
 }
 
-struct DetailRow: View {
+struct LandCoverDetailRow: View {
     let label: String
     let value: String
 

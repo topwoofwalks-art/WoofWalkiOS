@@ -13,7 +13,7 @@ class MapViewModel: ObservableObject {
     @Published var lostDogs: [LostDog] = []
     @Published var searchResults: [SearchResult] = []
     @Published var cameraMode: CameraMode = .free
-    @Published var mapStyle: MapStyle = .hybrid
+    @Published var mapStyle: WoofWalkMapStyle = .hybrid
     @Published var walkDistance: Double = 0
     @Published var walkDuration: TimeInterval = 0
     @Published var showLivestockOverlays: Bool = true
@@ -52,7 +52,7 @@ class MapViewModel: ObservableObject {
         $selectedPOITypes
             .combineLatest($pois)
             .map { types, pois in
-                pois.filter { types.contains($0.type) }
+                pois.filter { types.contains($0.poiType) }
             }
             .assign(to: &$filteredPOIs)
     }
@@ -89,13 +89,11 @@ class MapViewModel: ObservableObject {
     func addPOI(type: POI.POIType, at coordinate: CLLocationCoordinate2D) {
         let newPOI = POI(
             id: UUID().uuidString,
+            type: type.rawValue,
             title: "New \(type.rawValue)",
-            description: "User added POI",
-            coordinate: coordinate,
-            type: type,
-            voteUp: 0,
-            voteDown: 0,
-            createdAt: Date()
+            desc: "User added POI",
+            lat: coordinate.latitude,
+            lng: coordinate.longitude
         )
         pois.append(newPOI)
 

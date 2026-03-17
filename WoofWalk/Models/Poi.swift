@@ -92,15 +92,7 @@ struct Poi: Identifiable, Codable {
     }
 }
 
-struct AccessInfo: Codable {
-    var `public`: Bool
-    var notes: String
-
-    init(public: Bool = true, notes: String = "") {
-        self.public = `public`
-        self.notes = notes
-    }
-}
+// AccessInfo is defined in Models/POI/POI.swift
 
 struct Comment: Identifiable, Codable {
     @DocumentID var id: String?

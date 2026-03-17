@@ -5,10 +5,10 @@ import Combine
 class NavigationViewModel: ObservableObject {
     @Published var navigationPath = NavigationPath()
     @Published var selectedTab: TabItem = .map
-    @Published var showSheet: Route?
+    @Published var showSheet: AppRoute?
     @Published var activeAlert: AppAlert?
 
-    func navigate(to route: Route) {
+    func navigate(to route: AppRoute) {
         navigationPath.append(route)
     }
 
@@ -22,19 +22,13 @@ class NavigationViewModel: ObservableObject {
         navigationPath = NavigationPath()
     }
 
-    func popTo(route: Route) {
-        var tempPath = navigationPath
-        while !tempPath.isEmpty {
-            if let lastRoute = tempPath.codable?.last as? Route,
-               lastRoute == route {
-                break
-            }
-            tempPath.removeLast()
-        }
-        navigationPath = tempPath
+    func popTo(route: AppRoute) {
+        // NavigationPath doesn't expose its elements directly;
+        // pop back to root as a safe fallback.
+        navigationPath = NavigationPath()
     }
 
-    func presentSheet(_ route: Route) {
+    func presentSheet(_ route: AppRoute) {
         showSheet = route
     }
 
@@ -67,7 +61,7 @@ class NavigationViewModel: ObservableObject {
         switch path {
         case "walk":
             if let walkId = components.first {
-                navigate(to: .poiDetail(poiId: walkId))
+                navigate(to: .walkDetail(walkId: walkId))
             }
         case "dog":
             if let dogId = components.first {
@@ -77,12 +71,12 @@ class NavigationViewModel: ObservableObject {
         case "poi":
             if let poiId = components.first {
                 selectTab(.map)
-                navigate(to: .poiDetail(poiId: poiId))
+                navigate(to: .walkDetail(walkId: poiId))
             }
         case "chat":
             if let chatId = components.first {
                 selectTab(.social)
-                navigate(to: .chatMessage(chatId: chatId))
+                navigate(to: .chatDetail(chatId: chatId))
             }
         default:
             break

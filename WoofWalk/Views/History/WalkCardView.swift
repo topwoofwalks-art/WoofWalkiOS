@@ -70,7 +70,7 @@ struct WalkMapThumbnail: View {
             EmptyView()
         }
         .overlay(
-            MapPolyline(coordinates: coordinates)
+            WalkMapPolyline(coordinates: coordinates)
                 .stroke(Color.blue, lineWidth: 3)
         )
         .disabled(true)
@@ -105,7 +105,7 @@ struct WalkMapThumbnail: View {
     }
 }
 
-struct MapPolyline: Shape {
+struct WalkMapPolyline: Shape {
     let coordinates: [CLLocationCoordinate2D]
 
     func path(in rect: CGRect) -> Path {
@@ -156,6 +156,8 @@ struct MapPolyline: Shape {
     }
 }
 
+#if false
+// StatColumn is defined elsewhere - wrapped to avoid invalid redeclaration
 struct StatColumn: View {
     let label: String
     let value: String
@@ -171,3 +173,4 @@ struct StatColumn: View {
         }
     }
 }
+#endif

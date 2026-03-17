@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate OSRM types - real versions inline in RoutingViewModel.swift
 import Foundation
 
 struct OsrmRouteResponse: Codable {
@@ -44,3 +46,4 @@ struct OsrmNearestWaypoint: Codable {
     let name: String
     let distance: Double?
 }
+#endif

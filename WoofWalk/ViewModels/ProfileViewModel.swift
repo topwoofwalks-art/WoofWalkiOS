@@ -2,6 +2,12 @@ import Foundation
 import Combine
 import SwiftUI
 
+enum LeaderboardType: String, CaseIterable {
+    case global = "Global"
+    case regional = "Regional"
+    case friends = "Friends"
+}
+
 enum ProfileUiState {
     case loading
     case success(ProfileData)
@@ -267,9 +273,7 @@ struct StatsRepository {
     }
 }
 
-struct WalkSession {
-    let id: String
-}
+// WalkSession is defined in ViewModels/WalkViewModel.swift
 
 struct DailyWalkCount {
     let dayOfWeek: Int

@@ -6,7 +6,11 @@ struct RouteDestination: View {
     var body: some View {
         switch route {
         case .map:
-            MapScreen()
+            if #available(iOS 17.0, *) {
+                MapScreen()
+            } else {
+                MapScreenLegacy()
+            }
         case .profile:
             ProfileView()
         case .settings:

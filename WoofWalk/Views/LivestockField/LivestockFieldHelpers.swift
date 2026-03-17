@@ -255,21 +255,4 @@ struct LivestockFieldValidator {
     }
 }
 
-extension CLLocationCoordinate2D {
-    func distance(to: CLLocationCoordinate2D) -> Double {
-        let earthRadius = 6371000.0
-
-        let lat1 = self.latitude * .pi / 180
-        let lat2 = to.latitude * .pi / 180
-        let deltaLat = (to.latitude - self.latitude) * .pi / 180
-        let deltaLon = (to.longitude - self.longitude) * .pi / 180
-
-        let a = sin(deltaLat / 2) * sin(deltaLat / 2) +
-                cos(lat1) * cos(lat2) *
-                sin(deltaLon / 2) * sin(deltaLon / 2)
-
-        let c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-        return earthRadius * c
-    }
-}
+// distance(to:) is defined in MapAnnotation.swift

@@ -352,6 +352,9 @@ enum LocationError: LocalizedError {
     case timeout
     case geocodingFailed
     case invalidLocation
+    case permissionDenied
+    case locationUnavailable
+    case trackingFailed
 
     var errorDescription: String? {
         switch self {
@@ -363,13 +366,19 @@ enum LocationError: LocalizedError {
             return "Failed to geocode location"
         case .invalidLocation:
             return "Invalid location"
+        case .permissionDenied:
+            return "Location access is required. Please enable location permissions in Settings."
+        case .locationUnavailable:
+            return "Unable to determine your location"
+        case .trackingFailed:
+            return "Location tracking failed"
         }
     }
 }
 
 // MARK: - Notification Names
 
-extension Notification.Name {
-    static let didEnterRegion = Notification.Name("didEnterRegion")
-    static let didExitRegion = Notification.Name("didExitRegion")
+extension NSNotification.Name {
+    static let didEnterRegion = NSNotification.Name("didEnterRegion")
+    static let didExitRegion = NSNotification.Name("didExitRegion")
 }

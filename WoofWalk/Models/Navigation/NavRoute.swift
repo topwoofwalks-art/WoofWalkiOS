@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate Route/RouteLeg/CLLocationCoordinate2D:Codable - conflicts with RoutingViewModel.swift
 import Foundation
 import CoreLocation
 
@@ -252,3 +254,4 @@ extension CLLocationCoordinate2D: Codable {
         try container.encode(["lat": latitude, "lng": longitude])
     }
 }
+#endif

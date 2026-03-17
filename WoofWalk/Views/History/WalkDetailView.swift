@@ -167,7 +167,7 @@ struct WalkMapSection: View {
             EmptyView()
         }
         .overlay(
-            MapPolyline(coordinates: coordinates)
+            WalkMapPolyline(coordinates: coordinates)
                 .stroke(Color.blue, lineWidth: 4)
         )
         .onAppear {
@@ -293,6 +293,8 @@ struct ActionButtonsSection: View {
     }
 }
 
+#if false
+// ShareSheet is defined elsewhere - wrapped to avoid invalid redeclaration
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
 
@@ -302,3 +304,4 @@ struct ShareSheet: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
+#endif

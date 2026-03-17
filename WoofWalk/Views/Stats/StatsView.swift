@@ -67,12 +67,12 @@ struct StatsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: 20) {
-                StatColumn(
+                IconStatColumn(
                     icon: "figure.walk",
                     label: "Total Walks",
                     value: "\(viewModel.totalWalks)"
                 )
-                StatColumn(
+                IconStatColumn(
                     icon: "arrow.up.right",
                     label: "Distance",
                     value: viewModel.formatDistance(viewModel.totalDistance)
@@ -82,12 +82,12 @@ struct StatsView: View {
             Divider()
 
             HStack(spacing: 20) {
-                StatColumn(
+                IconStatColumn(
                     icon: "timer",
                     label: "Total Time",
                     value: viewModel.formatDuration(viewModel.totalTime)
                 )
-                StatColumn(
+                IconStatColumn(
                     icon: "speedometer",
                     label: "Avg Speed",
                     value: viewModel.formatSpeed(viewModel.averageSpeed)
@@ -224,7 +224,7 @@ struct StatsView: View {
     }
 }
 
-struct StatColumn: View {
+struct IconStatColumn: View {
     let icon: String
     let label: String
     let value: String

@@ -1,3 +1,5 @@
+#if false
+// DISABLED: Duplicate Tour/TourStep/TourAction types - real versions in Tour/TourModels.swift
 import Foundation
 
 struct Tour: Identifiable, Codable, Equatable {
@@ -88,3 +90,4 @@ struct TourCompletion: Codable, Equatable {
     let stepsCompleted: Int
     let totalSteps: Int
 }
+#endif

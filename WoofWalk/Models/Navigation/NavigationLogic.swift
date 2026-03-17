@@ -1,3 +1,5 @@
+#if false
+// DISABLED: References ambiguous RouteStep - duplicates handled in RoutingViewModel.swift
 import Foundation
 import CoreLocation
 
@@ -244,3 +246,4 @@ extension NavigationLogic {
         return result
     }
 }
+#endif

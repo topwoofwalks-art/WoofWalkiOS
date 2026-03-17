@@ -2,6 +2,7 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
+@available(iOS 17.0, *)
 struct MapView: View {
     @StateObject private var viewModel: MapViewModel
     @StateObject private var locationManager = LocationManager()
@@ -82,7 +83,7 @@ struct MapView: View {
                     }
                 }
             }
-            .mapStyle(viewModel.mapStyle)
+            .mapStyle(viewModel.mapStyle.mapStyle)
             .mapControls {
                 MapCompass()
                 MapScaleView()

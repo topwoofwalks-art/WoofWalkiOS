@@ -2,12 +2,99 @@ import Foundation
 import SwiftUI
 import Combine
 
+// MARK: - Tour Models for TourViewModel
+// These are distinct from Tour/TourModels.swift which defines the spotlight/overlay tour system.
+// These types support the guided walkthrough tours (map basics, livestock fields, etc.)
+
+struct GuidedTour: Identifiable, Codable, Equatable {
+    let id: String
+    let title: String
+    let description: String
+    var steps: [GuidedTourStep]
+    let targetScreen: GuidedTourTarget
+    let priority: Int
+    var completedAt: Date?
+
+    var isCompleted: Bool {
+        completedAt != nil
+    }
+
+    var progress: Double {
+        guard !steps.isEmpty else { return 0.0 }
+        let completed = steps.filter { $0.isCompleted }.count
+        return Double(completed) / Double(steps.count)
+    }
+}
+
+struct GuidedTourStep: Identifiable, Codable, Equatable {
+    let id: String
+    let title: String
+    let message: String
+    let targetElement: String?
+    let action: GuidedTourAction?
+    let order: Int
+    var isCompleted: Bool
+
+    var icon: String {
+        action?.icon ?? "info.circle"
+    }
+}
+
+enum GuidedTourAction: String, Codable {
+    case tap = "tap"
+    case swipe = "swipe"
+    case longPress = "longPress"
+    case doubleTap = "doubleTap"
+
+    var icon: String {
+        switch self {
+        case .tap: return "hand.tap"
+        case .swipe: return "hand.draw"
+        case .longPress: return "hand.point.up.left"
+        case .doubleTap: return "hand.tap.fill"
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .tap: return "Tap"
+        case .swipe: return "Swipe"
+        case .longPress: return "Long Press"
+        case .doubleTap: return "Double Tap"
+        }
+    }
+}
+
+enum GuidedTourTarget: String, Codable {
+    case map = "map"
+    case walkTracking = "walkTracking"
+    case poi = "poi"
+    case profile = "profile"
+    case settings = "settings"
+    case livestockFields = "livestockFields"
+    case walkingPaths = "walkingPaths"
+
+    var displayName: String {
+        switch self {
+        case .map: return "Map"
+        case .walkTracking: return "Walk Tracking"
+        case .poi: return "Points of Interest"
+        case .profile: return "Profile"
+        case .settings: return "Settings"
+        case .livestockFields: return "Livestock Fields"
+        case .walkingPaths: return "Walking Paths"
+        }
+    }
+}
+
+// MARK: - TourViewModel
+
 @MainActor
 class TourViewModel: ObservableObject {
-    @Published var activeTour: Tour?
+    @Published var activeTour: GuidedTour?
     @Published var currentStepIndex: Int = 0
     @Published var isShowingTour: Bool = false
-    @Published var availableTours: [Tour] = []
+    @Published var availableTours: [GuidedTour] = []
     @Published var completedTourIds: Set<String> = []
 
     private var cancellables = Set<AnyCancellable>()
@@ -19,7 +106,7 @@ class TourViewModel: ObservableObject {
         setupAvailableTours()
     }
 
-    var currentStep: TourStep? {
+    var currentStep: GuidedTourStep? {
         guard let tour = activeTour,
               currentStepIndex < tour.steps.count else {
             return nil
@@ -43,7 +130,7 @@ class TourViewModel: ObservableObject {
         return Double(currentStepIndex + 1) / Double(tour.steps.count)
     }
 
-    func startTour(_ tour: Tour) {
+    func startTour(_ tour: GuidedTour) {
         activeTour = tour
         currentStepIndex = 0
         isShowingTour = true
@@ -91,7 +178,7 @@ class TourViewModel: ObservableObject {
         saveCompletedTours()
     }
 
-    func shouldShowTour(for target: TourTarget) -> Tour? {
+    func shouldShowTour(for target: GuidedTourTarget) -> GuidedTour? {
         availableTours.first { tour in
             tour.targetScreen == target &&
             !completedTourIds.contains(tour.id)
@@ -130,13 +217,13 @@ class TourViewModel: ObservableObject {
         ]
     }
 
-    private func createMapTour() -> Tour {
-        Tour(
+    private func createMapTour() -> GuidedTour {
+        GuidedTour(
             id: "map_basics",
             title: "Map Basics",
             description: "Learn how to navigate and use the map",
             steps: [
-                TourStep(
+                GuidedTourStep(
                     id: "map_step1",
                     title: "Welcome",
                     message: "Welcome to WoofWalk! Let's explore the map features.",
@@ -145,7 +232,7 @@ class TourViewModel: ObservableObject {
                     order: 0,
                     isCompleted: false
                 ),
-                TourStep(
+                GuidedTourStep(
                     id: "map_step2",
                     title: "Camera Modes",
                     message: "Tap the camera icon to switch between different view modes.",
@@ -154,7 +241,7 @@ class TourViewModel: ObservableObject {
                     order: 1,
                     isCompleted: false
                 ),
-                TourStep(
+                GuidedTourStep(
                     id: "map_step3",
                     title: "POI Filters",
                     message: "Use the filter button to show or hide different points of interest.",
@@ -170,13 +257,13 @@ class TourViewModel: ObservableObject {
         )
     }
 
-    private func createLivestockFieldTour() -> Tour {
-        Tour(
+    private func createLivestockFieldTour() -> GuidedTour {
+        GuidedTour(
             id: "livestock_fields",
             title: "Livestock Fields",
             description: "Learn about livestock field warnings",
             steps: [
-                TourStep(
+                GuidedTourStep(
                     id: "livestock_step1",
                     title: "Field Overlays",
                     message: "Orange polygons show areas with livestock. Tap to see details.",
@@ -185,7 +272,7 @@ class TourViewModel: ObservableObject {
                     order: 0,
                     isCompleted: false
                 ),
-                TourStep(
+                GuidedTourStep(
                     id: "livestock_step2",
                     title: "Draw New Field",
                     message: "Long press on the map to start drawing a new livestock field.",
@@ -194,7 +281,7 @@ class TourViewModel: ObservableObject {
                     order: 1,
                     isCompleted: false
                 ),
-                TourStep(
+                GuidedTourStep(
                     id: "livestock_step3",
                     title: "Report Accuracy",
                     message: "Help the community by reporting if field data is accurate.",
@@ -210,13 +297,13 @@ class TourViewModel: ObservableObject {
         )
     }
 
-    private func createWalkingPathTour() -> Tour {
-        Tour(
+    private func createWalkingPathTour() -> GuidedTour {
+        GuidedTour(
             id: "walking_paths",
             title: "Walking Paths",
             description: "Discover safe walking paths",
             steps: [
-                TourStep(
+                GuidedTourStep(
                     id: "path_step1",
                     title: "Path Quality",
                     message: "Green paths are high quality, yellow are moderate, red are challenging.",
@@ -225,7 +312,7 @@ class TourViewModel: ObservableObject {
                     order: 0,
                     isCompleted: false
                 ),
-                TourStep(
+                GuidedTourStep(
                     id: "path_step2",
                     title: "Path Details",
                     message: "Tap a path to see surface type, shade level, and other details.",
@@ -241,13 +328,13 @@ class TourViewModel: ObservableObject {
         )
     }
 
-    private func createWalkTrackingTour() -> Tour {
-        Tour(
+    private func createWalkTrackingTour() -> GuidedTour {
+        GuidedTour(
             id: "walk_tracking",
             title: "Walk Tracking",
             description: "Track your walks with your dog",
             steps: [
-                TourStep(
+                GuidedTourStep(
                     id: "walk_step1",
                     title: "Start Walk",
                     message: "Tap the start button to begin tracking your walk.",
@@ -256,7 +343,7 @@ class TourViewModel: ObservableObject {
                     order: 0,
                     isCompleted: false
                 ),
-                TourStep(
+                GuidedTourStep(
                     id: "walk_step2",
                     title: "Pause & Resume",
                     message: "You can pause and resume your walk at any time.",
@@ -265,7 +352,7 @@ class TourViewModel: ObservableObject {
                     order: 1,
                     isCompleted: false
                 ),
-                TourStep(
+                GuidedTourStep(
                     id: "walk_step3",
                     title: "View Stats",
                     message: "See distance, duration, and pace in real-time.",

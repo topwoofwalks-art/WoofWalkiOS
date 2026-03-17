@@ -85,7 +85,7 @@ struct DogProfileCard: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
-                    Text("=")
+                    Text("\u{1F415}")
                         .font(.system(size: 40))
                 }
                 .frame(width: 70, height: 70)
@@ -95,7 +95,7 @@ struct DogProfileCard: View {
                     .fill(Color.blue.opacity(0.1))
                     .frame(width: 70, height: 70)
                     .overlay(
-                        Text("=")
+                        Text("\u{1F415}")
                             .font(.system(size: 40))
                     )
             }
