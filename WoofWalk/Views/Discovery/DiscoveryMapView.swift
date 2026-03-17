@@ -4,50 +4,41 @@ import MapKit
 struct DiscoveryMapView: View {
     let providers: [ServiceProviderLite]
     @State private var selectedProvider: ServiceProviderLite?
-    @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
+    @State private var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 51.5, longitude: -0.1),
+        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+    )
+
+    private var mappableProviders: [ServiceProviderLite] {
+        providers.filter { $0.latitude != nil && $0.longitude != nil }
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Map(position: $cameraPosition, selection: $selectedProvider) {
-                UserAnnotation()
+            Map(coordinateRegion: $region, showsUserLocation: true, annotationItems: mappableProviders) { provider in
+                MapAnnotation(coordinate: CLLocationCoordinate2D(
+                    latitude: provider.latitude!,
+                    longitude: provider.longitude!
+                )) {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedProvider = provider
+                        }
+                    } label: {
+                        VStack(spacing: 0) {
+                            Image(systemName: iconForProvider(provider))
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .frame(width: 32, height: 32)
+                                .background(Circle().fill(colorForProvider(provider)))
+                                .shadow(radius: 2)
 
-                ForEach(providers.filter { $0.latitude != nil && $0.longitude != nil }) { provider in
-                    Annotation(
-                        provider.name,
-                        coordinate: CLLocationCoordinate2D(
-                            latitude: provider.latitude!,
-                            longitude: provider.longitude!
-                        ),
-                        anchor: .bottom
-                    ) {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedProvider = provider
-                            }
-                        } label: {
-                            VStack(spacing: 0) {
-                                Image(systemName: iconForProvider(provider))
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                    .frame(width: 32, height: 32)
-                                    .background(Circle().fill(colorForProvider(provider)))
-                                    .shadow(radius: 2)
-
-                                // Pin tail
-                                Triangle()
-                                    .fill(colorForProvider(provider))
-                                    .frame(width: 10, height: 6)
-                            }
+                            Triangle()
+                                .fill(colorForProvider(provider))
+                                .frame(width: 10, height: 6)
                         }
                     }
-                    .tag(provider)
                 }
-            }
-            .mapStyle(.standard(pointsOfInterest: .excludingAll))
-            .mapControls {
-                MapUserLocationButton()
-                MapCompass()
-                MapScaleView()
             }
 
             // Selected provider card overlay
@@ -63,7 +54,6 @@ struct DiscoveryMapView: View {
     @ViewBuilder
     private func selectedProviderCard(_ provider: ServiceProviderLite) -> some View {
         VStack(spacing: 0) {
-            // Drag indicator
             RoundedRectangle(cornerRadius: 2)
                 .fill(Color.secondary.opacity(0.4))
                 .frame(width: 36, height: 4)
@@ -71,8 +61,7 @@ struct DiscoveryMapView: View {
                 .padding(.bottom, 4)
 
             HStack(spacing: 12) {
-                // Avatar
-                Circle().fill(Color.neutral90).frame(width: 48, height: 48)
+                Circle().fill(Color.gray.opacity(0.2)).frame(width: 48, height: 48)
                     .overlay {
                         if let url = provider.photoUrl, let imgUrl = URL(string: url) {
                             AsyncImage(url: imgUrl) { img in
@@ -93,12 +82,14 @@ struct DiscoveryMapView: View {
                         if provider.hasBackgroundCheck {
                             Image(systemName: "checkmark.seal.fill")
                                 .font(.caption)
-                                .foregroundColor(.turquoise60)
+                                .foregroundColor(.blue)
                         }
                     }
                     HStack(spacing: 4) {
                         if let rating = provider.rating {
-                            StarRatingView(rating: rating, size: 10)
+                            Image(systemName: "star.fill")
+                                .font(.caption2)
+                                .foregroundColor(.yellow)
                             Text(String(format: "%.1f", rating))
                                 .font(.caption)
                         }
@@ -108,15 +99,14 @@ struct DiscoveryMapView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-                    // Service tags
                     HStack(spacing: 4) {
                         ForEach(provider.services.prefix(2), id: \.self) { service in
                             Text(service)
                                 .font(.caption2)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Capsule().fill(Color.turquoise90))
-                                .foregroundColor(.turquoise30)
+                                .background(Capsule().fill(Color.blue.opacity(0.1)))
+                                .foregroundColor(.blue)
                         }
                     }
                 }
@@ -125,7 +115,7 @@ struct DiscoveryMapView: View {
 
                 VStack(spacing: 8) {
                     if let dist = provider.distance {
-                        Text(FormatUtils.formatDistance(dist * 1000))
+                        Text(String(format: "%.1fkm", dist))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -137,7 +127,7 @@ struct DiscoveryMapView: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(Capsule().fill(Color.turquoise60))
+                            .background(Capsule().fill(Color.blue))
                     }
                 }
             }
@@ -151,7 +141,6 @@ struct DiscoveryMapView: View {
         )
         .padding(.horizontal, 12)
         .padding(.bottom, 8)
-        .onTapGesture {} // prevent map from stealing tap
         .gesture(
             DragGesture(minimumDistance: 20)
                 .onEnded { value in
@@ -165,16 +154,16 @@ struct DiscoveryMapView: View {
     // MARK: - Helpers
 
     private func colorForProvider(_ provider: ServiceProviderLite) -> Color {
-        guard let primaryService = provider.services.first?.lowercased() else { return .turquoise60 }
+        guard let primaryService = provider.services.first?.lowercased() else { return .blue }
         switch primaryService {
-        case "walking": return .turquoise60
+        case "walking": return .blue
         case "grooming": return .purple
-        case "sitting": return .orange60
+        case "sitting": return .orange
         case "boarding": return .blue
         case "daycare": return .yellow
-        case "training": return .success60
+        case "training": return .green
         case "vet": return .red
-        default: return .turquoise60
+        default: return .blue
         }
     }
 

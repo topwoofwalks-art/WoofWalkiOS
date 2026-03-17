@@ -309,11 +309,33 @@ struct MapScreen: View {
                         .background(Circle().fill(.cyan))
                         .shadow(radius: 3)
                 case .hazard(let hazard):
-                    hazardMarkerView(for: hazard)
+                    let hType = HazardType(rawValue: hazard.type)
+                    ZStack {
+                        Circle()
+                            .fill((HazardSeverity(rawValue: hazard.severity) ?? .medium).color)
+                            .frame(width: 40, height: 40)
+                            .shadow(radius: 3)
+                        Text(hType?.emoji ?? "⚠️")
+                            .font(.system(size: 20))
+                    }
                 case .trailCondition(let condition):
-                    trailConditionMarkerView(for: condition)
+                    let tType = TrailConditionType(rawValue: condition.type)
+                    ZStack {
+                        Circle()
+                            .fill(tType?.color ?? .gray)
+                            .frame(width: 36, height: 36)
+                            .shadow(radius: 2)
+                        Text(tType?.emoji ?? "❓")
+                            .font(.system(size: 16))
+                    }
                 case .offLeadZoneLabel(let zone):
-                    offLeadZoneLabelView(for: zone)
+                    let zType = ZoneType(rawValue: zone.type)
+                    Text(zType?.displayName ?? zone.name)
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(.regularMaterial))
+                        .foregroundColor(zType?.color ?? .gray)
                 }
             }
         }

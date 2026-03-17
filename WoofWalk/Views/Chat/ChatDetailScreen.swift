@@ -10,7 +10,7 @@ struct ChatDetailScreen: View {
     @State private var selectedImage: UIImage?
     @State private var isSearching = false
     @State private var searchText = ""
-    @State private var fullScreenImageUrl: String?
+    @State private var fullScreenImageUrl: IdentifiableString?
 
     init(chatId: String) {
         self.chatId = chatId
@@ -66,7 +66,7 @@ struct ChatDetailScreen: View {
                                 showDateSeparator: showDate,
                                 dateLabel: dateLabel,
                                 onImageTap: { url in
-                                    fullScreenImageUrl = url
+                                    fullScreenImageUrl = IdentifiableString(url)
                                 }
                             )
                             .id(message.id ?? "msg-\(index)")
@@ -142,8 +142,8 @@ struct ChatDetailScreen: View {
                 }
             }
         }
-        .fullScreenCover(item: $fullScreenImageUrl) { url in
-            FullScreenImageViewer(imageUrl: url) {
+        .fullScreenCover(item: $fullScreenImageUrl) { wrapper in
+            FullScreenImageViewer(imageUrl: wrapper.id) {
                 fullScreenImageUrl = nil
             }
         }
@@ -212,8 +212,10 @@ struct TypingIndicatorRow: View {
 
 // MARK: - Full Screen Image Viewer
 
-extension String: @retroactive Identifiable {
-    public var id: String { self }
+// Wrapper for String to make it Identifiable for sheet(item:) usage
+struct IdentifiableString: Identifiable {
+    let id: String
+    init(_ string: String) { self.id = string }
 }
 
 struct FullScreenImageViewer: View {
