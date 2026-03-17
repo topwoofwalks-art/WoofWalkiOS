@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 
 struct TourOverlay: View {
@@ -173,3 +174,5 @@ struct TourOverlay_Previews: PreviewProvider {
         )
     }
 }
+
+#endif

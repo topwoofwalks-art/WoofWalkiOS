@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 
 struct TourExampleView: View {
@@ -316,3 +317,5 @@ struct TourWithAnnotationsExample: View {
 #Preview("Annotations") {
     TourWithAnnotationsExample()
 }
+
+#endif

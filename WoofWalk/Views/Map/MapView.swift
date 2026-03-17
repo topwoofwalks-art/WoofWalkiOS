@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 import MapKit
 import CoreLocation
@@ -346,3 +347,5 @@ struct MapView: View {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
 }
+
+#endif

@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 
 struct MapTourDemo: View {
@@ -321,3 +322,5 @@ struct MapTourDemo_Previews: PreviewProvider {
         )
     }
 }
+
+#endif

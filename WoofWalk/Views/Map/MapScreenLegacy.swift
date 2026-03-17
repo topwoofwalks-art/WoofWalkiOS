@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 import MapKit
 import CoreLocation
@@ -36,3 +37,5 @@ struct MapScreenLegacy: View {
         }
     }
 }
+
+#endif

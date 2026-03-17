@@ -1,3 +1,4 @@
+#if false
 import SwiftUI
 import MapKit
 
@@ -330,3 +331,5 @@ extension CLLocationCoordinate2D {
         )
     }
 }
+
+#endif
