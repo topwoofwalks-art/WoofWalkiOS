@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -149,3 +150,5 @@ class WalkSessionRepository {
         return try getWalksCompletedOnDate(startOfDay: startOfDay, endOfDay: endOfDay) > 0
     }
 }
+
+#endif

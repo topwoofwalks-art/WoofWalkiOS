@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -75,3 +76,5 @@ final class WalkEntity {
         )
     }
 }
+
+#endif

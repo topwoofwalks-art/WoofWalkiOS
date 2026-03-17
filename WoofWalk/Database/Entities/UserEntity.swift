@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 import FirebaseFirestore
@@ -120,3 +121,5 @@ final class UserEntity {
         )
     }
 }
+
+#endif

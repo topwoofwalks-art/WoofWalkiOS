@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -73,3 +74,5 @@ class CachedPoiRepository {
         try modelContext.save()
     }
 }
+
+#endif

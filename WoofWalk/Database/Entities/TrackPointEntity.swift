@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -26,3 +27,5 @@ final class TrackPointEntity {
         self.timestamp = timestamp
     }
 }
+
+#endif

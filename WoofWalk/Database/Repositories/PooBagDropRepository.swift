@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -65,3 +66,5 @@ class PooBagDropRepository {
         try modelContext.save()
     }
 }
+
+#endif

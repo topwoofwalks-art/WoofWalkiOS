@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -112,3 +113,5 @@ class WalkRepository {
         try modelContext.save()
     }
 }
+
+#endif

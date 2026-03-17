@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -13,3 +14,5 @@ final class WeightLogEntity {
         self.weightKg = weightKg
     }
 }
+
+#endif

@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -45,3 +46,5 @@ final class SyncQueueEntity {
         static let delete = "delete"
     }
 }
+
+#endif

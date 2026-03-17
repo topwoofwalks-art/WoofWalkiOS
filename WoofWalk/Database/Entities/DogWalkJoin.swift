@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -11,3 +12,5 @@ final class DogWalkJoin {
         self.sessionId = sessionId
     }
 }
+
+#endif

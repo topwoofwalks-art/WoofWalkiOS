@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -41,3 +42,5 @@ final class CachedPoiEntity {
         self.radiusMeters = radiusMeters
     }
 }
+
+#endif

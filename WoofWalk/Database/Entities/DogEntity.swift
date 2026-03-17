@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -140,3 +141,5 @@ final class DogEntity {
         )
     }
 }
+
+#endif

@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -107,3 +108,5 @@ class PoiRepository {
         return try modelContext.fetchCount(descriptor)
     }
 }
+
+#endif

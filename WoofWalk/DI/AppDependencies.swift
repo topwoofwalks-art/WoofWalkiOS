@@ -1,3 +1,4 @@
+#if false
 import Foundation
 import SwiftUI
 import FirebaseAuth
@@ -68,3 +69,5 @@ extension View {
         self.environment(\.diContainer, container)
     }
 }
+
+#endif

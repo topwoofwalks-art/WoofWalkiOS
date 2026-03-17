@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -180,3 +181,5 @@ class StatsRepository {
         return try modelContext.fetch(descriptor)
     }
 }
+
+#endif

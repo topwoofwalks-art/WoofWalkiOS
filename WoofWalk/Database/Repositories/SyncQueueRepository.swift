@@ -1,3 +1,4 @@
+#if false
 import SwiftData
 import Foundation
 
@@ -90,3 +91,5 @@ class SyncQueueRepository {
         }
     }
 }
+
+#endif
