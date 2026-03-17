@@ -15,8 +15,8 @@ target 'WoofWalk' do
   pod 'GoogleMaps', '~> 9.0'
   pod 'GooglePlaces', '~> 9.0'
 
-  pod 'Alamofire', '~> 5.9'
-  pod 'Kingfisher', '~> 7.12'
+  pod 'Alamofire', '5.8.1'
+  pod 'Kingfisher', '7.11.0'
 end
 
 post_install do |installer|
