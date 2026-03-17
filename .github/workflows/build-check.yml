@@ -18,6 +18,17 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Add GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -n "$GOOGLE_SERVICE_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_PLIST" | base64 --decode > WoofWalk/GoogleService-Info.plist
+            echo "GoogleService-Info.plist added from secret"
+          else
+            echo "No Firebase secret set - app will run without Firebase"
+          fi
+
       - name: Cache CocoaPods
         uses: actions/cache@v4
         with:
@@ -47,9 +58,8 @@ jobs:
           APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "WoofWalk.app" -path "*/Debug-iphonesimulator/*" | head -1)
           echo "path=$APP_PATH" >> $GITHUB_OUTPUT
           echo "Found app at: $APP_PATH"
-          ls -la "$APP_PATH" || echo "App not found!"
 
-      - name: Boot simulator and capture screenshots
+      - name: Capture simulator screenshots
         env:
           TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
@@ -73,53 +83,28 @@ jobs:
           xcrun simctl install "iPhone 15" "${{ steps.app.outputs.path }}"
           sleep 2
 
-          # Launch in screenshot mode with credentials
-          xcrun simctl launch "iPhone 15" com.woofwalk.ios \
-            -screenshot-mode 2>&1 || true
+          # Write test credentials to app UserDefaults
+          xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_EMAIL "${TEST_EMAIL:-}" || true
+          xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_PASSWORD "${TEST_PASSWORD:-}" || true
 
-          # Also set env vars for the app via simctl spawn
-          # Note: simctl launch doesn't pass env vars, so the app reads from UserDefaults instead
-          # Let's use a different approach - write a plist with the creds
-          xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_EMAIL "$TEST_EMAIL"
-          xcrun simctl spawn "iPhone 15" defaults write com.woofwalk.ios TEST_PASSWORD "$TEST_PASSWORD"
+          # Launch app in screenshot mode
+          xcrun simctl launch "iPhone 15" com.woofwalk.ios -screenshot-mode || true
+          sleep 3
 
-          # Relaunch with screenshot mode
-          xcrun simctl terminate "iPhone 15" com.woofwalk.ios 2>/dev/null || true
-          sleep 1
-          xcrun simctl launch "iPhone 15" com.woofwalk.ios -screenshot-mode
+          # Check if app is running
+          xcrun simctl spawn "iPhone 15" launchctl list | grep woofwalk || echo "App may not be running"
 
-          # Wait for app to launch and show login
-          sleep 5
-          xcrun simctl io "iPhone 15" screenshot screenshots/01-login-screen.png
-          echo "Captured: Login screen"
+          # Capture at intervals - the automation switches tabs every ~5 seconds
+          for i in $(seq 1 10); do
+            sleep 5
+            xcrun simctl io "iPhone 15" screenshot "screenshots/$(printf '%02d' $i)-capture.png"
+            echo "Captured screenshot $i"
+          done
 
-          # Wait for auto-sign-in (automation handles this)
-          sleep 10
-          xcrun simctl io "iPhone 15" screenshot screenshots/02-after-signin.png
-          echo "Captured: After sign-in"
+          # Check app logs for crash info
+          xcrun simctl spawn "iPhone 15" log show --predicate 'process == "WoofWalk"' --last 30s --style compact 2>/dev/null | tail -20 || true
 
-          # Wait for tab navigation (automation cycles through tabs)
-          sleep 8
-          xcrun simctl io "iPhone 15" screenshot screenshots/03-map-tab.png
-          echo "Captured: Map tab"
-
-          sleep 8
-          xcrun simctl io "iPhone 15" screenshot screenshots/04-social-tab.png
-          echo "Captured: Social tab"
-
-          sleep 8
-          xcrun simctl io "iPhone 15" screenshot screenshots/05-discover-tab.png
-          echo "Captured: Discover tab"
-
-          sleep 8
-          xcrun simctl io "iPhone 15" screenshot screenshots/06-profile-tab.png
-          echo "Captured: Profile tab"
-
-          sleep 5
-          xcrun simctl io "iPhone 15" screenshot screenshots/07-final.png
-          echo "Captured: Final state"
-
-          echo "=== All screenshots ==="
+          echo "=== Screenshots ==="
           ls -la screenshots/
 
       - name: Upload screenshots
