@@ -265,6 +265,7 @@
 		A1000001000000000000597 /* WalkProgressCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000596 /* WalkProgressCard.swift */; };
 		A1000001000000000000599 /* WalkReportCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000598 /* WalkReportCardView.swift */; };
 		A1000001000000000000601 /* WalkShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000600 /* WalkShareCard.swift */; };
+		A1000001000000000000652 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000651 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -528,6 +529,7 @@
 		A1000001000000000000596 /* WalkProgressCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkProgressCard.swift; sourceTree = "<group>"; };
 		A1000001000000000000598 /* WalkReportCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkReportCardView.swift; sourceTree = "<group>"; };
 		A1000001000000000000600 /* WalkShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkShareCard.swift; sourceTree = "<group>"; };
+		A1000001000000000000651 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -568,6 +570,7 @@
 				A1000001000000000000613 /* Navigation */,
 				A1000001000000000000618 /* Theme */,
 				A1000001000000000000619 /* Tour */,
+				A1000001000000000000651 /* GoogleService-Info.plist */,
 			);
 			path = WoofWalk;
 			sourceTree = "<group>";
@@ -1263,6 +1266,7 @@
 			files = (
 				A1000001000000000000007 /* Preview Assets.xcassets in Resources */,
 				A1000001000000000000005 /* Assets.xcassets in Resources */,
+				A1000001000000000000652 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
