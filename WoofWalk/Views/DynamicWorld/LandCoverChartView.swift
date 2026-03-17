@@ -30,7 +30,7 @@ struct LandCoverChartView: View {
                 .font(.headline)
                 .padding(.horizontal)
 
-            if #available(iOS 16.0, *) {
+            if #available(iOS 17.0, *) {
                 Chart(chartData, id: \.name) { item in
                     SectorMark(
                         angle: .value("Percentage", item.value * 100),

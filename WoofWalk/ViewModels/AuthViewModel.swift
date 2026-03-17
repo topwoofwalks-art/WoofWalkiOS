@@ -3,7 +3,7 @@ import SwiftUI
 import FirebaseAuth
 import AuthenticationServices
 
-enum AuthState {
+enum AuthState: Equatable {
     case initial
     case loading
     case authenticated

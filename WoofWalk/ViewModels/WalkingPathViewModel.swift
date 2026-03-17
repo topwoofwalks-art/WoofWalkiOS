@@ -42,19 +42,13 @@ class WalkingPathViewModel: ObservableObject {
     }
 
     func getPathQualityScore(_ path: WalkingPath) -> Double {
-        let surfaceScore = path.surfaceType.suitabilityScore
-        let metadataScore = path.metadata.qualityScore
-
-        return (surfaceScore + metadataScore) / 2.0
+        return path.qualityScore / 15.0 // Normalize to 0-1 range
     }
 
     func getRecommendedPaths(for dogSize: DogSize, maxDifficulty: Difficulty = .moderate) -> [WalkingPath] {
         paths.filter { path in
             let qualityScore = getPathQualityScore(path)
-            let meetsAccessibility = path.metadata.accessibility != .limited
-            let meetsDifficulty = getDifficultyLevel(path.metadata.difficulty) <= getDifficultyLevel(maxDifficulty)
-
-            return qualityScore >= 0.5 && meetsAccessibility && meetsDifficulty
+            return qualityScore >= 0.5 && path.isPedestrian
         }.sorted { getPathQualityScore($0) > getPathQualityScore($1) }
     }
 
@@ -63,10 +57,10 @@ class WalkingPathViewModel: ObservableObject {
         var minDistance = Double.infinity
 
         for path in paths {
-            if let closestPoint = path.closestPoint(to: coordinate) {
+            for coord in path.coordinates {
                 let distance = haversineDistance(
                     from: coordinate,
-                    to: closestPoint
+                    to: coord.clLocationCoordinate2D
                 )
 
                 if distance < minDistance {

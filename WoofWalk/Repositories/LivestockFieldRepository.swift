@@ -439,9 +439,9 @@ actor LivestockFieldRepository {
                 bbox: bbox,
                 area_m2: area_m2,
                 speciesScores: speciesScoresData,
+                lastSeenAt: lastSeenAt,
                 polygonRaw: polygon,
-                isDangerous: isDangerous,
-                lastSeenAt: lastSeenAt
+                isDangerous: isDangerous
             )
         }
 
@@ -506,9 +506,9 @@ actor LivestockFieldRepository {
             bbox: bbox,
             area_m2: area,
             speciesScores: speciesScores,
+            lastSeenAt: Date().timeIntervalSince1970 * 1000,
             polygonRaw: polygonData,
-            isDangerous: isDangerous,
-            lastSeenAt: Date().timeIntervalSince1970 * 1000
+            isDangerous: isDangerous
         )
 
         var currentFields = cachedFields

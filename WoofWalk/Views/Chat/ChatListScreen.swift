@@ -18,7 +18,17 @@ struct ChatListScreen: View {
             }
             .overlay {
                 if viewModel.chats.isEmpty && !viewModel.isLoading {
-                    ContentUnavailableView("No Messages", systemImage: "bubble.left.and.bubble.right", description: Text("Start a conversation"))
+                    VStack(spacing: 12) {
+                        Image(systemName: "bubble.left.and.bubble.right")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No Messages")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        Text("Start a conversation")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         }
