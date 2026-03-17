@@ -65,6 +65,11 @@ jobs:
             -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.simulator }}" \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
+            DEBUG_INFORMATION_FORMAT=dwarf \
+            GCC_GENERATE_DEBUGGING_SYMBOLS=NO \
+            SWIFT_OPTIMIZATION_LEVEL='-Onone' \
+            -parallelizeTargets \
+            -jobs 2 \
             2>&1 | tee build.log | xcpretty
 
       - name: Upload build log on failure
