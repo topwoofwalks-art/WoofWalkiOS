@@ -145,8 +145,6 @@ struct PathDetailSheet: View {
     }
 }
 
-#if false
-// DetailRow is defined elsewhere - wrapped to avoid invalid redeclaration
 struct DetailRow: View {
     let label: String
     let value: String
@@ -160,7 +158,6 @@ struct DetailRow: View {
         }
     }
 }
-#endif
 
 struct WalkingPathLegend: View {
     var body: some View {

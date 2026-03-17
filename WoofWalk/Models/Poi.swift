@@ -2,7 +2,7 @@ import Foundation
 import FirebaseFirestore
 
 struct Poi: Identifiable, Codable {
-    @DocumentID var id: String?
+    var id: String = ""
     var type: String
     var title: String
     var desc: String
@@ -24,7 +24,7 @@ struct Poi: Identifiable, Codable {
     var administrativeArea: String
     var formattedAddress: String
 
-    init(id: String? = nil,
+    init(id: String = "",
          type: String = PoiType.bin.rawValue,
          title: String = "",
          desc: String = "",

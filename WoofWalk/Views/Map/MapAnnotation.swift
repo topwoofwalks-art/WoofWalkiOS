@@ -18,7 +18,7 @@ struct POIMarkerView: View {
     }
 
     private var markerColor: Color {
-        switch poi.type {
+        switch poi.poiType {
         case .bin:
             return .green
         case .hazard:
@@ -45,7 +45,7 @@ struct POIMarkerView: View {
     }
 
     private var iconName: String {
-        switch poi.type {
+        switch poi.poiType {
         case .bin:
             return "trash.fill"
         case .hazard:

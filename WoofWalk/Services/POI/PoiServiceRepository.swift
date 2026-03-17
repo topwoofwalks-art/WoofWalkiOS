@@ -70,27 +70,7 @@ class PoiServiceRepository {
     }
 
     func getPoisNearby(center: CLLocationCoordinate2D, radiusKm: Double = 5.0) -> AnyPublisher<[POI], Error> {
-        let firestorePois = getFirestorePoisNearby(center: center, radiusKm: radiusKm)
-
-        return firestorePois.map { [weak self] firestorePois in
-            Task {
-                do {
-                    let osmPois = try await self?.poiManager.fetchPoisWithCache(
-                        lat: center.latitude,
-                        lng: center.longitude,
-                        radiusKm: radiusKm
-                    ) ?? []
-
-                    return firestorePois + osmPois
-                } catch {
-                    print("Failed to fetch OSM POIs: \(error)")
-                    return firestorePois
-                }
-            }
-            return firestorePois
-        }
-        .switchToLatest()
-        .eraseToAnyPublisher()
+        return getFirestorePoisNearby(center: center, radiusKm: radiusKm)
     }
 
     private func getFirestorePoisNearby(center: CLLocationCoordinate2D, radiusKm: Double) -> AnyPublisher<[POI], Error> {

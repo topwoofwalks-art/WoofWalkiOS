@@ -1,5 +1,3 @@
-#if false
-// DISABLED: Duplicate Direction types - Distance/Duration conflict with RoutingViewModel.swift
 import Foundation
 
 struct DirectionsResponse: Codable {
@@ -43,17 +41,17 @@ struct OverviewPolyline: Codable {
 }
 
 struct DirectionsLeg: Codable {
-    let distance: Distance
-    let duration: Duration
-    let startLocation: Location
-    let endLocation: Location
+    let distance: DirectionsDistance
+    let duration: DirectionsDuration
+    let startLocation: DirectionsLocation
+    let endLocation: DirectionsLocation
     let steps: [DirectionsStep]
 
     init(
-        distance: Distance = Distance(),
-        duration: Duration = Duration(),
-        startLocation: Location = Location(),
-        endLocation: Location = Location(),
+        distance: DirectionsDistance = DirectionsDistance(),
+        duration: DirectionsDuration = DirectionsDuration(),
+        startLocation: DirectionsLocation = DirectionsLocation(),
+        endLocation: DirectionsLocation = DirectionsLocation(),
         steps: [DirectionsStep] = []
     ) {
         self.distance = distance
@@ -64,7 +62,7 @@ struct DirectionsLeg: Codable {
     }
 }
 
-struct Distance: Codable {
+struct DirectionsDistance: Codable {
     let value: Int
     let text: String
 
@@ -74,7 +72,7 @@ struct Distance: Codable {
     }
 }
 
-struct Duration: Codable {
+struct DirectionsDuration: Codable {
     let value: Int
     let text: String
 
@@ -84,7 +82,7 @@ struct Duration: Codable {
     }
 }
 
-struct Location: Codable {
+struct DirectionsLocation: Codable {
     let lat: Double
     let lng: Double
 
@@ -96,20 +94,20 @@ struct Location: Codable {
 
 struct DirectionsStep: Codable {
     let htmlInstructions: String
-    let distance: Distance
-    let duration: Duration
-    let startLocation: Location
-    let endLocation: Location
+    let distance: DirectionsDistance
+    let duration: DirectionsDuration
+    let startLocation: DirectionsLocation
+    let endLocation: DirectionsLocation
     let polyline: OverviewPolyline
     let travelMode: String
     let maneuver: String?
 
     init(
         htmlInstructions: String = "",
-        distance: Distance = Distance(),
-        duration: Duration = Duration(),
-        startLocation: Location = Location(),
-        endLocation: Location = Location(),
+        distance: DirectionsDistance = DirectionsDistance(),
+        duration: DirectionsDuration = DirectionsDuration(),
+        startLocation: DirectionsLocation = DirectionsLocation(),
+        endLocation: DirectionsLocation = DirectionsLocation(),
         polyline: OverviewPolyline = OverviewPolyline(),
         travelMode: String = "WALKING",
         maneuver: String? = nil
@@ -126,15 +124,14 @@ struct DirectionsStep: Codable {
 }
 
 struct Bounds: Codable {
-    let northeast: Location
-    let southwest: Location
+    let northeast: DirectionsLocation
+    let southwest: DirectionsLocation
 
     init(
-        northeast: Location = Location(),
-        southwest: Location = Location()
+        northeast: DirectionsLocation = DirectionsLocation(),
+        southwest: DirectionsLocation = DirectionsLocation()
     ) {
         self.northeast = northeast
         self.southwest = southwest
     }
 }
-#endif

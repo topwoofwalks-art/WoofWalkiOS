@@ -61,7 +61,7 @@ class GuidanceViewModel: ObservableObject {
 
     private let routingViewModel: RoutingViewModel
 
-    init(routingViewModel: RoutingViewModel) {
+    init(routingViewModel: RoutingViewModel = RoutingViewModel()) {
         self.routingViewModel = routingViewModel
     }
 

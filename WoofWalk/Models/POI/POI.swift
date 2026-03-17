@@ -94,67 +94,6 @@ extension Poi {
         PoiStatus(rawValue: status) ?? .active
     }
 
-    var isExpired: Bool {
-        guard let expiresAt = expiresAt else { return false }
-        return expiresAt.dateValue() < Date()
-    }
-
-    var displayLocation: String {
-        if !formattedAddress.isEmpty {
-            return formattedAddress
-        }
-        if !streetAddress.isEmpty {
-            return streetAddress
-        }
-        return String(format: "%.6f, %.6f", lat, lng)
-    }
-}
-
-#if false
-// DISABLED: Duplicate POI struct - the Poi struct is in Models/Poi.swift
-// Keeping enums and AccessInfo above since they are used throughout the codebase.
-struct POI: Identifiable, Codable {
-    typealias POIType = PoiType
-
-    var id: String = ""
-    var type: String = PoiType.bin.rawValue
-    var title: String = ""
-    var desc: String = ""
-    var lat: Double = 0.0
-    var lng: Double = 0.0
-    var geohash: String = ""
-    var photoUrls: [String] = []
-    var createdBy: String = ""
-    var createdAt: Timestamp?
-    var updatedAt: Timestamp?
-    var status: String = PoiStatus.active.rawValue
-    var voteUp: Int = 0
-    var voteDown: Int = 0
-    var regionCode: String = ""
-    var expiresAt: Timestamp?
-    var access: AccessInfo?
-    var streetAddress: String = ""
-    var locality: String = ""
-    var administrativeArea: String = ""
-    var formattedAddress: String = ""
-
-    var coordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: lat, longitude: lng)
-    }
-
-    var poiType: PoiType {
-        PoiType.from(string: type) ?? .bin
-    }
-
-    var poiStatus: PoiStatus {
-        PoiStatus(rawValue: status) ?? .active
-    }
-
-    var isExpired: Bool {
-        guard let expiresAt = expiresAt else { return false }
-        return expiresAt.dateValue() < Date()
-    }
-
     var displayLocation: String {
         if !formattedAddress.isEmpty {
             return formattedAddress
@@ -188,7 +127,7 @@ struct CachedPoi: Codable {
     var regionLng: Double
     var radiusKm: Double
 
-    func toDomainPoi() -> POI {
+    func toDomainPoi() -> Poi {
         let tagPairs = tags.split(separator: ";")
             .compactMap { pair -> (String, String)? in
                 let parts = pair.split(separator: "=", maxSplits: 1)
@@ -200,14 +139,12 @@ struct CachedPoi: Codable {
         let displayTitle = !name.isEmpty ? name : (tagDict["amenity"] ?? tagDict["leisure"] ?? type)
         let description = tagPairs.map { "\($0): \($1)" }.joined(separator: "\n")
 
-        return POI(
-            id: osmId,
+        return Poi(
             type: type,
             title: displayTitle,
             desc: description,
             lat: latitude,
             lng: longitude,
-            geohash: "",
             photoUrls: [],
             createdBy: "overpass",
             createdAt: Timestamp(date: cachedAt),
@@ -223,4 +160,3 @@ struct CachedPoi: Codable {
         )
     }
 }
-#endif

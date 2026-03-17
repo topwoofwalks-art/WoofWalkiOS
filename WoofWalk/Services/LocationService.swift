@@ -169,7 +169,7 @@ class LocationService: NSObject, ObservableObject {
         }
 
         return try await withCheckedThrowingContinuation { continuation in
-            var hasReturned = false
+            nonisolated(unsafe) var hasReturned = false
             var timeoutTask: Task<Void, Never>?
 
             let observer = locationUpdatePublisher
