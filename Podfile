@@ -10,6 +10,7 @@ target 'WoofWalk' do
   pod 'Firebase/Messaging', '~> 10.29'
   pod 'Firebase/Crashlytics', '~> 10.29'
   pod 'Firebase/Analytics', '~> 10.29'
+  pod 'Firebase/Functions', '~> 10.29'
 
   pod 'GoogleSignIn', '~> 7.1'
   pod 'GoogleMaps', '~> 9.0'

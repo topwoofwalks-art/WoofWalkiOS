@@ -574,7 +574,7 @@ actor LivestockFieldRepository {
         if field.isDangerous {
             desc += " [DANGEROUS]"
         }
-        desc += ". Area: \(String(format: "%.0f", field.area_m2))m²"
+        desc += ". Area: \(String(format: "%.0f", field.area_m2))m2"
 
         return Poi(
             type: "LIVESTOCK",
