@@ -99,3 +99,4 @@ secrets.plist
 # macOS
 .DS_Store
 all_swift_types.txt
+screenshots-latest/
