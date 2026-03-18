@@ -155,7 +155,7 @@ struct WalkReportCardView: View {
 
     // MARK: - Share action
 
-    private func shareReportCard() {
+    @MainActor private func shareReportCard() {
         // Build a shareable version of the report card (without interactive elements)
         let shareView = reportCardShareContent
         let image = shareView.renderToImage(size: ShareCardSize.socialMedia)

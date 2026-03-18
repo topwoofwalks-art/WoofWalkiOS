@@ -65,6 +65,7 @@ class ClientBookingsViewModel: ObservableObject {
         isLoading = true
 
         bookingRepository.getClientBookings(clientId: userId)
+            .catch { _ in Just([]) }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] bookings in
                 self?.bookings = bookings

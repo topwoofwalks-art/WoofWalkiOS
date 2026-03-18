@@ -21,7 +21,7 @@ struct ShareWalkSheet: View {
 
     /// Pre-rendered share image at social-media resolution (1080x1350).
     /// Computed lazily on first access so the sheet opens fast.
-    private var renderedImage: UIImage? {
+    @MainActor private var renderedImage: UIImage? {
         switch selectedTab {
         case .walk:
             return ShareService.shared.renderCardToImage(shareCard, size: ShareCardSize.socialMedia)
@@ -115,7 +115,7 @@ struct ShareWalkSheet: View {
 
     // MARK: - Share handling
 
-    private func handleShare(_ destination: ShareDestination) {
+    @MainActor private func handleShare(_ destination: ShareDestination) {
         if destination == .liveWalk {
             showLiveShare = true
             return
