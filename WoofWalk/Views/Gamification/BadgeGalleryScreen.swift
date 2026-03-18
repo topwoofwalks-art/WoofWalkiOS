@@ -102,12 +102,8 @@ struct BadgeGalleryScreen: View {
         .navigationBarTitleDisplayMode(.large)
         .task { await vm.loadData() }
         .sheet(item: $vm.selectedBadge) { badge in
-            BadgeDetailSheet(
-                badge: badge,
-                isUnlocked: vm.isUnlocked(badge),
-                progress: vm.progress(for: badge)
-            )
-            .presentationDetents([.medium])
+            BadgeDetailSheet(badgeId: badge.id)
+                .presentationDetents([.medium])
         }
         .overlay {
             if vm.isLoading {
