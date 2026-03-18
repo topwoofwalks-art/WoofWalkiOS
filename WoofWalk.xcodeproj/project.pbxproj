@@ -280,7 +280,7 @@
 		A1000001000000000000817 /* QuickReplySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000816 /* QuickReplySheet.swift */; };
 		A1000001000000000000819 /* LanguageSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000818 /* LanguageSelectionView.swift */; };
 		A1000001000000000000821 /* RainModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000820 /* RainModeSettingsView.swift */; };
-		A1000001000000000000861 /* AwayModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000860 /* AwayModeSettingsView.swift */; };
+		A1000001000000000000871 /* AwayModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000870 /* AwayModeSettingsView.swift */; };
 		A1000001000000000000823 /* CompletionMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000822 /* CompletionMapView.swift */; };
 		A1000001000000000000825 /* LiveShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000824 /* LiveShareView.swift */; };
 		A1000001000000000000827 /* PBShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000826 /* PBShareCard.swift */; };
@@ -585,7 +585,7 @@
 		A1000001000000000000814 /* BusinessInboxScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessInboxScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000816 /* QuickReplySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplySheet.swift; sourceTree = "<group>"; };
 		A1000001000000000000818 /* LanguageSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionView.swift; sourceTree = "<group>"; };
-		A1000001000000000000860 /* AwayModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwayModeSettingsView.swift; sourceTree = "<group>"; };
+		A1000001000000000000870 /* AwayModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwayModeSettingsView.swift; sourceTree = "<group>"; };
 		A1000001000000000000820 /* RainModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainModeSettingsView.swift; sourceTree = "<group>"; };
 		A1000001000000000000822 /* CompletionMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionMapView.swift; sourceTree = "<group>"; };
 		A1000001000000000000824 /* LiveShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveShareView.swift; sourceTree = "<group>"; };
@@ -1271,7 +1271,7 @@
 				A1000001000000000000562 /* PermissionsView.swift */,
 				A1000001000000000000564 /* SettingsView.swift */,
 				A1000001000000000000818 /* LanguageSelectionView.swift */,
-				A1000001000000000000860 /* AwayModeSettingsView.swift */,
+				A1000001000000000000870 /* AwayModeSettingsView.swift */,
 				A1000001000000000000820 /* RainModeSettingsView.swift */,
 			);
 			path = Settings;
@@ -1703,7 +1703,7 @@
 				A1000001000000000000813 /* NotificationService.swift in Sources */,
 				A1000001000000000000815 /* BusinessInboxScreen.swift in Sources */,
 				A1000001000000000000817 /* QuickReplySheet.swift in Sources */,
-				A1000001000000000000861 /* AwayModeSettingsView.swift in Sources */,
+				A1000001000000000000871 /* AwayModeSettingsView.swift in Sources */,
 				A1000001000000000000819 /* LanguageSelectionView.swift in Sources */,
 				A1000001000000000000821 /* RainModeSettingsView.swift in Sources */,
 				A1000001000000000000823 /* CompletionMapView.swift in Sources */,
