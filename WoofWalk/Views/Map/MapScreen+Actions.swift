@@ -95,20 +95,23 @@ extension MapScreen {
                 print("[MapScreen] Charity points awarded: \(charityPoints) for \(charityName)")
             }
 
-            // Update challenge progress after walk completion (matches Android WalkTrackingViewModel.updateChallengeProgress)
-            let streakValue = try? await Firestore.firestore().collection("users")
-                .document(Auth.auth().currentUser?.uid ?? "")
-                .getDocument()
-                .data(as: UserProfile.self).walkStreak?.currentStreak ?? 0
-            await ChallengeRepository.shared.updateChallengeProgressAfterWalk(
-                distanceMeters: completedDistance,
-                durationSeconds: completedDuration,
-                currentStreak: streakValue ?? 0
-            )
+            // Update challenge progress after walk completion
+            var streakValue = 0
+            if let uid = Auth.auth().currentUser?.uid {
+                streakValue = (try? await Firestore.firestore().collection("users")
+                    .document(uid)
+                    .getDocument()
+                    .data(as: UserProfile.self).walkStreak?.currentStreak) ?? 0
+                await ChallengeRepository.shared.updateChallengeProgressAfterWalk(
+                    distanceMeters: completedDistance,
+                    durationSeconds: completedDuration,
+                    currentStreak: streakValue
+                )
+            }
 
             // Schedule streak reminder notification for tomorrow
             NotificationService.shared.scheduleStreakReminder(
-                streakDays: streakValue ?? 0,
+                streakDays: streakValue,
                 dogName: "Your dog"
             )
         }
