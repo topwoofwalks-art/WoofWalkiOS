@@ -217,7 +217,7 @@ extension MapScreen {
 
     var livestockModeButton: some View {
         Button(action: { showLivestockMode.toggle() }) {
-            Image(systemName: showLivestockMode ? "hare.fill" : "hare")
+            Image(systemName: showLivestockMode ? "pawprint.fill" : "pawprint")
                 .font(.title3)
                 .foregroundColor(showLivestockMode ? .brown : .primary)
                 .padding(8)

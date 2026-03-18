@@ -81,20 +81,43 @@ class MapViewModel: ObservableObject {
     func loadPOIs(near center: CLLocationCoordinate2D? = nil) {
         let queryCenter = center ?? CLLocationCoordinate2D(latitude: 51.5, longitude: -0.1)
 
+        // Load from Firestore
         poiService.getPoisNearby(center: queryCenter, radiusKm: 5.0)
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { completion in
                     if case .failure(let error) = completion {
-                        print("[MapViewModel] Failed to load POIs: \(error.localizedDescription)")
+                        print("[MapViewModel] Failed to load POIs from Firestore: \(error.localizedDescription)")
                     }
                 },
-                receiveValue: { [weak self] pois in
-                    self?.pois = pois
-                    print("[MapViewModel] Loaded \(pois.count) POIs from Firestore")
+                receiveValue: { [weak self] firestorePois in
+                    guard let self = self else { return }
+                    let existingOsmPois = self.pois.filter { $0.id.hasPrefix("osm_") }
+                    self.pois = firestorePois + existingOsmPois
+                    print("[MapViewModel] Loaded \(firestorePois.count) POIs from Firestore, \(existingOsmPois.count) OSM POIs retained")
                 }
             )
             .store(in: &cancellables)
+
+        // Load from Overpass/OSM (with caching)
+        loadOverpassPOIs(near: queryCenter)
+    }
+
+    private func loadOverpassPOIs(near center: CLLocationCoordinate2D) {
+        Task {
+            do {
+                let osmPois = try await PoiManager.shared.fetchPoisWithCache(
+                    lat: center.latitude,
+                    lng: center.longitude,
+                    radiusKm: 2.0
+                )
+                let firestorePois = self.pois.filter { !$0.id.hasPrefix("osm_") }
+                self.pois = firestorePois + osmPois
+                print("[MapViewModel] Loaded \(osmPois.count) POIs from Overpass/OSM")
+            } catch {
+                print("[MapViewModel] Failed to load Overpass POIs: \(error.localizedDescription)")
+            }
+        }
     }
 
     func togglePOIType(_ type: POI.POIType) {
