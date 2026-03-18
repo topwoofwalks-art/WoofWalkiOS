@@ -38,17 +38,29 @@ struct FeedScreen: View {
                         }
 
                         if !viewModel.isLoading && viewModel.posts.isEmpty {
-                            VStack(spacing: 12) {
-                                Image(systemName: "text.bubble")
-                                    .font(.system(size: 48))
-                                    .foregroundColor(.secondary)
+                            VStack(spacing: 16) {
+                                Image(systemName: "pawprint.circle.fill")
+                                    .font(.system(size: 64))
+                                    .foregroundColor(Color(red: 0/255, green: 160/255, blue: 176/255))
+
                                 Text("No Posts Yet")
                                     .font(.title3.bold())
-                                Text("Be the first to share a walk!")
+
+                                Text("Start a walk and share it with the community!")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+
+                                Button(action: { showCreatePost = true }) {
+                                    Label("Start Walking", systemImage: "figure.walk")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 24)
+                                        .padding(.vertical, 12)
+                                        .background(Capsule().fill(Color(red: 0/255, green: 160/255, blue: 176/255)))
+                                }
                             }
-                            .padding(.top, 60)
+                            .padding(.top, 40)
                         }
                     }
                     .padding(.horizontal)

@@ -11,8 +11,7 @@ struct ProfileView: View {
                 VStack(spacing: 20) {
                     switch viewModel.uiState {
                     case .loading:
-                        ProgressView()
-                            .padding(.top, 100)
+                        placeholderProfile()
 
                     case .success(let data):
                         profileHeader(user: data.user)
@@ -79,6 +78,50 @@ struct ProfileView: View {
                 Text("Are you sure you want to log out?")
             }
         }
+    }
+
+    // MARK: - Placeholder Profile (shown when loading or no auth)
+
+    private func placeholderProfile() -> some View {
+        VStack(spacing: 16) {
+            // Avatar placeholder
+            Circle()
+                .fill(Color(red: 0/255, green: 160/255, blue: 176/255).opacity(0.2))
+                .frame(width: 100, height: 100)
+                .overlay(
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(Color(red: 0/255, green: 160/255, blue: 176/255))
+                )
+
+            Text("Welcome to WoofWalk")
+                .font(.title2.bold())
+
+            Text("Sign in to see your profile")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            // Demo stats grid
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                StatCard(title: "Walks", value: "0", icon: "figure.walk", color: .blue)
+                StatCard(title: "Distance", value: "0 km", icon: "map", color: .green)
+                StatCard(title: "Time", value: "0h", icon: "clock", color: .orange)
+                StatCard(title: "Points", value: "0", icon: "star.fill", color: .purple)
+            }
+            .padding(.horizontal)
+
+            // Sign in prompt
+            Button(action: {}) {
+                Label("Sign In", systemImage: "person.crop.circle.badge.plus")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Capsule().fill(Color(red: 0/255, green: 160/255, blue: 176/255)))
+            }
+            .padding(.top, 8)
+        }
+        .padding(.top, 40)
     }
 
     // MARK: - Profile Header with League Tier Badge
