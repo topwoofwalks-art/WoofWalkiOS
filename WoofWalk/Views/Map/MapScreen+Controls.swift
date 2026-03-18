@@ -162,13 +162,20 @@ extension MapScreen {
 
     // MARK: - Rain Mode Button
 
+    @ViewBuilder
     var rainModeButton: some View {
         Button(action: { showRainMode.toggle() }) {
             Image(systemName: showRainMode ? "cloud.rain.fill" : "cloud.rain")
                 .font(.body)
                 .foregroundColor(showRainMode ? .white : .primary)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(showRainMode ? .blue : .regularMaterial))
+                .background {
+                    if showRainMode {
+                        Circle().fill(.blue)
+                    } else {
+                        Circle().fill(.regularMaterial)
+                    }
+                }
         }
     }
 
