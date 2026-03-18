@@ -132,24 +132,7 @@ class MapViewModel: ObservableObject {
                     return
                 }
                 self?.hazardReports = docs.compactMap { doc -> HazardReport? in
-                    let data = doc.data()
-                    guard let type = data["type"] as? String,
-                          let severity = data["severity"] as? String,
-                          let lat = data["lat"] as? Double,
-                          let lng = data["lng"] as? Double else { return nil }
-                    return HazardReport(
-                        id: doc.documentID,
-                        type: type,
-                        severity: severity,
-                        description: data["description"] as? String ?? "",
-                        lat: lat,
-                        lng: lng,
-                        reportedBy: data["reportedBy"] as? String ?? "",
-                        reportedAt: (data["reportedAt"] as? Timestamp)?.dateValue() ?? Date(),
-                        expiresAt: (data["expiresAt"] as? Timestamp)?.dateValue() ?? Date(),
-                        voteUp: data["voteUp"] as? Int ?? 0,
-                        voteDown: data["voteDown"] as? Int ?? 0
-                    )
+                    try? doc.data(as: HazardReport.self)
                 }
                 print("[MapViewModel] Loaded \(self?.hazardReports.count ?? 0) hazard reports")
             }
@@ -166,21 +149,7 @@ class MapViewModel: ObservableObject {
                     return
                 }
                 self?.trailConditions = docs.compactMap { doc -> TrailCondition? in
-                    let data = doc.data()
-                    guard let type = data["type"] as? String,
-                          let lat = data["lat"] as? Double,
-                          let lng = data["lng"] as? Double else { return nil }
-                    return TrailCondition(
-                        id: doc.documentID,
-                        type: type,
-                        severity: data["severity"] as? Double ?? 0.5,
-                        note: data["note"] as? String ?? "",
-                        lat: lat,
-                        lng: lng,
-                        reportedBy: data["reportedBy"] as? String ?? "",
-                        voteUp: data["voteUp"] as? Int ?? 0,
-                        voteDown: data["voteDown"] as? Int ?? 0
-                    )
+                    try? doc.data(as: TrailCondition.self)
                 }
                 print("[MapViewModel] Loaded \(self?.trailConditions.count ?? 0) trail conditions")
             }
