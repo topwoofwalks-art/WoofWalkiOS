@@ -45,6 +45,8 @@ struct MapScreen: View {
     @State var completedDistance: Double = 0
     @State var completedDuration: Int = 0
     @StateObject var settingsViewModel = SettingsViewModel()
+    @StateObject var walkPathVM = WalkPathVM()
+    @StateObject var livestockFieldVM = LivestockFieldViewModel()
     @State var mapStyle: WoofWalkMapStyle = .standard
     @State var isPlanningMode = false
     @State var showSavePlannedWalkDialog = false

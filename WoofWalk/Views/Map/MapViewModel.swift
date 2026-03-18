@@ -135,6 +135,21 @@ class MapViewModel: ObservableObject {
                     try? doc.data(as: HazardReport.self)
                 }
                 print("[MapViewModel] Loaded \(self?.hazardReports.count ?? 0) hazard reports")
+
+                // Register geofences for nearby hazards
+                if let hazards = self?.hazardReports, !hazards.isEmpty {
+                    let hazardPois = hazards.map { hazard in
+                        Poi(type: "HAZARD", title: hazard.hazardType.displayName, desc: hazard.description,
+                            lat: hazard.lat, lng: hazard.lng)
+                    }
+                    // Use first hazard location as approximate user location for filtering
+                    if let first = hazards.first {
+                        let approxLocation = CLLocationCoordinate2D(latitude: first.lat, longitude: first.lng)
+                        let _ = GeofenceManager.shared.registerGeofences(
+                            pois: hazardPois, userLocation: approxLocation
+                        )
+                    }
+                }
             }
     }
 

@@ -216,7 +216,13 @@ extension MapScreen {
     // MARK: - Livestock Mode Button
 
     var livestockModeButton: some View {
-        Button(action: { showLivestockMode.toggle() }) {
+        Button(action: {
+            showLivestockMode.toggle()
+            livestockFieldVM.toggleFieldOverlays()
+            if showLivestockMode, let loc = locationManager.location {
+                Task { await livestockFieldVM.loadFieldsNearby(center: loc) }
+            }
+        }) {
             Image(systemName: showLivestockMode ? "pawprint.fill" : "pawprint")
                 .font(.title3)
                 .foregroundColor(showLivestockMode ? .brown : .primary)
@@ -228,7 +234,21 @@ extension MapScreen {
     // MARK: - Walking Paths Button
 
     var walkingPathsButton: some View {
-        Button(action: { showWalkingPaths.toggle() }) {
+        Button(action: {
+            showWalkingPaths.toggle()
+            walkPathVM.togglePathLayer()
+            if showWalkingPaths {
+                let center = region.center
+                let span = region.span
+                let bounds = [
+                    CLLocationCoordinate2D(latitude: center.latitude - span.latitudeDelta/2, longitude: center.longitude - span.longitudeDelta/2),
+                    CLLocationCoordinate2D(latitude: center.latitude + span.latitudeDelta/2, longitude: center.longitude - span.longitudeDelta/2),
+                    CLLocationCoordinate2D(latitude: center.latitude + span.latitudeDelta/2, longitude: center.longitude + span.longitudeDelta/2),
+                    CLLocationCoordinate2D(latitude: center.latitude - span.latitudeDelta/2, longitude: center.longitude + span.longitudeDelta/2)
+                ]
+                walkPathVM.loadPathsInViewport(bounds: bounds)
+            }
+        }) {
             Image(systemName: showWalkingPaths ? "point.topleft.down.to.point.bottomright.curvepath.fill" : "point.topleft.down.to.point.bottomright.curvepath")
                 .font(.title3)
                 .foregroundColor(showWalkingPaths ? .green : .primary)
