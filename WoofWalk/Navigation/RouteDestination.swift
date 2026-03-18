@@ -31,9 +31,9 @@ struct RouteDestination: View {
         case .walkDetail(let walkId):
             WalkHistoryDetailScreen(walkId: walkId)
         case .liveShare(let walkId):
-            PlaceholderView(title: "Live Share", icon: "location.fill", detail: walkId)
+            LiveShareView(walkId: walkId, onStopSharing: {})
         case .walkPhotoGallery(let walkId):
-            PlaceholderView(title: "Walk Photos", icon: "photo.on.rectangle.angled", detail: walkId)
+            PlaceholderView(title: "Walk Photos", icon: "photo.on.rectangle.angled", detail: walkId, description: "Browse and share photos captured during your walk")
         case .dogStats(let dogId):
             DogStatsDetailView(dogId: dogId, dogName: "")
         case .addDog:
@@ -49,15 +49,16 @@ struct RouteDestination: View {
         case .createPost:
             CreatePostSheet(onPost: { _, _ in })
         case .createStory:
-            PlaceholderView(title: "Create Story", icon: "plus.circle.fill")
+            CreatePostSheet(onPost: { _, _ in })
+                .navigationTitle("Create Story")
         case .storyViewer(let userId):
-            PlaceholderView(title: "Story Viewer", icon: "eye.fill", detail: userId)
+            PlaceholderView(title: "Story Viewer", icon: "eye.fill", detail: userId, description: "Watch stories shared by other walkers in your community")
         case .publicProfile(let userId):
-            PlaceholderView(title: "Public Profile", icon: "person.crop.circle", detail: userId)
+            PlaceholderView(title: "Public Profile", icon: "person.crop.circle", detail: userId, description: "View walker profile, dogs, and walk history")
         case .followList(let userId, let type):
-            PlaceholderView(title: "\(type.capitalized)", icon: "person.2.fill", detail: userId)
+            PlaceholderView(title: "\(type.capitalized)", icon: "person.2.fill", detail: userId, description: "Browse \(type) list and discover new walkers")
         case .reportPost(let postId):
-            PlaceholderView(title: "Report Post", icon: "exclamationmark.triangle.fill", detail: postId)
+            PlaceholderView(title: "Report Post", icon: "exclamationmark.triangle.fill", detail: postId, description: "Flag inappropriate content for community moderators")
         case .challenges:
             ChallengesScreen()
         case .challengeDetail(let challengeId):
@@ -90,13 +91,13 @@ struct RouteDestination: View {
         case .badgeGallery:
             BadgeGalleryScreen()
         case .badgeDetail(let badgeId):
-            PlaceholderView(title: "Badge Detail", icon: "trophy.circle.fill", detail: badgeId)
+            PlaceholderView(title: "Badge Detail", icon: "trophy.circle.fill", detail: badgeId, description: "View badge requirements, progress, and how to earn it")
         case .walkHistoryDetail(let walkId):
             WalkHistoryDetailScreen(walkId: walkId)
         case .milestones:
-            PlaceholderView(title: "Milestones", icon: "star.fill")
+            MilestonesListScreen()
         case .levelUp:
-            PlaceholderView(title: "Level Up", icon: "arrow.up.circle.fill")
+            PlaceholderView(title: "Level Up", icon: "arrow.up.circle.fill", description: "See your level progress and upcoming rewards")
         case .discovery:
             DiscoveryScreen()
         case .providerDetail(let providerId):
@@ -114,35 +115,35 @@ struct RouteDestination: View {
         case .businessInbox:
             BusinessInboxScreen()
         case .businessDashboard:
-            PlaceholderView(title: "Business Dashboard", icon: "chart.bar.fill")
+            PlaceholderView(title: "Business Dashboard", icon: "chart.bar.fill", description: "Overview of bookings, earnings, and client activity")
         case .businessSchedule:
-            PlaceholderView(title: "Business Schedule", icon: "calendar")
+            PlaceholderView(title: "Business Schedule", icon: "calendar", description: "View and manage your upcoming walk bookings")
         case .businessClients:
-            PlaceholderView(title: "Business Clients", icon: "person.2.fill")
+            PlaceholderView(title: "Business Clients", icon: "person.2.fill", description: "Manage your client list and dog profiles")
         case .businessEarnings:
-            PlaceholderView(title: "Business Earnings", icon: "sterlingsign.circle.fill")
+            PlaceholderView(title: "Business Earnings", icon: "sterlingsign.circle.fill", description: "Track revenue, invoices, and payment history")
         case .businessSettings:
-            PlaceholderView(title: "Business Settings", icon: "gearshape.fill")
+            PlaceholderView(title: "Business Settings", icon: "gearshape.fill", description: "Configure service areas, pricing, and availability")
 
         // Client
         case .clientBookings:
-            PlaceholderView(title: "My Bookings", icon: "calendar.badge.clock")
+            PlaceholderView(title: "My Bookings", icon: "calendar.badge.clock", description: "View upcoming and past walk bookings")
         case .clientDashboard:
-            PlaceholderView(title: "Client Dashboard", icon: "house.fill")
+            PlaceholderView(title: "Client Dashboard", icon: "house.fill", description: "Your dog walking overview and quick actions")
         case .clientInvoices:
-            PlaceholderView(title: "Invoices", icon: "doc.text.fill")
+            PlaceholderView(title: "Invoices", icon: "doc.text.fill", description: "View and pay outstanding invoices")
         case .clientMessages:
-            PlaceholderView(title: "Messages", icon: "bubble.left.and.bubble.right.fill")
+            PlaceholderView(title: "Messages", icon: "bubble.left.and.bubble.right.fill", description: "Chat with your dog walker")
 
         // Map features
         case .hazardReport:
-            PlaceholderView(title: "Report Hazard", icon: "exclamationmark.triangle.fill")
+            HazardReportScreen()
         case .hazardDetail(let hazardId):
-            PlaceholderView(title: "Hazard Detail", icon: "exclamationmark.triangle", detail: hazardId)
+            PlaceholderView(title: "Hazard Detail", icon: "exclamationmark.triangle", detail: hazardId, description: "View hazard details, severity, and community reports")
         case .trailConditionReport:
-            PlaceholderView(title: "Trail Conditions", icon: "leaf.fill")
+            TrailConditionSheet(userLocation: nil, onSubmit: { _, _, _ in })
         case .offLeadZones:
-            PlaceholderView(title: "Off-Lead Zones", icon: "pawprint.fill")
+            OffLeadZonesScreen()
         case .rainModeSettings:
             RainModeSettingsView()
         case .routeLibrary:
@@ -152,7 +153,7 @@ struct RouteDestination: View {
         case .nearbyPubs:
             NearbyPubsSheetWrapper()
         case .pubDetail(let pubId):
-            PlaceholderView(title: "Pub Detail", icon: "mug.fill", detail: pubId)
+            PlaceholderView(title: "Pub Detail", icon: "mug.fill", detail: pubId, description: "View pub amenities, dog policy, photos, and directions")
 
         // Settings
         case .languageSettings:
@@ -160,9 +161,9 @@ struct RouteDestination: View {
         case .autoReplySettings:
             AwayModeSettingsWrapper()
         case .notificationSettings:
-            PlaceholderView(title: "Notifications", icon: "bell.fill")
+            PlaceholderView(title: "Notifications", icon: "bell.fill", description: "Configure push notifications, hazard alerts, and reminders")
         case .privacySettings:
-            PlaceholderView(title: "Privacy", icon: "lock.shield.fill")
+            PlaceholderView(title: "Privacy", icon: "lock.shield.fill", description: "Manage profile visibility, location sharing, and data preferences")
         }
     }
 }
@@ -214,6 +215,7 @@ struct PlaceholderView: View {
     let title: String
     let icon: String
     var detail: String? = nil
+    var description: String? = nil
 
     var body: some View {
         VStack(spacing: 24) {
@@ -223,15 +225,23 @@ struct PlaceholderView: View {
                 .foregroundStyle(.secondary)
             Text(title)
                 .font(.title.bold())
+            if let description {
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
             if let detail {
                 Text(detail)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(.tertiary)
                     .monospaced()
             }
-            Text("Coming soon")
+            Label("Coming soon", systemImage: "clock")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tertiary)
+                .padding(.top, 8)
             Spacer()
         }
         .frame(maxWidth: .infinity)

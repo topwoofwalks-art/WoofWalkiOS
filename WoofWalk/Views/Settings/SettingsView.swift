@@ -9,6 +9,9 @@ struct SettingsView: View {
     @State private var showExportDialog = false
     @State private var exportURL: URL?
 
+    @AppStorage("voiceGuidanceEnabled") private var voiceGuidanceEnabled = false
+    @AppStorage("fogOfWarEnabled") private var fogOfWarEnabled = false
+
     var body: some View {
         NavigationView {
             List {
@@ -111,6 +114,20 @@ struct SettingsView: View {
                 RainModeSettingsView()
             } label: {
                 Label("Rain Mode", systemImage: "cloud.rain")
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("Voice Guidance", isOn: $voiceGuidanceEnabled)
+                Text("Spoken turn-by-turn directions during guided walks")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("Fog of War Mode", isOn: $fogOfWarEnabled)
+                Text("Reveals map areas as you walk through them")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
     }

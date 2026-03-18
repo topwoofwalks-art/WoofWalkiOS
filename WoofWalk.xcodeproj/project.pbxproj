@@ -213,6 +213,7 @@
 		A1000001000000000000479 /* ChallengesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000478 /* ChallengesScreen.swift */; };
 		A1000001000000000000481 /* LeagueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000480 /* LeagueView.swift */; };
 		A1000001000000000000483 /* MilestoneCelebration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000482 /* MilestoneCelebration.swift */; };
+		A1000001000000000000931 /* MilestonesListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000930 /* MilestonesListScreen.swift */; };
 		A1000001000000000000485 /* StreakBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000484 /* StreakBanner.swift */; };
 		A1000001000000000000487 /* WalkCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000486 /* WalkCardView.swift */; };
 		A1000001000000000000489 /* WalkDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000488 /* WalkDetailView.swift */; };
@@ -311,7 +312,9 @@
 		A1000001000000000000869 /* RouteDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000868 /* RouteDetailScreen.swift */; };
 		A1000001000000000000871 /* RouteLibraryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000870 /* RouteLibraryScreen.swift */; };
 		A1000001000000000000921 /* FogOfWarOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000920 /* FogOfWarOverlay.swift */; };
+		A1000001000000000000933 /* HazardReportScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000932 /* HazardReportScreen.swift */; };
 		A1000001000000000000925 /* NightModeOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000924 /* NightModeOverlay.swift */; };
+		A1000001000000000000935 /* OffLeadZonesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000934 /* OffLeadZonesScreen.swift */; };
 		A1000001000000000000923 /* WeatherWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000922 /* WeatherWidget.swift */; };
 		A1000001000000000000873 /* WalkHistoryDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000872 /* WalkHistoryDetailScreen.swift */; };
 		A1000001000000000000875 /* WalkHistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000874 /* WalkHistoryScreen.swift */; };
@@ -527,6 +530,7 @@
 		A1000001000000000000478 /* ChallengesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengesScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000480 /* LeagueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeagueView.swift; sourceTree = "<group>"; };
 		A1000001000000000000482 /* MilestoneCelebration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestoneCelebration.swift; sourceTree = "<group>"; };
+		A1000001000000000000930 /* MilestonesListScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestonesListScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000484 /* StreakBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakBanner.swift; sourceTree = "<group>"; };
 		A1000001000000000000486 /* WalkCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkCardView.swift; sourceTree = "<group>"; };
 		A1000001000000000000488 /* WalkDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkDetailView.swift; sourceTree = "<group>"; };
@@ -625,7 +629,9 @@
 		A1000001000000000000868 /* RouteDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDetailScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000870 /* RouteLibraryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteLibraryScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000920 /* FogOfWarOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FogOfWarOverlay.swift; sourceTree = "<group>"; };
+		A1000001000000000000932 /* HazardReportScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardReportScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000924 /* NightModeOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightModeOverlay.swift; sourceTree = "<group>"; };
+		A1000001000000000000934 /* OffLeadZonesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffLeadZonesScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000922 /* WeatherWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherWidget.swift; sourceTree = "<group>"; };
 		A1000001000000000000872 /* WalkHistoryDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryDetailScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000874 /* WalkHistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryScreen.swift; sourceTree = "<group>"; };
@@ -1182,6 +1188,7 @@
 				A1000001000000000000478 /* ChallengesScreen.swift */,
 				A1000001000000000000480 /* LeagueView.swift */,
 				A1000001000000000000482 /* MilestoneCelebration.swift */,
+				A1000001000000000000930 /* MilestonesListScreen.swift */,
 				A1000001000000000000484 /* StreakBanner.swift */,
 				A1000001000000000000846 /* AnimationModifiers.swift */,
 			);
@@ -1235,7 +1242,9 @@
 				A1000001000000000000868 /* RouteDetailScreen.swift */,
 				A1000001000000000000870 /* RouteLibraryScreen.swift */,
 				A1000001000000000000920 /* FogOfWarOverlay.swift */,
+				A1000001000000000000932 /* HazardReportScreen.swift */,
 				A1000001000000000000924 /* NightModeOverlay.swift */,
+				A1000001000000000000934 /* OffLeadZonesScreen.swift */,
 				A1000001000000000000922 /* WeatherWidget.swift */,
 			);
 			path = Map;
@@ -1660,6 +1669,7 @@
 				A1000001000000000000479 /* ChallengesScreen.swift in Sources */,
 				A1000001000000000000481 /* LeagueView.swift in Sources */,
 				A1000001000000000000483 /* MilestoneCelebration.swift in Sources */,
+				A1000001000000000000931 /* MilestonesListScreen.swift in Sources */,
 				A1000001000000000000485 /* StreakBanner.swift in Sources */,
 				A1000001000000000000487 /* WalkCardView.swift in Sources */,
 				A1000001000000000000489 /* WalkDetailView.swift in Sources */,
@@ -1758,7 +1768,9 @@
 				A1000001000000000000869 /* RouteDetailScreen.swift in Sources */,
 				A1000001000000000000871 /* RouteLibraryScreen.swift in Sources */,
 				A1000001000000000000921 /* FogOfWarOverlay.swift in Sources */,
+				A1000001000000000000933 /* HazardReportScreen.swift in Sources */,
 				A1000001000000000000925 /* NightModeOverlay.swift in Sources */,
+				A1000001000000000000935 /* OffLeadZonesScreen.swift in Sources */,
 				A1000001000000000000923 /* WeatherWidget.swift in Sources */,
 				A1000001000000000000873 /* WalkHistoryDetailScreen.swift in Sources */,
 				A1000001000000000000875 /* WalkHistoryScreen.swift in Sources */,
