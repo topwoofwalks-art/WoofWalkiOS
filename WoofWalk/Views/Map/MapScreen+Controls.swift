@@ -146,7 +146,7 @@ extension MapScreen {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 8).fill(.regularMaterial))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
         }
     }
 
