@@ -46,6 +46,8 @@ struct MapScreen: View {
     @State var showLivestockMode = false
     @State var showWalkingPaths = false
     @State var dismissedHazardIds: Set<String> = []
+    @State var showFogOfWar = false
+    @State var fogOfWarCoordinates: [CLLocationCoordinate2D] = []
     @State var showTrailConditionSheet = false
     @State var showNearbyPubsSheet = false
     @State var showPubDetailSheet = false
@@ -67,6 +69,10 @@ struct MapScreen: View {
             controlsOverlay
             hazardAlertOverlay
             planningOverlay
+            FogOfWarOverlay(
+                exploredCoordinates: fogOfWarCoordinates,
+                isEnabled: $showFogOfWar
+            )
         }
         .modifier(MapSheetModifiers(
             showSearchBar: $showSearchBar,
@@ -193,6 +199,9 @@ struct MapScreen: View {
             if let location = newLocation {
                 mapViewModel.updateWalkPolyline(with: location)
                 walkTrackingViewModel.updateLocation(location)
+                if showFogOfWar && walkTrackingViewModel.isWalkActive {
+                    fogOfWarCoordinates.append(location)
+                }
             }
         }
     }

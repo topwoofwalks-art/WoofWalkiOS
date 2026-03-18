@@ -24,6 +24,8 @@ extension MapScreen {
         HStack(alignment: .top, spacing: 12) {
             compassView
             Spacer()
+            WeatherWidget()
+            Spacer()
             topRightControls
         }
         .padding()
