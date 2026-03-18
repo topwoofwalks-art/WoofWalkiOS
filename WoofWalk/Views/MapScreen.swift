@@ -46,6 +46,7 @@ struct MapScreen: View {
     @State var completedDistance: Double = 0
     @State var completedDuration: Int = 0
     @StateObject var settingsViewModel = SettingsViewModel()
+    @ObservedObject var buttonTestCoordinator = ButtonTestCoordinator.shared
     @StateObject var walkPathVM = WalkPathVM()
     @StateObject var livestockFieldVM = LivestockFieldViewModel()
     @State var mapStyle: WoofWalkMapStyle = .standard
@@ -323,6 +324,77 @@ struct MapScreen: View {
             guard let walk = walk else { return }
             AppNavigator.shared.pendingPlannedWalk = nil
             executePlannedWalk(walk)
+        }
+        .onChange(of: buttonTestCoordinator.currentCommand) { command in
+            handleTestCommand(command)
+        }
+    }
+
+    // MARK: - Button Test Command Handler
+
+    private func handleTestCommand(_ command: TestCommand) {
+        let coord = ButtonTestCoordinator.shared
+        guard command != .none else { return }
+
+        switch command {
+        case .tapCarButton:
+            handleCarButton()
+            coord.reportResult("Car button tapped, carLocation=\(carLocation != nil)")
+        case .tapFilterButton, .openFilterSheet:
+            showFilterSheet = true
+            coord.reportResult("Filter sheet opened")
+        case .closeFilterSheet, .closeSheet:
+            showFilterSheet = false
+            showNearbyPubsSheet = false
+            showTrailConditionSheet = false
+            coord.reportResult("Sheets closed")
+        case .tapLocationButton:
+            centerOnUser()
+            coord.reportResult("Centered on user location")
+        case .tapTorchButton:
+            toggleTorch()
+            coord.reportResult("Torch toggled, isTorchOn=\(isTorchOn)")
+        case .tapLivestockButton:
+            showLivestockMode.toggle()
+            coord.reportResult("Livestock mode=\(showLivestockMode)")
+        case .tapWalkingPathsButton:
+            showWalkingPaths.toggle()
+            coord.reportResult("Walking paths=\(showWalkingPaths)")
+        case .tapRainModeButton, .enableRainMode:
+            showRainMode = true
+            coord.reportResult("Rain mode enabled")
+        case .disableRainMode:
+            showRainMode = false
+            coord.reportResult("Rain mode disabled")
+        case .tapPubsButton, .openNearbyPubsSheet:
+            showNearbyPubsSheet = true
+            coord.reportResult("Nearby pubs sheet opened")
+        case .tapAddPOIButton:
+            addPOI()
+            coord.reportResult("Add POI triggered")
+        case .tapWalkButton:
+            toggleWalk()
+            coord.reportResult("Walk toggled, isActive=\(walkTrackingViewModel.isWalkActive)")
+        case .startWalk:
+            if !walkTrackingViewModel.isWalkActive { startWalk() }
+            coord.reportResult("Walk started")
+        case .stopWalk:
+            if walkTrackingViewModel.isWalkActive { stopWalk() }
+            coord.reportResult("Walk stopped")
+        case .tapQuickAddBin:
+            quickAddBin()
+            coord.reportResult("Quick add bin triggered")
+        case .verifyMapLoaded:
+            let hasPois = !mapViewModel.pois.isEmpty
+            coord.reportResult("Map loaded, POIs=\(mapViewModel.pois.count), hasPois=\(hasPois)")
+        case .verifyPOIsVisible:
+            let filtered = mapViewModel.filteredPOIs.count
+            coord.reportResult("Filtered POIs visible: \(filtered)")
+        case .verifyBinDistanceVisible:
+            let bins = mapViewModel.pois.filter { $0.poiType == .bin }
+            coord.reportResult("Bins loaded: \(bins.count)")
+        case .none:
+            break
         }
     }
 

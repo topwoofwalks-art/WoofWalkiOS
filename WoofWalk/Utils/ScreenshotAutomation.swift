@@ -168,6 +168,64 @@ class ScreenshotAutomation: ObservableObject {
             await self.hold(1)
         }
 
+        // Phase 8: Button-level tests on Map screen
+        await testPhase("PHASE 8: Button-Level Tests") {
+            AppNavigator.shared.switchMode(.public_)
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(2)
+
+            // Wait for POIs to load
+            await self.hold(5)
+            await self.testButton(.verifyMapLoaded, name: "Verify-Map-Loaded")
+            await self.testButton(.verifyPOIsVisible, name: "Verify-POIs-Visible")
+            await self.testButton(.verifyBinDistanceVisible, name: "Verify-Bins-Loaded")
+
+            // Test each button
+            await self.testButton(.tapCarButton, name: "Car-Button")
+            await self.testButton(.tapCarButton, name: "Car-Button-Clear") // tap again to show options
+
+            await self.testButton(.tapFilterButton, name: "Filter-Button-Open")
+            await self.hold(1)
+            await self.testButton(.closeSheet, name: "Filter-Button-Close")
+
+            await self.testButton(.tapLocationButton, name: "Location-Button")
+
+            await self.testButton(.tapTorchButton, name: "Torch-On")
+            await self.testButton(.tapTorchButton, name: "Torch-Off")
+
+            await self.testButton(.tapLivestockButton, name: "Livestock-Mode-On")
+            await self.testButton(.tapLivestockButton, name: "Livestock-Mode-Off")
+
+            await self.testButton(.tapWalkingPathsButton, name: "Walking-Paths-On")
+            await self.testButton(.tapWalkingPathsButton, name: "Walking-Paths-Off")
+
+            // Rain mode - enable then immediately disable (skip long press since no touch filtering on sim)
+            await self.testButton(.enableRainMode, name: "Rain-Mode-Enable")
+            await self.hold(1)
+            await self.testButton(.disableRainMode, name: "Rain-Mode-Disable")
+
+            await self.testButton(.tapPubsButton, name: "Pubs-Button-Open")
+            await self.hold(1)
+            await self.testButton(.closeSheet, name: "Pubs-Sheet-Close")
+
+            await self.testButton(.tapAddPOIButton, name: "Add-POI-Button")
+            await self.testButton(.tapQuickAddBin, name: "Quick-Add-Bin")
+        }
+
+        // Phase 9: Walk flow test
+        await testPhase("PHASE 9: Walk Flow") {
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(1)
+
+            await self.testButton(.startWalk, name: "Start-Walk")
+            await self.hold(3) // walk for 3 seconds
+            await self.testButton(.stopWalk, name: "Stop-Walk")
+            await self.hold(2) // wait for completion screen
+            self.record("Walk-Flow-Complete", status: "PASS", notes: "Walk started and stopped successfully")
+        }
+
         // Generate report
         await generateReport()
     }
@@ -193,6 +251,18 @@ class ScreenshotAutomation: ObservableObject {
         screenIndex += 1
 
         AppNavigator.shared.popToRoot()
+        await hold(0.5)
+    }
+
+    private func testButton(_ command: TestCommand, name: String) async {
+        let coord = ButtonTestCoordinator.shared
+        await coord.send(command)
+        let result = coord.lastResult
+        if result.isEmpty {
+            record("Btn-\(name)", status: "WARN", notes: "No result returned")
+        } else {
+            record("Btn-\(name)", status: "PASS", notes: result)
+        }
         await hold(0.5)
     }
 
