@@ -130,9 +130,8 @@ struct FeedScreen: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 20)
-                }
-                .refreshable { viewModel.refresh() }
             }
+            .refreshable { viewModel.refresh() }
         }
         .sheet(isPresented: $showCreatePost) {
             CreatePostSheet(onPost: { text, photoUrl in
