@@ -1,0 +1,197 @@
+name: Full Test Suite
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main']
+    paths:
+      - '.github/workflows/full-test.yml'
+
+jobs:
+  test:
+    name: Full Route & Button Test
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 15.4
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Add GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -n "$GOOGLE_SERVICE_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_PLIST" | base64 --decode > WoofWalk/GoogleService-Info.plist
+            echo "GoogleService-Info.plist added from secret"
+          else
+            echo "No Firebase secret set"
+          fi
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-v2-${{ hashFiles('Podfile') }}
+          restore-keys: pods-v2-
+
+      - name: Install CocoaPods
+        run: pod install --repo-update
+
+      - name: Build for simulator
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace WoofWalk.xcworkspace \
+            -scheme WoofWalk \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            ENABLE_USER_SCRIPT_SANDBOXING=NO \
+            2>&1 | tee build.log | xcpretty
+
+      - name: Find built app
+        id: app
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "WoofWalk.app" -path "*/Debug-iphonesimulator/*" | head -1)
+          echo "path=$APP_PATH" >> $GITHUB_OUTPUT
+          echo "Found app at: $APP_PATH"
+          if [ -f WoofWalk/GoogleService-Info.plist ]; then
+            cp WoofWalk/GoogleService-Info.plist "$APP_PATH/GoogleService-Info.plist"
+          fi
+
+      - name: Run full test suite
+        env:
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: |
+          mkdir -p test-results/screenshots
+          DEVICE="iPhone 15"
+          BUNDLE="com.woofwalk.ios"
+          MAX_RETRIES=3
+          RETRY=0
+
+          # Boot simulator
+          xcrun simctl boot "$DEVICE" || true
+          sleep 5
+
+          # Clean status bar
+          xcrun simctl status_bar "$DEVICE" override \
+            --time "9:41" --batteryState charged --batteryLevel 100 \
+            --cellularMode active --cellularBars 4 --wifiBars 3
+
+          # Set simulated location (London - matches default map center)
+          xcrun simctl location "$DEVICE" set 51.5,-0.1
+
+          # Grant permissions
+          xcrun simctl privacy "$DEVICE" grant all "$BUNDLE" || true
+          xcrun simctl privacy "$DEVICE" grant location-always "$BUNDLE" || true
+          xcrun simctl privacy "$DEVICE" grant photos "$BUNDLE" || true
+          xcrun simctl privacy "$DEVICE" grant camera "$BUNDLE" || true
+          xcrun simctl privacy "$DEVICE" grant notifications "$BUNDLE" || true
+
+          # Write test credentials
+          xcrun simctl spawn "$DEVICE" defaults write "$BUNDLE" TEST_EMAIL "${TEST_EMAIL:-}" || true
+          xcrun simctl spawn "$DEVICE" defaults write "$BUNDLE" TEST_PASSWORD "${TEST_PASSWORD:-}" || true
+
+          while [ $RETRY -lt $MAX_RETRIES ]; do
+            echo "=== TEST RUN $(($RETRY + 1))/$MAX_RETRIES ==="
+
+            # Install fresh
+            xcrun simctl install "$DEVICE" "${{ steps.app.outputs.path }}"
+            sleep 2
+
+            # Launch in full test mode
+            xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE" -full-test-mode > test-results/app-output-run$RETRY.log 2>&1 &
+            APP_PID=$!
+
+            # Wait for test to complete (max 5 minutes per run)
+            WAITED=0
+            while [ $WAITED -lt 300 ]; do
+              sleep 5
+              WAITED=$(($WAITED + 5))
+
+              # Check if automation completed
+              if grep -q "END REPORT" test-results/app-output-run$RETRY.log 2>/dev/null; then
+                echo "Test run completed at ${WAITED}s"
+                break
+              fi
+
+              # Capture progressive screenshots every 15s
+              if [ $(($WAITED % 15)) -eq 0 ]; then
+                SCREENSHOT_NAME="test-results/screenshots/run${RETRY}_${WAITED}s.png"
+                xcrun simctl io "$DEVICE" screenshot "$SCREENSHOT_NAME" 2>/dev/null || true
+              fi
+
+              # Check if app crashed
+              if ! xcrun simctl spawn "$DEVICE" launchctl list 2>/dev/null | grep -q "$BUNDLE"; then
+                echo "App appears to have crashed at ${WAITED}s"
+                xcrun simctl io "$DEVICE" screenshot "test-results/screenshots/crash_run${RETRY}.png" 2>/dev/null || true
+                break
+              fi
+            done
+
+            # Final screenshot
+            xcrun simctl io "$DEVICE" screenshot "test-results/screenshots/final_run${RETRY}.png" 2>/dev/null || true
+
+            # Capture simulator logs
+            xcrun simctl spawn "$DEVICE" log show \
+              --predicate 'process == "WoofWalk"' \
+              --last 300s --style compact 2>/dev/null > test-results/sim-log-run$RETRY.log || true
+
+            # Kill the app
+            kill $APP_PID 2>/dev/null || true
+            xcrun simctl terminate "$DEVICE" "$BUNDLE" 2>/dev/null || true
+            sleep 2
+
+            # Check pass rate
+            if grep -q "=== TEST REPORT ===" test-results/app-output-run$RETRY.log 2>/dev/null; then
+              PASS_RATE=$(grep "Pass Rate:" test-results/app-output-run$RETRY.log | grep -oE '[0-9]+\.[0-9]+' | head -1)
+              echo "Run $RETRY pass rate: ${PASS_RATE}%"
+
+              if [ "$(echo "$PASS_RATE >= 99" | bc)" -eq 1 ] 2>/dev/null; then
+                echo "=== TARGET REACHED: ${PASS_RATE}% ==="
+                break
+              fi
+            else
+              echo "No test report found - app may have crashed"
+            fi
+
+            RETRY=$(($RETRY + 1))
+            echo "Retrying... ($RETRY/$MAX_RETRIES)"
+            sleep 5
+          done
+
+          # Generate summary
+          echo "=== ALL RUN LOGS ===" > test-results/summary.txt
+          for f in test-results/app-output-run*.log; do
+            echo "--- $(basename $f) ---" >> test-results/summary.txt
+            grep "\[ScreenshotAutomation\]" "$f" >> test-results/summary.txt 2>/dev/null || true
+            echo "" >> test-results/summary.txt
+          done
+
+          # Print final report
+          LATEST_LOG=$(ls -t test-results/app-output-run*.log 2>/dev/null | head -1)
+          if [ -n "$LATEST_LOG" ]; then
+            echo ""
+            echo "=== FINAL TEST REPORT ==="
+            grep "\[ScreenshotAutomation\]" "$LATEST_LOG" | tail -50
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-test-results
+          path: test-results/
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
