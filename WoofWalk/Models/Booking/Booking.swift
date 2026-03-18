@@ -1,0 +1,133 @@
+import Foundation
+import FirebaseFirestore
+
+/// Represents a booking for a pet service (walk, grooming, sitting, boarding).
+/// Matches Android Firestore structure exactly.
+struct Booking: Identifiable, Codable {
+    @DocumentID var id: String?
+    var clientId: String
+    var clientName: String
+    var businessId: String
+    var orgId: String
+    var organizationId: String
+    var dogName: String
+    var dogBreed: String?
+    var serviceType: String  // Raw Firestore value; use serviceTypeEnum for typed access
+    var startTime: Int64
+    var endTime: Int64
+    var status: String       // Raw Firestore value; use statusEnum for typed access
+    var location: String
+    var notes: String?
+    var price: Double
+    var isPaid: Bool
+    var assignedTo: String?
+    var clientPhone: String?
+    var clientEmail: String?
+    var clientAvatar: String?
+    var dogAvatar: String?
+    var petId: String?
+    var specialInstructions: String?
+    var specialRequirements: String?
+    var cancellationReason: String?
+    var createdAt: Int64
+    var updatedAt: Int64
+
+    // MARK: - Computed Properties
+
+    /// Typed booking status
+    var statusEnum: BookingStatus {
+        BookingStatus.from(rawValue: status)
+    }
+
+    /// Typed service type
+    var serviceTypeEnum: BookingServiceType {
+        BookingServiceType.from(rawValue: serviceType)
+    }
+
+    /// Get organization ID from either orgId or organizationId field
+    var organizationIdCompat: String {
+        orgId.isEmpty ? organizationId : orgId
+    }
+
+    /// Start time as Date
+    var startDate: Date {
+        Date(timeIntervalSince1970: TimeInterval(startTime) / 1000.0)
+    }
+
+    /// End time as Date
+    var endDate: Date {
+        Date(timeIntervalSince1970: TimeInterval(endTime) / 1000.0)
+    }
+
+    /// Duration in minutes
+    var durationMinutes: Int {
+        Int((endTime - startTime) / (1000 * 60))
+    }
+
+    // MARK: - Init
+
+    init(
+        id: String? = nil,
+        clientId: String = "",
+        clientName: String = "",
+        businessId: String = "",
+        orgId: String = "",
+        organizationId: String = "",
+        dogName: String = "",
+        dogBreed: String? = nil,
+        serviceType: String = BookingServiceType.walk.rawValue,
+        startTime: Int64 = 0,
+        endTime: Int64 = 0,
+        status: String = BookingStatus.pending.rawValue,
+        location: String = "",
+        notes: String? = nil,
+        price: Double = 0.0,
+        isPaid: Bool = false,
+        assignedTo: String? = nil,
+        clientPhone: String? = nil,
+        clientEmail: String? = nil,
+        clientAvatar: String? = nil,
+        dogAvatar: String? = nil,
+        petId: String? = nil,
+        specialInstructions: String? = nil,
+        specialRequirements: String? = nil,
+        cancellationReason: String? = nil,
+        createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
+        updatedAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000)
+    ) {
+        self.id = id
+        self.clientId = clientId
+        self.clientName = clientName
+        self.businessId = businessId
+        self.orgId = orgId
+        self.organizationId = organizationId
+        self.dogName = dogName
+        self.dogBreed = dogBreed
+        self.serviceType = serviceType
+        self.startTime = startTime
+        self.endTime = endTime
+        self.status = status
+        self.location = location
+        self.notes = notes
+        self.price = price
+        self.isPaid = isPaid
+        self.assignedTo = assignedTo
+        self.clientPhone = clientPhone
+        self.clientEmail = clientEmail
+        self.clientAvatar = clientAvatar
+        self.dogAvatar = dogAvatar
+        self.petId = petId
+        self.specialInstructions = specialInstructions
+        self.specialRequirements = specialRequirements
+        self.cancellationReason = cancellationReason
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    // MARK: - Static Helpers
+
+    /// Convert a Date to epoch milliseconds (matching Android's Long format)
+    static func toEpochMs(_ date: Date) -> Int64 {
+        Int64(date.timeIntervalSince1970 * 1000)
+    }
+}

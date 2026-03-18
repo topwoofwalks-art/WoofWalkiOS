@@ -172,6 +172,7 @@ struct ChatMessage: Identifiable, Codable {
     var readBy: [String]
     var isAutoReply: Bool
     var type: String?
+    var reactions: [String: [String]]
     @ServerTimestamp var createdAt: Timestamp?
 
     init(id: String? = nil,
@@ -183,6 +184,7 @@ struct ChatMessage: Identifiable, Codable {
          readBy: [String] = [],
          isAutoReply: Bool = false,
          type: String? = nil,
+         reactions: [String: [String]] = [:],
          createdAt: Timestamp? = nil) {
         self.id = id
         self.chatId = chatId
@@ -193,6 +195,7 @@ struct ChatMessage: Identifiable, Codable {
         self.readBy = readBy
         self.isAutoReply = isAutoReply
         self.type = type
+        self.reactions = reactions
         self.createdAt = createdAt
     }
 

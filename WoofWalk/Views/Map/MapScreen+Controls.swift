@@ -212,6 +212,7 @@ extension MapScreen {
             }
 
             addPOIButton
+            plannedWalksButton
             planningModeButton
         }
     }
@@ -283,6 +284,16 @@ extension MapScreen {
                 .foregroundColor(.white)
                 .frame(width: 44, height: 44)
                 .background(Circle().fill(.blue))
+        }
+    }
+
+    var plannedWalksButton: some View {
+        NavigationLink(value: AppRoute.plannedWalks) {
+            Image(systemName: "calendar.badge.clock")
+                .font(.body)
+                .foregroundColor(.white)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(Color.turquoise60))
         }
     }
 

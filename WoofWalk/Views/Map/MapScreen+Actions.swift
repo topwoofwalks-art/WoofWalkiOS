@@ -1,6 +1,8 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import FirebaseAuth
+import FirebaseFirestore
 
 // MARK: - MapScreen Actions Extension
 
@@ -10,6 +12,13 @@ extension MapScreen {
 
     func handleMapTap(_ coordinate: CLLocationCoordinate2D) {
         guard !walkTrackingViewModel.isWalkActive else { return }
+
+        // In planning mode, taps add waypoints instead of showing the dialog
+        if isPlanningMode {
+            mapViewModel.addPlanningWaypoint(coordinate)
+            return
+        }
+
         clickedLocation = coordinate
         showMapClickDialog = true
     }
@@ -61,17 +70,113 @@ extension MapScreen {
         completedDuration = Int(walkTrackingViewModel.walkDuration)
         walkTrackingViewModel.stopWalk()
         mapViewModel.stopWalkTracking()
+        guidanceViewModel.stopGuidance()
         showWalkSummary = true
 
+        // Mark planned walk as completed if this was a guided planned walk
+        if pendingPlannedWalk != nil {
+            let walkId = "\(Auth.auth().currentUser?.uid ?? "")_\(Int(Date().timeIntervalSince1970 * 1000))"
+            markPlannedWalkCompleted(walkId: walkId)
+        }
+
         Task {
-            await BadgeAwardingService.shared.checkAndAwardBadges(
-                walkDistance: completedDistance,
-                totalWalks: 0,
-                totalDistance: completedDistance,
-                poisCreated: 0,
-                votesGiven: 0
+            await BadgeAwardingService.shared.checkAndAwardBadgesAfterWalk(
+                walkDistance: completedDistance
+            )
+
+            // Record charity points if eligible (matches Android WalkTrackingViewModel.recordCharityPoints)
+            let charityPoints = await CharityRepository.shared.recordCharityPoints(
+                distanceMeters: completedDistance
+            )
+            if charityPoints > 0 {
+                let charityId = CharityRepository.shared.getSelectedCharityId()
+                let charityName = CharityRepository.shared.getCharityName(charityId)
+                print("[MapScreen] Charity points awarded: \(charityPoints) for \(charityName)")
+            }
+
+            // Update challenge progress after walk completion (matches Android WalkTrackingViewModel.updateChallengeProgress)
+            let streakValue = try? await Firestore.firestore().collection("users")
+                .document(Auth.auth().currentUser?.uid ?? "")
+                .getDocument()
+                .data(as: UserProfile.self).walkStreak?.currentStreak ?? 0
+            await ChallengeRepository.shared.updateChallengeProgressAfterWalk(
+                distanceMeters: completedDistance,
+                durationSeconds: completedDuration,
+                currentStreak: streakValue ?? 0
             )
         }
+    }
+
+    // MARK: - Execute Planned Walk
+
+    func executePlannedWalk(_ walk: PlannedWalk) {
+        let waypoints = walk.routePolyline.map {
+            CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
+        }
+
+        guard waypoints.count >= 2 else {
+            print("[MapScreen] Cannot start planned walk: need at least 2 waypoints")
+            startWalk()
+            return
+        }
+
+        // Center map on the walk start
+        let startCoord = waypoints.first!
+        region = MKCoordinateRegion(
+            center: startCoord,
+            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+        )
+
+        // Store planned walk ID for completion marking
+        pendingPlannedWalk = walk
+
+        // Use RoutingViewModel to fetch the full route, then start guidance
+        let origin = waypoints.first!
+        let destination = waypoints.last!
+
+        if waypoints.count == 2 {
+            routingViewModel.onMapTap(origin: origin, destination: destination, destinationName: walk.title)
+        } else {
+            // Multi-waypoint: use the via point for circular route generation
+            let viaPoint = waypoints[waypoints.count / 2]
+            routingViewModel.generateCircularRoute(
+                userLocation: origin,
+                viaPoint: viaPoint
+            )
+        }
+
+        // Observe routing state to start guidance once route is ready
+        Task {
+            for _ in 0..<30 {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                if case .previewReady(let preview) = routingViewModel.routingState,
+                   let route = preview.route, !preview.isLoading {
+                    if let userLoc = locationManager.location {
+                        guidanceViewModel.startGuidance(route: route, userLocation: userLoc)
+                        walkTrackingViewModel.startWalk()
+                        mapViewModel.startWalkTracking()
+                        print("[MapScreen] Started guided walk for planned walk: \(walk.title)")
+                    }
+                    return
+                }
+            }
+            print("[MapScreen] Route fetch timed out for planned walk, starting unguided walk")
+            startWalk()
+        }
+    }
+
+    func markPlannedWalkCompleted(walkId: String) {
+        guard let plannedWalk = pendingPlannedWalk, let plannedWalkId = plannedWalk.id else { return }
+        let repo = PlannedWalkRepository()
+        Task {
+            do {
+                try await repo.markAsCompleted(plannedWalkId: plannedWalkId, completedWalkId: walkId)
+                print("[MapScreen] Marked planned walk \(plannedWalkId) as completed")
+            } catch {
+                print("[MapScreen] Failed to mark planned walk as completed: \(error.localizedDescription)")
+            }
+        }
+        pendingPlannedWalk = nil
     }
 
     // MARK: - POI Actions

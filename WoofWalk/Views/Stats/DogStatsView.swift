@@ -1,5 +1,3 @@
-#if false
-// Disabled: depends on StatsViewModel which is #if false
 import SwiftUI
 import Charts
 
@@ -188,12 +186,3 @@ struct StatRow: View {
         }
     }
 }
-
-struct DogStatsView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationView {
-            DogStatsView(dogId: "test-id", dogName: "Max")
-        }
-    }
-}
-#endif

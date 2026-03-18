@@ -18,6 +18,10 @@ class BadgeAwardingService: ObservableObject {
             let doc = try await db.collection("users").document(uid).getDocument()
             let existingBadges = doc.data()?["badges"] as? [String] ?? []
 
+            // Use Firestore totals if available (more accurate than passed-in values)
+            let firestoreTotalWalks = doc.data()?["totalWalks"] as? Int ?? totalWalks
+            let firestoreTotalDistance = doc.data()?["totalDistanceMeters"] as? Double ?? totalDistance
+
             var newBadges: [String] = []
             var achievements: [WalkAchievement] = []
 
@@ -27,9 +31,9 @@ class BadgeAwardingService: ObservableObject {
                 let earned: Bool
                 switch badge.unlockCriteria.type {
                 case .walksCompleted:
-                    earned = totalWalks >= badge.unlockCriteria.targetValue
+                    earned = firestoreTotalWalks >= badge.unlockCriteria.targetValue
                 case .distanceTotal:
-                    earned = totalDistance >= Double(badge.unlockCriteria.targetValue)
+                    earned = firestoreTotalDistance >= Double(badge.unlockCriteria.targetValue)
                 case .poisCreated:
                     earned = poisCreated >= badge.unlockCriteria.targetValue
                 case .votesGiven:
@@ -58,6 +62,34 @@ class BadgeAwardingService: ObservableObject {
             }
         } catch {
             print("Badge check error: \(error)")
+        }
+    }
+
+    /// Convenience method that fetches current user stats from Firestore before checking badges.
+    /// Call this after a walk completes so badge checks use up-to-date totals.
+    func checkAndAwardBadgesAfterWalk(walkDistance: Double) async {
+        guard let uid = auth.currentUser?.uid else { return }
+
+        do {
+            let doc = try await db.collection("users").document(uid).getDocument()
+            let totalWalks = doc.data()?["totalWalks"] as? Int ?? 0
+            let totalDistance = doc.data()?["totalDistanceMeters"] as? Double ?? 0
+
+            // Count user's POIs
+            let poisSnapshot = try await db.collection("pois")
+                .whereField("createdBy", isEqualTo: uid)
+                .getDocuments()
+            let poisCreated = poisSnapshot.documents.count
+
+            await checkAndAwardBadges(
+                walkDistance: walkDistance,
+                totalWalks: totalWalks,
+                totalDistance: totalDistance,
+                poisCreated: poisCreated,
+                votesGiven: 0
+            )
+        } catch {
+            print("Badge stats fetch error: \(error)")
         }
     }
 

@@ -5,7 +5,11 @@ struct ChatMessageRow: View {
     let isFromCurrentUser: Bool
     let showDateSeparator: Bool
     let dateLabel: String?
+    var currentUserId: String = ""
     var onImageTap: ((String) -> Void)? = nil
+    var onReactionTap: ((String, String) -> Void)? = nil // (messageId, emoji)
+
+    @State private var showReactionPicker = false
 
     var body: some View {
         VStack(spacing: 8) {
@@ -17,6 +21,30 @@ struct ChatMessageRow: View {
                     .padding(.vertical, 4)
                     .background(Capsule().fill(Color.neutral90))
                     .padding(.vertical, 8)
+            }
+
+            // Reaction picker overlay
+            if showReactionPicker {
+                HStack {
+                    if isFromCurrentUser { Spacer() }
+                    MessageReactionPicker(
+                        onReactionSelected: { emoji in
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                                showReactionPicker = false
+                            }
+                            if let msgId = message.id {
+                                onReactionTap?(msgId, emoji)
+                            }
+                        },
+                        onDismiss: {
+                            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                                showReactionPicker = false
+                            }
+                        }
+                    )
+                    .transition(.scale(scale: 0.5).combined(with: .opacity))
+                    if !isFromCurrentUser { Spacer() }
+                }
             }
 
             HStack(alignment: .bottom, spacing: 8) {
@@ -50,6 +78,11 @@ struct ChatMessageRow: View {
                                     .frame(width: 100, height: 100)
                             }
                         }
+                        .onLongPressGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.65)) {
+                                showReactionPicker.toggle()
+                            }
+                        }
                     }
 
                     // Text message
@@ -63,6 +96,24 @@ struct ChatMessageRow: View {
                                     .fill(isFromCurrentUser ? Color.turquoise60 : Color.neutral90)
                             )
                             .foregroundColor(isFromCurrentUser ? .white : .primary)
+                            .onLongPressGesture {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.65)) {
+                                    showReactionPicker.toggle()
+                                }
+                            }
+                    }
+
+                    // Reaction summary
+                    if !message.reactions.isEmpty {
+                        MessageReactionSummary(
+                            reactions: message.reactions,
+                            currentUserId: currentUserId,
+                            onReactionTap: { emoji in
+                                if let msgId = message.id {
+                                    onReactionTap?(msgId, emoji)
+                                }
+                            }
+                        )
                     }
 
                     // Timestamp + read receipt

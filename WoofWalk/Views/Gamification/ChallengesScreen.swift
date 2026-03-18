@@ -165,10 +165,15 @@ struct ChallengeCard: View {
 class ChallengesViewModel: ObservableObject {
     @Published var challenges: [Challenge] = []
     @Published var userProgress: [String: Double] = [:]
-    private let repository = ChallengeRepository()
+    private let repository = ChallengeRepository.shared
     private var cancellable: AnyCancellable?
 
     init() {
+        // Ensure default challenges exist before listening
+        Task {
+            await repository.ensureDefaultChallengesExist()
+        }
+
         cancellable = repository.getActiveChallenges()
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { _ in }, receiveValue: { [weak self] challenges in

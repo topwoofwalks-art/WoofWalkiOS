@@ -62,14 +62,19 @@ enum AppRoute: Hashable {
     case businessDashboard
     case businessSchedule
     case businessClients
+    case businessClientDetail(clientId: String)
     case businessEarnings
     case businessSettings
+    case businessWalkConsole(bookingId: String)
+    case scanKey
 
     // Client
     case clientBookings
+    case clientBookingDetail(bookingId: String)
     case clientDashboard
     case clientInvoices
     case clientMessages
+    case providerSearch(serviceType: String)
 
     // Map features
     case hazardReport
@@ -77,6 +82,7 @@ enum AppRoute: Hashable {
     case trailConditionReport
     case offLeadZones
     case rainModeSettings
+    case plannedWalks
     case routeLibrary
     case routeDetail(routeId: String)
     case nearbyPubs
@@ -132,17 +138,23 @@ enum AppRoute: Hashable {
         case .businessDashboard: hasher.combine("businessDashboard")
         case .businessSchedule: hasher.combine("businessSchedule")
         case .businessClients: hasher.combine("businessClients")
+        case .businessClientDetail(let id): hasher.combine("businessClientDetail"); hasher.combine(id)
         case .businessEarnings: hasher.combine("businessEarnings")
         case .businessSettings: hasher.combine("businessSettings")
+        case .businessWalkConsole(let id): hasher.combine("businessWalkConsole"); hasher.combine(id)
+        case .scanKey: hasher.combine("scanKey")
         case .clientBookings: hasher.combine("clientBookings")
+        case .clientBookingDetail(let id): hasher.combine("clientBookingDetail"); hasher.combine(id)
         case .clientDashboard: hasher.combine("clientDashboard")
         case .clientInvoices: hasher.combine("clientInvoices")
         case .clientMessages: hasher.combine("clientMessages")
+        case .providerSearch(let type): hasher.combine("providerSearch"); hasher.combine(type)
         case .hazardReport: hasher.combine("hazardReport")
         case .hazardDetail(let id): hasher.combine("hazardDetail"); hasher.combine(id)
         case .trailConditionReport: hasher.combine("trailConditionReport")
         case .offLeadZones: hasher.combine("offLeadZones")
         case .rainModeSettings: hasher.combine("rainModeSettings")
+        case .plannedWalks: hasher.combine("plannedWalks")
         case .routeLibrary: hasher.combine("routeLibrary")
         case .routeDetail(let id): hasher.combine("routeDetail"); hasher.combine(id)
         case .nearbyPubs: hasher.combine("nearbyPubs")

@@ -2,75 +2,37 @@ import SwiftUI
 
 struct FeedScreen: View {
     @StateObject private var viewModel = FeedViewModel()
+    @StateObject private var storyViewModel = StoryViewModel()
     @State private var showCreatePost = false
+
+    private var emptyStateIcon: String {
+        switch viewModel.feedMode {
+        case .forYou: return "pawprint.circle.fill"
+        case .nearby: return "location.circle.fill"
+        case .following: return "person.2.circle.fill"
+        }
+    }
+
+    private var emptyStateTitle: String {
+        switch viewModel.feedMode {
+        case .forYou: return "No Posts Yet"
+        case .nearby: return "No Nearby Posts"
+        case .following: return "No Posts from Friends"
+        }
+    }
+
+    private var emptyStateMessage: String {
+        switch viewModel.feedMode {
+        case .forYou: return "Start a walk and share it with the community!"
+        case .nearby: return "No one has posted within 25km yet. Be the first!"
+        case .following: return "Add friends to see their posts here."
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             // Stories row
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    // "Your Story" button
-                    VStack(spacing: 4) {
-                        ZStack(alignment: .bottomTrailing) {
-                            Circle()
-                                .fill(Color(red: 0/255, green: 160/255, blue: 176/255).opacity(0.15))
-                                .frame(width: 64, height: 64)
-                                .overlay(
-                                    Image(systemName: "person.fill")
-                                        .font(.title2)
-                                        .foregroundColor(Color(red: 0/255, green: 160/255, blue: 176/255))
-                                )
-
-                            Circle()
-                                .fill(Color(red: 0/255, green: 160/255, blue: 176/255))
-                                .frame(width: 22, height: 22)
-                                .overlay(
-                                    Image(systemName: "plus")
-                                        .font(.caption2.bold())
-                                        .foregroundColor(.white)
-                                )
-                                .offset(x: 2, y: 2)
-                        }
-
-                        Text("Your Story")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-
-                    // Placeholder story circles
-                    ForEach(0..<5, id: \.self) { i in
-                        VStack(spacing: 4) {
-                            Circle()
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [Color(red: 0/255, green: 160/255, blue: 176/255), .orange],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 2
-                                )
-                                .frame(width: 64, height: 64)
-                                .overlay(
-                                    Circle()
-                                        .fill(Color.gray.opacity(0.2))
-                                        .padding(3)
-                                        .overlay(
-                                            Image(systemName: "pawprint.fill")
-                                                .foregroundColor(.gray.opacity(0.5))
-                                        )
-                                )
-
-                            Text("Dog \(i + 1)")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-            }
-            .padding(.vertical, 8)
+            StoriesRow(viewModel: storyViewModel)
 
             // Tab picker
             Picker("Feed", selection: $viewModel.feedMode) {
@@ -87,7 +49,7 @@ struct FeedScreen: View {
 
             ScrollView {
                     LazyVStack(spacing: 12) {
-                        ForEach(viewModel.posts) { post in
+                        ForEach(Array(viewModel.posts.enumerated()), id: \.element.id) { index, post in
                             WalkPostCard(
                                 post: post,
                                 onReaction: { type in
@@ -96,22 +58,42 @@ struct FeedScreen: View {
                                 onComment: { viewModel.selectedPost = post },
                                 onShare: {}
                             )
+
+                            // Insert a DogReelCard every 10 posts
+                            if (index + 1) % 10 == 0,
+                               let reel = DogReelSamples.reel(at: (index + 1) / 10 - 1) {
+                                DogReelCard(
+                                    videoURL: reel.url,
+                                    dogName: reel.dogName,
+                                    ownerName: reel.ownerName
+                                )
+                                .frame(height: 480)
+                            }
                         }
 
-                        if viewModel.isLoading {
+                        // Infinite scroll trigger
+                        if !viewModel.posts.isEmpty {
+                            Color.clear
+                                .frame(height: 1)
+                                .onAppear {
+                                    viewModel.loadMorePosts()
+                                }
+                        }
+
+                        if viewModel.isLoading || viewModel.isLoadingMore {
                             ProgressView().padding()
                         }
 
                         if !viewModel.isLoading && viewModel.posts.isEmpty {
                             VStack(spacing: 16) {
-                                Image(systemName: "pawprint.circle.fill")
+                                Image(systemName: emptyStateIcon)
                                     .font(.system(size: 64))
                                     .foregroundColor(Color(red: 0/255, green: 160/255, blue: 176/255))
 
-                                Text("No Posts Yet")
+                                Text(emptyStateTitle)
                                     .font(.title3.bold())
 
-                                Text("Start a walk and share it with the community!")
+                                Text(emptyStateMessage)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
@@ -137,6 +119,7 @@ struct FeedScreen: View {
             CreatePostSheet(onPost: { text, photoUrl in
                 viewModel.createPost(text: text, photoUrl: photoUrl)
             })
+            .environmentObject(viewModel)
         }
         .sheet(item: $viewModel.selectedPost) { post in
             PostDetailScreen(post: post)

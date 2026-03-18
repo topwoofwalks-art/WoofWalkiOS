@@ -149,4 +149,12 @@ struct PBShareCard: View {
             )
         }
     }
+
+    // MARK: - Render to shareable image (1080x1350, 4:5)
+
+    /// Renders this PB share card to a UIImage at social-media resolution (1080x1350).
+    /// Uses the View.renderToImage extension from ShareService.
+    func renderToImage() -> UIImage {
+        self.renderToImage(size: ShareCardSize.socialMedia)
+    }
 }

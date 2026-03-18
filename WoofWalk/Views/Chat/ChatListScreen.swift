@@ -4,12 +4,24 @@ import FirebaseFirestore
 
 struct ChatListScreen: View {
     @StateObject private var viewModel = ChatListViewModel()
+    @State private var chatToDelete: Chat?
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
-            List(viewModel.chats) { chat in
-                NavigationLink(value: chat.id ?? "") {
-                    ChatListRow(chat: chat, currentUserId: viewModel.currentUserId)
+            List {
+                ForEach(viewModel.chats) { chat in
+                    NavigationLink(value: chat.id ?? "") {
+                        ChatListRow(chat: chat, currentUserId: viewModel.currentUserId)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            chatToDelete = chat
+                            showDeleteConfirmation = true
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
             }
             .navigationTitle("Messages")
@@ -30,6 +42,19 @@ struct ChatListScreen: View {
                             .foregroundColor(.secondary)
                     }
                 }
+            }
+            .alert("Delete Conversation", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    chatToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    if let chat = chatToDelete, let chatId = chat.id {
+                        viewModel.deleteConversation(chatId: chatId)
+                    }
+                    chatToDelete = nil
+                }
+            } message: {
+                Text("This will permanently delete this conversation and all its messages. This action cannot be undone.")
             }
         }
     }
@@ -116,6 +141,26 @@ class ChatListViewModel: ObservableObject {
                     try? doc.data(as: Chat.self)
                 }
             }
+    }
+
+    func deleteConversation(chatId: String) {
+        Task {
+            do {
+                // Delete all messages in the subcollection (batch max 500)
+                let messagesSnapshot = try await db.collection("messageThreads").document(chatId)
+                    .collection("messages").limit(to: 500).getDocuments()
+                let batch = db.batch()
+                for doc in messagesSnapshot.documents {
+                    batch.deleteDocument(doc.reference)
+                }
+                // Delete the thread document itself
+                batch.deleteDocument(db.collection("messageThreads").document(chatId))
+                try await batch.commit()
+                print("Conversation deleted: \(chatId)")
+            } catch {
+                print("Delete conversation error: \(error.localizedDescription)")
+            }
+        }
     }
 
     deinit { listener?.remove() }

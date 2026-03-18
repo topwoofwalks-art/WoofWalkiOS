@@ -302,10 +302,16 @@ class FriendRepository {
         return []
     }
 
-    func addFriend(userId: String) async throws {
+    func sendFriendRequest(toUserId: String) async throws {
         guard let currentUserId = auth.currentUser?.uid else { return }
-        try await firestore.collection("users").document(currentUserId)
-            .collection("friends").document(userId).setData(["addedAt": FieldValue.serverTimestamp()])
+        let data: [String: Any] = [
+            "userId1": currentUserId,
+            "userId2": toUserId,
+            "status": "PENDING",
+            "requestedBy": currentUserId,
+            "createdAt": FieldValue.serverTimestamp()
+        ]
+        try await firestore.collection("friendships").addDocument(data: data)
     }
 }
 

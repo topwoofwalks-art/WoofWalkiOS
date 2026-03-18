@@ -1,5 +1,3 @@
-#if false
-// Disabled: depends on StatsViewModel which is #if false
 import SwiftUI
 import Charts
 
@@ -15,7 +13,7 @@ struct StatsView: View {
                         ProgressView()
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else if let error = viewModel.errorMessage {
-                        ErrorView(message: error) {
+                        StatsErrorView(message: error) {
                             Task {
                                 await viewModel.loadStatistics()
                             }
@@ -430,13 +428,7 @@ enum TimeFrame: String, CaseIterable {
     case allTime = "All Time"
 }
 
-extension AchievementCategory: CaseIterable {
-    static var allCases: [AchievementCategory] {
-        return [.walks, .distance, .social, .special]
-    }
-}
-
-struct ErrorView: View {
+struct StatsErrorView: View {
     let message: String
     let retry: () -> Void
 
@@ -456,10 +448,3 @@ struct ErrorView: View {
         .padding()
     }
 }
-
-struct StatsView_Previews: PreviewProvider {
-    static var previews: some View {
-        StatsView()
-    }
-}
-#endif

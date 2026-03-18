@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1000001000000000000993 /* PlannedWalkRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000994 /* PlannedWalkRepository.swift */; };
+		A1000001000000000000995 /* PlannedWalksScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000996 /* PlannedWalksScreen.swift */; };
+		A1000001000000000000997 /* PlannedWalkDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000998 /* PlannedWalkDetailSheet.swift */; };
 		A1000001000000000000001 /* WoofWalkApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000002 /* WoofWalkApp.swift */; };
 		A1000001000000000000003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000004 /* ContentView.swift */; };
 		A1000001000000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000006 /* Assets.xcassets */; };
@@ -197,6 +200,14 @@
 		A1000001000000000000711 /* DiscoveryMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000710 /* DiscoveryMapView.swift */; };
 		A1000001000000000000713 /* ProviderDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000712 /* ProviderDetailScreen.swift */; };
 		A1000001000000000000715 /* AdvancedFilterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000714 /* AdvancedFilterSheet.swift */; };
+		A1000001000000000000977 /* ServicesCategoryGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000976 /* ServicesCategoryGrid.swift */; };
+		A1000001000000000000979 /* DiscoveryFilterChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000978 /* DiscoveryFilterChips.swift */; };
+		A1000001000000000000981 /* ServiceProviderCardCompact.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000980 /* ServiceProviderCardCompact.swift */; };
+		A1000001000000000000983 /* DiscoverySortBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000982 /* DiscoverySortBar.swift */; };
+		A1000001000000000000985 /* Booking.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000984 /* Booking.swift */; };
+		A1000001000000000000987 /* BookingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000986 /* BookingStatus.swift */; };
+		A1000001000000000000989 /* BookingServiceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000988 /* BookingServiceType.swift */; };
+		A1000001000000000000991 /* BookingRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000990 /* BookingRepository.swift */; };
 		A1000001000000000000457 /* BirthdayCountdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000456 /* BirthdayCountdown.swift */; };
 		A1000001000000000000459 /* DogStatsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000458 /* DogStatsScreen.swift */; };
 		A1000001000000000000461 /* MedicationFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000460 /* MedicationFormView.swift */; };
@@ -431,6 +442,9 @@
 		A1000001000000000000268 /* LivestockFieldRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockFieldRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000270 /* MilestoneRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MilestoneRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000272 /* UserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000994 /* PlannedWalkRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedWalkRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000996 /* PlannedWalksScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedWalksScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000998 /* PlannedWalkDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedWalkDetailSheet.swift; sourceTree = "<group>"; };
 		A1000001000000000000910 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		A1000001000000000000926 /* OfflineMessageQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineMessageQueue.swift; sourceTree = "<group>"; };
 		A1000001000000000000912 /* DogStatsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogStatsDetailView.swift; sourceTree = "<group>"; };
@@ -530,6 +544,10 @@
 		A1000001000000000000710 /* DiscoveryMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryMapView.swift; sourceTree = "<group>"; };
 		A1000001000000000000712 /* ProviderDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderDetailScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000714 /* AdvancedFilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedFilterSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000976 /* ServicesCategoryGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesCategoryGrid.swift; sourceTree = "<group>"; };
+		A1000001000000000000978 /* DiscoveryFilterChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryFilterChips.swift; sourceTree = "<group>"; };
+		A1000001000000000000980 /* ServiceProviderCardCompact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProviderCardCompact.swift; sourceTree = "<group>"; };
+		A1000001000000000000982 /* DiscoverySortBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverySortBar.swift; sourceTree = "<group>"; };
 		A1000001000000000000456 /* BirthdayCountdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthdayCountdown.swift; sourceTree = "<group>"; };
 		A1000001000000000000458 /* DogStatsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogStatsScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000460 /* MedicationFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationFormView.swift; sourceTree = "<group>"; };
@@ -668,6 +686,11 @@
 		A1000001000000000000972 /* ClientInvoicesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientInvoicesScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000974 /* HazardDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardDetailScreen.swift; sourceTree = "<group>"; };
 
+		A1000001000000000000984 /* Booking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Booking.swift; sourceTree = "<group>"; };
+		A1000001000000000000986 /* BookingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingStatus.swift; sourceTree = "<group>"; };
+		A1000001000000000000988 /* BookingServiceType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingServiceType.swift; sourceTree = "<group>"; };
+		A1000001000000000000990 /* BookingRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingRepository.swift; sourceTree = "<group>"; };
+
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -721,9 +744,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		A1000001000000000000992 /* Booking */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000000984 /* Booking.swift */,
+				A1000001000000000000986 /* BookingStatus.swift */,
+				A1000001000000000000988 /* BookingServiceType.swift */,
+			);
+			path = Booking;
+			sourceTree = "<group>";
+		};
 		A1000001000000000000015 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000992 /* Booking */,
 				A1000001000000000000606 /* Discovery */,
 				A1000001000000000000607 /* Dog */,
 				A1000001000000000000608 /* DynamicWorld */,
@@ -858,12 +892,14 @@
 		A1000001000000000000019 /* Repositories */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000000990 /* BookingRepository.swift */,
 				A1000001000000000000260 /* ChallengeRepository.swift */,
 				A1000001000000000000262 /* CharityRepository.swift */,
 				A1000001000000000000264 /* DiscoveryRepository.swift */,
 				A1000001000000000000266 /* LeagueRepository.swift */,
 				A1000001000000000000268 /* LivestockFieldRepository.swift */,
 				A1000001000000000000270 /* MilestoneRepository.swift */,
+				A1000001000000000000994 /* PlannedWalkRepository.swift */,
 				A1000001000000000000272 /* UserRepository.swift */,
 			);
 			path = Repositories;
@@ -1197,6 +1233,10 @@
 				A1000001000000000000710 /* DiscoveryMapView.swift */,
 				A1000001000000000000712 /* ProviderDetailScreen.swift */,
 				A1000001000000000000714 /* AdvancedFilterSheet.swift */,
+				A1000001000000000000976 /* ServicesCategoryGrid.swift */,
+				A1000001000000000000978 /* DiscoveryFilterChips.swift */,
+				A1000001000000000000980 /* ServiceProviderCardCompact.swift */,
+				A1000001000000000000982 /* DiscoverySortBar.swift */,
 			);
 			path = Discovery;
 			sourceTree = "<group>";
@@ -1417,6 +1457,8 @@
 				A1000001000000000000872 /* WalkHistoryDetailScreen.swift */,
 				A1000001000000000000874 /* WalkHistoryScreen.swift */,
 				A1000001000000000000952 /* WalkPhotoGalleryScreen.swift */,
+				A1000001000000000000996 /* PlannedWalksScreen.swift */,
+				A1000001000000000000998 /* PlannedWalkDetailSheet.swift */,
 
 			);
 			path = Walk;
@@ -1716,6 +1758,10 @@
 				A1000001000000000000711 /* DiscoveryMapView.swift in Sources */,
 				A1000001000000000000713 /* ProviderDetailScreen.swift in Sources */,
 				A1000001000000000000715 /* AdvancedFilterSheet.swift in Sources */,
+				A1000001000000000000977 /* ServicesCategoryGrid.swift in Sources */,
+				A1000001000000000000979 /* DiscoveryFilterChips.swift in Sources */,
+				A1000001000000000000981 /* ServiceProviderCardCompact.swift in Sources */,
+				A1000001000000000000983 /* DiscoverySortBar.swift in Sources */,
 				A1000001000000000000457 /* BirthdayCountdown.swift in Sources */,
 				A1000001000000000000459 /* DogStatsScreen.swift in Sources */,
 				A1000001000000000000461 /* MedicationFormView.swift in Sources */,
@@ -1790,6 +1836,9 @@
 				A1000001000000000000585 /* PlanningModeOverlay.swift in Sources */,
 				A1000001000000000000587 /* RouteStartProximitySheet.swift in Sources */,
 				A1000001000000000000589 /* SavePlannedWalkDialog.swift in Sources */,
+				A1000001000000000000993 /* PlannedWalkRepository.swift in Sources */,
+				A1000001000000000000995 /* PlannedWalksScreen.swift in Sources */,
+				A1000001000000000000997 /* PlannedWalkDetailSheet.swift in Sources */,
 				A1000001000000000000591 /* ShareWalkSheet.swift in Sources */,
 				A1000001000000000000593 /* WalkCompletionScreen.swift in Sources */,
 				A1000001000000000000595 /* WalkControlPanel.swift in Sources */,
@@ -1855,6 +1904,10 @@
 				A1000001000000000000971 /* BusinessEarningsScreen.swift in Sources */,
 				A1000001000000000000973 /* ClientInvoicesScreen.swift in Sources */,
 				A1000001000000000000975 /* HazardDetailScreen.swift in Sources */,
+				A1000001000000000000985 /* Booking.swift in Sources */,
+				A1000001000000000000987 /* BookingStatus.swift in Sources */,
+				A1000001000000000000989 /* BookingServiceType.swift in Sources */,
+				A1000001000000000000991 /* BookingRepository.swift in Sources */,
 
 			);
 			runOnlyForDeploymentPostprocessing = 0;

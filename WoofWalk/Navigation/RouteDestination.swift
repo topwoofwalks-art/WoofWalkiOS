@@ -117,23 +117,33 @@ struct RouteDestination: View {
         case .businessDashboard:
             BusinessDashboardScreen()
         case .businessSchedule:
-            BusinessScheduleScreen()
+            BusinessScheduleScreen(viewModel: BusinessViewModel())
         case .businessClients:
-            BusinessClientsScreen()
+            BusinessClientsScreen(viewModel: BusinessViewModel())
+        case .businessClientDetail(let clientId):
+            ClientDetailScreen(clientId: clientId)
         case .businessEarnings:
             BusinessEarningsScreen()
         case .businessSettings:
             BusinessSettingsScreen()
+        case .businessWalkConsole(let bookingId):
+            BusinessWalkConsoleScreen(bookingId: bookingId)
+        case .scanKey:
+            ScanKeyScreen()
 
         // Client
         case .clientBookings:
             ClientBookingsScreen()
+        case .clientBookingDetail(let bookingId):
+            BookingDetailScreen(bookingId: bookingId)
         case .clientDashboard:
             ClientDashboardScreen()
         case .clientInvoices:
             ClientInvoicesScreen()
         case .clientMessages:
             ClientMessagesScreen()
+        case .providerSearch(let serviceType):
+            ProviderSearchView(serviceType: serviceTypeFromString(serviceType))
 
         // Map features
         case .hazardReport:
@@ -146,6 +156,8 @@ struct RouteDestination: View {
             OffLeadZonesScreen()
         case .rainModeSettings:
             RainModeSettingsView()
+        case .plannedWalks:
+            PlannedWalksScreen()
         case .routeLibrary:
             RouteLibraryScreen()
         case .routeDetail(let routeId):
@@ -196,6 +208,8 @@ private struct AwayModeSettingsWrapper: View {
     @State private var autoReplyMessage = "Thanks for your message! I'm currently away and will respond when I'm back."
     @State private var startDate = Date()
     @State private var endDate = Date().addingTimeInterval(86400)
+    @State private var holidayMode = HolidayMode()
+    @State private var quickReplies = QuickReplyTemplate.defaults
 
     var body: some View {
         AwayModeSettingsView(
@@ -203,6 +217,8 @@ private struct AwayModeSettingsWrapper: View {
             autoReplyMessage: $autoReplyMessage,
             startDate: $startDate,
             endDate: $endDate,
+            holidayMode: $holidayMode,
+            quickReplies: $quickReplies,
             onSave: {}
         )
         .navigationTitle("Auto-Reply")
@@ -210,6 +226,11 @@ private struct AwayModeSettingsWrapper: View {
 }
 
 // MARK: - Placeholder for routes without destination views yet
+
+/// Maps a service type string back to the ServiceType enum for provider search navigation.
+private func serviceTypeFromString(_ value: String) -> ServiceType {
+    ServiceType.allCases.first(where: { $0.rawValue == value }) ?? .dailyWalks
+}
 
 struct PlaceholderView: View {
     let title: String

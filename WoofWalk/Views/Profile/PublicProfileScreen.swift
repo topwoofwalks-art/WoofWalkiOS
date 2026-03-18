@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 import FirebaseFirestore
 
 struct PublicProfileScreen: View {
@@ -9,6 +10,12 @@ struct PublicProfileScreen: View {
     @State private var followersCount = 0
     @State private var followingCount = 0
     @State private var recentWalks: [RecentWalkDisplay] = []
+    @State private var friendStatus: FriendStatus?
+    @State private var friendshipId: String?
+    @State private var friendRequestedBy: String?
+    @State private var friendActionInProgress = false
+
+    private let userRepository = UserRepository()
 
     var body: some View {
         ScrollView {
@@ -19,6 +26,7 @@ struct PublicProfileScreen: View {
                 VStack(spacing: 20) {
                     avatarHeader(user: user)
                     statsRow(user: user)
+                    friendRequestButton()
                     followButton()
                     dogsSection(dogs: user.dogs)
                     recentWalksSection()
@@ -103,6 +111,138 @@ struct PublicProfileScreen: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Friend Request Button
+
+    @ViewBuilder
+    private func friendRequestButton() -> some View {
+        let brandColor = Color(red: 0/255, green: 160/255, blue: 176/255)
+
+        switch friendStatus {
+        case .accepted:
+            // Already friends
+            Button {
+                guard !friendActionInProgress, let fId = friendshipId else { return }
+                friendActionInProgress = true
+                Task {
+                    try? await userRepository.removeFriend(friendshipId: fId)
+                    friendStatus = nil
+                    friendshipId = nil
+                    friendActionInProgress = false
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "person.badge.minus")
+                    Text("Remove Friend")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .foregroundColor(.primary)
+                .background(Color(.systemGray5))
+                .cornerRadius(12)
+            }
+            .disabled(friendActionInProgress)
+
+        case .pending:
+            if friendRequestedBy == Auth.auth().currentUser?.uid {
+                // We sent the request -- show "Request Sent"
+                Button {} label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock")
+                        Text("Request Sent")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .foregroundColor(.secondary)
+                    .background(Color(.systemGray5))
+                    .cornerRadius(12)
+                }
+                .disabled(true)
+            } else {
+                // They sent us a request -- show Accept / Decline
+                HStack(spacing: 12) {
+                    Button {
+                        guard !friendActionInProgress, let fId = friendshipId else { return }
+                        friendActionInProgress = true
+                        Task {
+                            try? await userRepository.acceptFriendRequest(friendshipId: fId)
+                            friendStatus = .accepted
+                            friendActionInProgress = false
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark")
+                            Text("Accept")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .foregroundColor(.white)
+                        .background(brandColor)
+                        .cornerRadius(12)
+                    }
+                    .disabled(friendActionInProgress)
+
+                    Button {
+                        guard !friendActionInProgress, let fId = friendshipId else { return }
+                        friendActionInProgress = true
+                        Task {
+                            try? await userRepository.rejectFriendRequest(friendshipId: fId)
+                            friendStatus = nil
+                            friendshipId = nil
+                            friendActionInProgress = false
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "xmark")
+                            Text("Decline")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .foregroundColor(.primary)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(12)
+                    }
+                    .disabled(friendActionInProgress)
+                }
+            }
+
+        case .blocked:
+            EmptyView()
+
+        case nil:
+            // No friendship -- show "Send Friend Request"
+            Button {
+                guard !friendActionInProgress else { return }
+                friendActionInProgress = true
+                Task {
+                    do {
+                        try await userRepository.sendFriendRequest(toUserId: userId)
+                        friendStatus = .pending
+                        friendRequestedBy = Auth.auth().currentUser?.uid
+                    } catch {
+                        print("Send friend request failed: \(error.localizedDescription)")
+                    }
+                    friendActionInProgress = false
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "person.badge.plus")
+                    Text("Send Friend Request")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .foregroundColor(.white)
+                .background(brandColor)
+                .cornerRadius(12)
+            }
+            .disabled(friendActionInProgress)
+        }
     }
 
     // MARK: - Follow Button
@@ -229,6 +369,20 @@ struct PublicProfileScreen: View {
             user = try? snapshot.data(as: UserProfile.self)
             followersCount = Int.random(in: 3...120)
             followingCount = Int.random(in: 1...80)
+        }
+
+        // Load friendship status
+        Task {
+            do {
+                let result = try await userRepository.getFriendshipStatus(userId: userId)
+                await MainActor.run {
+                    friendStatus = result.status
+                    friendshipId = result.friendshipId
+                    friendRequestedBy = result.requestedBy
+                }
+            } catch {
+                print("Failed to load friendship status: \(error.localizedDescription)")
+            }
         }
     }
 }

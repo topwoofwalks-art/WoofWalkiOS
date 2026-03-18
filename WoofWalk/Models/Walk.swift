@@ -6,7 +6,7 @@ struct WalkHistory: Identifiable, Codable {
     var userId: String
     @ServerTimestamp var startedAt: Timestamp?
     @ServerTimestamp var endedAt: Timestamp?
-    var distanceMeters: Int
+    var distanceMeters: Double
     var durationSec: Int
     var track: [TrackPoint]
     var polyline: String
@@ -16,7 +16,7 @@ struct WalkHistory: Identifiable, Codable {
          userId: String = "",
          startedAt: Timestamp? = nil,
          endedAt: Timestamp? = nil,
-         distanceMeters: Int = 0,
+         distanceMeters: Double = 0.0,
          durationSec: Int = 0,
          track: [TrackPoint] = [],
          polyline: String = "",

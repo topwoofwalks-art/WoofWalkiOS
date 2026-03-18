@@ -1,6 +1,3 @@
-#if false
-// StatsViewModel.swift - disabled due to broken type references (Timestamp vs Date, type-checker timeout)
-
 import Foundation
 import SwiftUI
 import Combine
@@ -32,6 +29,9 @@ class StatsViewModel: ObservableObject {
     @Published var currentStreak: Int = 0
     @Published var longestStreak: Int = 0
 
+    @Published var earlyMorningWalks: Int = 0
+    @Published var lateNightWalks: Int = 0
+
     private let db = Firestore.firestore()
     private var cancellables = Set<AnyCancellable>()
 
@@ -53,6 +53,7 @@ class StatsViewModel: ObservableObject {
             calculateDogStats(from: allWalks)
             calculatePersonalRecords(from: allWalks)
             calculateStreaks(from: allWalks)
+            calculateTimeOfDayWalks(from: allWalks)
             contributions = userPOIs.count
 
             checkAchievements()
@@ -65,10 +66,9 @@ class StatsViewModel: ObservableObject {
     }
 
     private func fetchAllWalks(userId: String) async throws -> [WalkHistory] {
-        let snapshot = try await db.collection("walks")
-            .whereField("userId", isEqualTo: userId)
-            .whereField("endedAt", isNotEqualTo: NSNull())
-            .order(by: "endedAt", descending: true)
+        let snapshot = try await db.collection("users").document(userId)
+            .collection("walks")
+            .order(by: "startedAt", descending: true)
             .getDocuments()
 
         return snapshot.documents.compactMap { doc in
@@ -88,7 +88,7 @@ class StatsViewModel: ObservableObject {
 
     private func calculateOverallStats(from walks: [WalkHistory]) {
         totalWalks = walks.count
-        totalDistance = walks.reduce(0) { $0 + $1.distanceMeters }
+        totalDistance = walks.reduce(0) { $0 + Double($1.distanceMeters) }
         totalTime = walks.reduce(0) { $0 + $1.durationSec }
 
         if totalTime > 0 && totalDistance > 0 {
@@ -106,7 +106,8 @@ class StatsViewModel: ObservableObject {
         var dailyCounts = Array(repeating: 0, count: 7)
 
         for walk in walks {
-            guard let walkDate = walk.startedAt else { continue }
+            guard let walkTimestamp = walk.startedAt else { continue }
+            let walkDate = walkTimestamp.dateValue()
 
             if walkDate >= weekStart && walkDate <= today {
                 let dayIndex = calendar.dateComponents([.day], from: weekStart, to: walkDate).day ?? 0
@@ -120,19 +121,18 @@ class StatsViewModel: ObservableObject {
     }
 
     private func calculatePeriodStats(from walks: [WalkHistory]) {
-        let calendar = Calendar.current
         let dateFormatter = DateFormatter()
 
         dateFormatter.dateFormat = "'Week' w, yyyy"
         let weeklyGroups = Dictionary(grouping: walks) { walk -> String in
-            guard let date = walk.startedAt else { return "" }
-            return dateFormatter.string(from: date)
+            guard let ts = walk.startedAt else { return "" }
+            return dateFormatter.string(from: ts.dateValue())
         }
 
         weeklyStats = weeklyGroups.map { period, periodWalks in
             PeriodStats(
                 period: period,
-                distanceMeters: periodWalks.reduce(0) { $0 + $1.distanceMeters },
+                distanceMeters: periodWalks.reduce(0) { $0 + Double($1.distanceMeters) },
                 durationSec: periodWalks.reduce(0) { $0 + $1.durationSec },
                 walkCount: periodWalks.count
             )
@@ -140,14 +140,14 @@ class StatsViewModel: ObservableObject {
 
         dateFormatter.dateFormat = "MMMM yyyy"
         let monthlyGroups = Dictionary(grouping: walks) { walk -> String in
-            guard let date = walk.startedAt else { return "" }
-            return dateFormatter.string(from: date)
+            guard let ts = walk.startedAt else { return "" }
+            return dateFormatter.string(from: ts.dateValue())
         }
 
         monthlyStats = monthlyGroups.map { period, periodWalks in
             PeriodStats(
                 period: period,
-                distanceMeters: periodWalks.reduce(0) { $0 + $1.distanceMeters },
+                distanceMeters: periodWalks.reduce(0) { $0 + Double($1.distanceMeters) },
                 durationSec: periodWalks.reduce(0) { $0 + $1.durationSec },
                 walkCount: periodWalks.count
             )
@@ -161,7 +161,7 @@ class StatsViewModel: ObservableObject {
         for walk in walks {
             for dogId in walk.dogIds {
                 walkCounts[dogId, default: 0] += 1
-                distances[dogId, default: 0] += walk.distanceMeters
+                distances[dogId, default: 0] += Double(walk.distanceMeters)
             }
         }
 
@@ -176,8 +176,8 @@ class StatsViewModel: ObservableObject {
         let longestDuration = walks.max(by: { $0.durationSec < $1.durationSec })
 
         var fastestPace = Double.greatestFiniteMagnitude
-        for walk in walks where walk.durationSec > 0 {
-            let pace = Double(walk.durationSec) / (walk.distanceMeters / 1000.0)
+        for walk in walks where walk.durationSec > 0 && walk.distanceMeters > 0 {
+            let pace = Double(walk.durationSec) / (Double(walk.distanceMeters) / 1000.0)
             if pace < fastestPace {
                 fastestPace = pace
             }
@@ -185,14 +185,14 @@ class StatsViewModel: ObservableObject {
 
         let calendar = Calendar.current
         let walksByDay = Dictionary(grouping: walks) { walk -> Date in
-            guard let date = walk.startedAt else { return Date.distantPast }
-            return calendar.startOfDay(for: date)
+            guard let ts = walk.startedAt else { return Date.distantPast }
+            return calendar.startOfDay(for: ts.dateValue())
         }
 
         let mostActiveDay = walksByDay.max(by: { $0.value.count < $1.value.count })
 
         personalRecords = PersonalRecords(
-            longestWalkDistance: longestDistance?.distanceMeters ?? 0,
+            longestWalkDistance: Double(longestDistance?.distanceMeters ?? 0),
             longestWalkTime: longestDuration?.durationSec ?? 0,
             fastestPace: fastestPace == Double.greatestFiniteMagnitude ? 0 : fastestPace,
             mostActiveDay: mostActiveDay?.key ?? Date()
@@ -207,19 +207,25 @@ class StatsViewModel: ObservableObject {
         }
 
         let calendar = Calendar.current
-        let sortedWalks = walks.sorted { ($0.startedAt ?? Date.distantPast) > ($1.startedAt ?? Date.distantPast) }
+        let sortedWalks = walks.sorted {
+            ($0.startedAt?.dateValue() ?? Date.distantPast) > ($1.startedAt?.dateValue() ?? Date.distantPast)
+        }
 
         var dates = Set<Date>()
         for walk in sortedWalks {
-            if let date = walk.startedAt {
-                dates.insert(calendar.startOfDay(for: date))
+            if let ts = walk.startedAt {
+                dates.insert(calendar.startOfDay(for: ts.dateValue()))
             }
         }
 
         let sortedDates = dates.sorted(by: >)
+        guard sortedDates.count > 1 else {
+            currentStreak = sortedDates.isEmpty ? 0 : 1
+            longestStreak = currentStreak
+            return
+        }
 
-        var current = 0
-        var longest = 0
+        var longest = 1
         var temp = 1
 
         for i in 0..<sortedDates.count - 1 {
@@ -234,6 +240,7 @@ class StatsViewModel: ObservableObject {
         }
         longest = max(longest, temp)
 
+        var current = 0
         if let firstDate = sortedDates.first {
             let today = calendar.startOfDay(for: Date())
             let diff = calendar.dateComponents([.day], from: firstDate, to: today).day ?? 0
@@ -254,6 +261,27 @@ class StatsViewModel: ObservableObject {
 
         currentStreak = current
         longestStreak = longest
+    }
+
+    private func calculateTimeOfDayWalks(from walks: [WalkHistory]) {
+        let calendar = Calendar.current
+        var earlyCount = 0
+        var lateCount = 0
+
+        for walk in walks {
+            guard let ts = walk.startedAt else { continue }
+            let hour = calendar.component(.hour, from: ts.dateValue())
+
+            if hour < 7 {
+                earlyCount += 1
+            }
+            if hour >= 21 {
+                lateCount += 1
+            }
+        }
+
+        earlyMorningWalks = earlyCount
+        lateNightWalks = lateCount
     }
 
     private func checkAchievements() {
@@ -285,9 +313,9 @@ class StatsViewModel: ObservableObject {
         case .dogParksVisited:
             return 0.0
         case .earlyMorning:
-            return 0.0
+            return min(1.0, Double(earlyMorningWalks) / Double(definition.targetValue))
         case .lateNight:
-            return 0.0
+            return min(1.0, Double(lateNightWalks) / Double(definition.targetValue))
         }
     }
 
@@ -358,7 +386,7 @@ struct Achievement: Identifiable {
     let targetValue: Int
 }
 
-enum AchievementCategory: String, Codable {
+enum AchievementCategory: String, Codable, CaseIterable {
     case walks
     case distance
     case social
@@ -515,4 +543,3 @@ struct AchievementDefinitions {
         )
     ]
 }
-#endif

@@ -13,6 +13,7 @@ class AppNavigator: ObservableObject {
     @Published var path = NavigationPath()
     @Published var selectedTab: AppTab = .map
     @Published var currentMode: AppMode = .public
+    @Published var pendingPlannedWalk: PlannedWalk?
 
     func navigate(to route: AppRoute) {
         path.append(route)

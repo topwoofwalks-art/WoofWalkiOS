@@ -1,6 +1,7 @@
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseStorage
 import PhotosUI
 
 struct ChatDetailScreen: View {
@@ -11,6 +12,8 @@ struct ChatDetailScreen: View {
     @State private var isSearching = false
     @State private var searchText = ""
     @State private var fullScreenImageUrl: IdentifiableString?
+    @State private var showDeleteConfirmation = false
+    @Environment(\.dismiss) private var dismiss
 
     init(chatId: String) {
         self.chatId = chatId
@@ -65,8 +68,12 @@ struct ChatDetailScreen: View {
                                 isFromCurrentUser: message.senderId == viewModel.currentUserId,
                                 showDateSeparator: showDate,
                                 dateLabel: dateLabel,
+                                currentUserId: viewModel.currentUserId,
                                 onImageTap: { url in
                                     fullScreenImageUrl = IdentifiableString(url)
+                                },
+                                onReactionTap: { messageId, emoji in
+                                    viewModel.toggleReaction(messageId: messageId, emoji: emoji)
                                 }
                             )
                             .id(message.id ?? "msg-\(index)")
@@ -102,6 +109,20 @@ struct ChatDetailScreen: View {
                 }
             }
 
+            // Upload progress
+            if let progress = viewModel.photoUploadProgress {
+                HStack(spacing: 8) {
+                    ProgressView(value: progress)
+                        .tint(.turquoise60)
+                    Text("\(Int(progress * 100))%")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .monospacedDigit()
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+            }
+
             Divider()
 
             // Input bar
@@ -134,13 +155,35 @@ struct ChatDetailScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    withAnimation { isSearching.toggle() }
-                    if !isSearching { searchText = "" }
-                } label: {
-                    Image(systemName: isSearching ? "magnifyingglass.circle.fill" : "magnifyingglass")
+                HStack(spacing: 12) {
+                    Button {
+                        withAnimation { isSearching.toggle() }
+                        if !isSearching { searchText = "" }
+                    } label: {
+                        Image(systemName: isSearching ? "magnifyingglass.circle.fill" : "magnifyingglass")
+                    }
+
+                    Menu {
+                        Button(role: .destructive) {
+                            showDeleteConfirmation = true
+                        } label: {
+                            Label("Delete Conversation", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
                 }
             }
+        }
+        .alert("Delete Conversation", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                viewModel.deleteConversation {
+                    dismiss()
+                }
+            }
+        } message: {
+            Text("This will permanently delete this conversation and all its messages. This action cannot be undone.")
         }
         .fullScreenCover(item: $fullScreenImageUrl) { wrapper in
             FullScreenImageViewer(imageUrl: wrapper.id) {
@@ -275,6 +318,7 @@ class ChatDetailViewModel: ObservableObject {
     @Published var otherUserName = ""
     @Published var isOtherUserTyping = false
     @Published var hasOlderMessages = false
+    @Published var photoUploadProgress: Double?
 
     let chatId: String
     let currentUserId: String
@@ -392,8 +436,137 @@ class ChatDetailViewModel: ObservableObject {
     }
 
     func sendPhotoMessage(_ image: UIImage) {
-        // TODO: Upload to Firebase Storage first, then send message with imageUrl
-        print("Photo message sending not yet implemented")
+        guard !currentUserId.isEmpty else { return }
+        guard let imageData = image.jpegData(compressionQuality: 0.7) else {
+            print("Failed to compress image to JPEG")
+            return
+        }
+
+        photoUploadProgress = 0.0
+
+        let fileName = "chat_images/\(chatId)/\(UUID().uuidString).jpg"
+        let storageRef = Storage.storage().reference().child(fileName)
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+
+        let uploadTask = storageRef.putData(imageData, metadata: metadata)
+
+        uploadTask.observe(.progress) { [weak self] snapshot in
+            if let progress = snapshot.progress {
+                Task { @MainActor in
+                    self?.photoUploadProgress = progress.fractionCompleted
+                }
+            }
+        }
+
+        uploadTask.observe(.success) { [weak self] _ in
+            guard let self else { return }
+            storageRef.downloadURL { url, error in
+                Task { @MainActor in
+                    self.photoUploadProgress = nil
+                    if let error {
+                        print("Failed to get download URL: \(error.localizedDescription)")
+                        return
+                    }
+                    guard let downloadUrl = url?.absoluteString else { return }
+                    self.createPhotoMessage(imageUrl: downloadUrl)
+                }
+            }
+        }
+
+        uploadTask.observe(.failure) { [weak self] snapshot in
+            Task { @MainActor in
+                self?.photoUploadProgress = nil
+                print("Photo upload failed: \(snapshot.error?.localizedDescription ?? "unknown error")")
+            }
+        }
+    }
+
+    private func createPhotoMessage(imageUrl: String) {
+        let message = ChatMessage(
+            chatId: chatId,
+            senderId: currentUserId,
+            senderName: "",
+            text: "",
+            imageUrl: imageUrl,
+            readBy: [currentUserId],
+            createdAt: Timestamp()
+        )
+        try? db.collection("messageThreads").document(chatId).collection("messages").addDocument(from: message)
+
+        // Update last message on the thread
+        Task {
+            let chatDoc = try? await db.collection("messageThreads").document(chatId).getDocument()
+            let chat = try? chatDoc?.data(as: Chat.self)
+            let otherUserId = chat?.getOtherParticipantId(currentUserId: currentUserId)
+
+            var updateData: [String: Any] = [
+                "lastMessage": "\u{1F4F7} Photo",
+                "lastMessageSenderId": currentUserId,
+                "lastMessageAt": FieldValue.serverTimestamp(),
+                "updatedAt": FieldValue.serverTimestamp()
+            ]
+            if let otherUserId {
+                updateData["unreadCount.\(otherUserId)"] = FieldValue.increment(Int64(1))
+            }
+            try? await db.collection("messageThreads").document(chatId).updateData(updateData)
+        }
+    }
+
+    // MARK: - Delete Conversation
+
+    func deleteConversation(completion: @escaping () -> Void) {
+        Task {
+            do {
+                // Delete all messages in the subcollection (batch max 500)
+                let messagesSnapshot = try await db.collection("messageThreads").document(chatId)
+                    .collection("messages").limit(to: 500).getDocuments()
+                let batch = db.batch()
+                for doc in messagesSnapshot.documents {
+                    batch.deleteDocument(doc.reference)
+                }
+                // Delete the thread document itself
+                batch.deleteDocument(db.collection("messageThreads").document(chatId))
+                try await batch.commit()
+                print("Conversation deleted: \(chatId)")
+                completion()
+            } catch {
+                print("Delete conversation error: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    // MARK: - Reactions
+
+    func toggleReaction(messageId: String, emoji: String) {
+        guard !currentUserId.isEmpty else { return }
+        let messageRef = db.collection("messageThreads").document(chatId)
+            .collection("messages").document(messageId)
+
+        Task {
+            do {
+                let doc = try await messageRef.getDocument()
+                guard let data = doc.data() else { return }
+                var reactions = data["reactions"] as? [String: [String]] ?? [:]
+                var userIds = reactions[emoji] ?? []
+
+                if userIds.contains(currentUserId) {
+                    userIds.removeAll { $0 == currentUserId }
+                    if userIds.isEmpty {
+                        reactions.removeValue(forKey: emoji)
+                    } else {
+                        reactions[emoji] = userIds
+                    }
+                } else {
+                    userIds.append(currentUserId)
+                    reactions[emoji] = userIds
+                }
+
+                try await messageRef.updateData(["reactions": reactions])
+            } catch {
+                print("Toggle reaction error: \(error.localizedDescription)")
+            }
+        }
     }
 
     // MARK: - Typing Indicator

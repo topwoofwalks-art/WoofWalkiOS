@@ -67,5 +67,13 @@
 	<array>
 		<string>MKDirectionsModePedestrian</string>
 	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram-stories</string>
+		<string>instagram</string>
+		<string>whatsapp</string>
+		<string>fb</string>
+		<string>twitter</string>
+	</array>
 </dict>
 </plist>

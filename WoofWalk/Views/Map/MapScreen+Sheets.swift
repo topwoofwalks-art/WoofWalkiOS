@@ -246,9 +246,20 @@ struct MapAlertModifiers: ViewModifier {
 
 struct MapFullScreenModifiers: ViewModifier {
     @Binding var showWalkSummary: Bool
+    @ObservedObject var badgeService: BadgeAwardingService = .shared
 
     let completedDistance: Double
     let completedDuration: Int
+
+    private var earnedPoints: Int {
+        WalkPointsCalculator.calculatePoints(
+            distanceMeters: completedDistance,
+            durationSec: completedDuration,
+            trackPoints: [],
+            walksCompletedToday: 0,
+            hasWalkedYesterday: false
+        ).points
+    }
 
     func body(content: Content) -> some View {
         content
@@ -259,19 +270,25 @@ struct MapFullScreenModifiers: ViewModifier {
                     pace: completedDistance > 0 ? (Double(completedDuration) / 60.0) / (completedDistance / 1000.0) : 0,
                     steps: 0,
                     dogNames: [],
-                    pointsEarned: WalkPointsCalculator.calculatePoints(
-                        distanceKm: completedDistance / 1000.0,
-                        durationSec: completedDuration,
-                        streakDays: 0,
-                        charityEnabled: false
-                    ).totalPoints,
+                    pointsEarned: earnedPoints,
                     personalBest: nil,
                     streakDays: 0,
                     milestones: [],
+                    achievements: badgeService.pendingAchievements,
                     mapImage: nil,
                     onShare: { showWalkSummary = false },
                     onDone: { showWalkSummary = false }
                 )
+                .task {
+                    // Update weekly league score after walk completion
+                    let points = earnedPoints
+                    guard points > 0 else { return }
+                    do {
+                        try await LeagueRepository().addWeeklyPoints(points)
+                    } catch {
+                        print("Failed to update league points (non-fatal): \(error)")
+                    }
+                }
             }
     }
 }

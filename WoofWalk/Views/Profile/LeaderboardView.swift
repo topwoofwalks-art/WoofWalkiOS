@@ -3,6 +3,7 @@ import SwiftUI
 struct LeaderboardView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @State private var selectedType: LeaderboardType = .global
+    @State private var showPointsGuide = false
 
     var body: some View {
         NavigationView {
@@ -26,6 +27,16 @@ struct LeaderboardView: View {
             }
             .navigationTitle("Leaderboard")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showPointsGuide = true }) {
+                        Image(systemName: "info.circle")
+                    }
+                }
+            }
+            .sheet(isPresented: $showPointsGuide) {
+                PointsGuideSheet()
+            }
             .onAppear {
                 viewModel.loadLeaderboard(type: selectedType)
             }

@@ -9,6 +9,9 @@ struct CharitySettingsView: View {
             Section {
                 Toggle("Donate Walk Points to Charity", isOn: $viewModel.charityEnabled)
                     .tint(.turquoise60)
+                    .onChange(of: viewModel.charityEnabled) { newValue in
+                        viewModel.persistCharityEnabled(newValue)
+                    }
             } footer: {
                 Text("When enabled, 25% of your walk points will be donated to your chosen charity.")
             }
@@ -65,6 +68,9 @@ struct CharitySettingsView: View {
         .sheet(isPresented: $showCharityPicker) {
             CharityPickerSheet(selectedCharityId: $viewModel.selectedCharityId)
         }
+        .onChange(of: viewModel.selectedCharityId) { newValue in
+            viewModel.persistSelectedCharity(newValue)
+        }
     }
 }
 
@@ -76,13 +82,20 @@ class CharitySettingsViewModel: ObservableObject {
     @Published var monthlyPoints: Int64 = 0
     @Published var lifetimePoints: Int64 = 0
 
-    private let repository = CharityRepository()
+    private let repository = CharityRepository.shared
 
     var selectedCharity: CharityOrg? {
         CharityOrg.supportedCharities.first { $0.id == selectedCharityId }
     }
 
     init() {
+        // Load local state immediately for fast UI
+        charityEnabled = repository.isCharityEnabled()
+        let localCharityId = repository.getSelectedCharityId()
+        if !localCharityId.isEmpty {
+            selectedCharityId = localCharityId
+        }
+        // Then fetch from Firestore for fresh data
         loadProfile()
     }
 
@@ -95,6 +108,20 @@ class CharitySettingsViewModel: ObservableObject {
                 monthlyPoints = profile.monthlyPoints
                 lifetimePoints = profile.lifetimePoints
             }
+        }
+    }
+
+    /// Persist charity enabled to UserDefaults + Firestore (matches Android setCharityEnabled).
+    func persistCharityEnabled(_ enabled: Bool) {
+        Task {
+            try? await repository.setCharityEnabled(enabled)
+        }
+    }
+
+    /// Persist selected charity to UserDefaults + Firestore (matches Android setSelectedCharity).
+    func persistSelectedCharity(_ charityId: String) {
+        Task {
+            try? await repository.setSelectedCharity(charityId)
         }
     }
 }

@@ -28,9 +28,9 @@ class WalkHistoryViewModel: ObservableObject {
         isLoading = true
         walksListener?.remove()
 
-        walksListener = db.collection("walk_sessions")
-            .whereField("clientId", isEqualTo: userId)
-            .order(by: "startTime", descending: true)
+        walksListener = db.collection("users").document(userId)
+            .collection("walks")
+            .order(by: "startedAt", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let self = self else { return }
 
@@ -60,9 +60,9 @@ class WalkHistoryViewModel: ObservableObject {
         isLoading = true
 
         do {
-            let snapshot = try await db.collection("walk_sessions")
-                .whereField("clientId", isEqualTo: userId)
-                .order(by: "startTime", descending: true)
+            let snapshot = try await db.collection("users").document(userId)
+                .collection("walks")
+                .order(by: "startedAt", descending: true)
                 .getDocuments()
 
             walks = snapshot.documents.compactMap { doc in
@@ -80,8 +80,14 @@ class WalkHistoryViewModel: ObservableObject {
     func selectWalk(walkId: String) {
         isLoading = true
 
-        db.collection("walk_sessions")
-            .document(walkId)
+        guard let userId = Auth.auth().currentUser?.uid else {
+            error = "User not authenticated"
+            isLoading = false
+            return
+        }
+
+        db.collection("users").document(userId)
+            .collection("walks").document(walkId)
             .getDocument { [weak self] snapshot, error in
                 guard let self = self else { return }
 
@@ -104,8 +110,14 @@ class WalkHistoryViewModel: ObservableObject {
     func deleteWalk(walkId: String) {
         isLoading = true
 
-        db.collection("walk_sessions")
-            .document(walkId)
+        guard let userId = Auth.auth().currentUser?.uid else {
+            error = "User not authenticated"
+            isLoading = false
+            return
+        }
+
+        db.collection("users").document(userId)
+            .collection("walks").document(walkId)
             .delete { [weak self] error in
                 guard let self = self else { return }
 

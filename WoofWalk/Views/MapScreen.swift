@@ -39,7 +39,7 @@ struct MapScreen: View {
     @State var completedDuration: Int = 0
     @State var mapStyle: WoofWalkMapStyle = .standard
     @State var isPlanningMode = false
-    @State var planningWaypoints: [CLLocationCoordinate2D] = []
+    @State var showSavePlannedWalkDialog = false
     @State var showBackgroundLocationPrompt = false
     @State var showRouteStartProximity = false
     @State var pendingRouteStart: CLLocationCoordinate2D?
@@ -55,6 +55,7 @@ struct MapScreen: View {
     @State var selectedPub: POI?
     @State var showClusterSelectionSheet = false
     @State var selectedCluster: AnnotationCluster?
+    @State var pendingPlannedWalk: PlannedWalk?
     @AppStorage("hasShownBackgroundLocationPrompt") var hasShownPrompt = false
     @AppStorage("walkStreak") var walkStreak: Int = 0
 
@@ -193,6 +194,60 @@ struct MapScreen: View {
                 )
             }
         }
+        .sheet(isPresented: $showSavePlannedWalkDialog) {
+            SavePlannedWalkDialog(
+                isPresented: $showSavePlannedWalkDialog,
+                waypoints: mapViewModel.planningWaypoints,
+                distance: mapViewModel.plannedRouteDistance,
+                duration: mapViewModel.plannedRouteDuration,
+                onSave: { title, description, date in
+                    let repo = PlannedWalkRepository()
+                    let distance = mapViewModel.plannedRouteDistance
+                    let duration = mapViewModel.plannedRouteDuration
+
+                    // Use the combined detailed polyline (from OSRM routing) if available,
+                    // otherwise fall back to raw waypoints
+                    let detailedPolyline = mapViewModel.combinedPlanningPolyline
+                    let polylineToSave = detailedPolyline.count > mapViewModel.planningWaypoints.count
+                        ? detailedPolyline
+                        : mapViewModel.planningWaypoints
+
+                    let startLocation = polylineToSave.first.map {
+                        LatLngData(latitude: $0.latitude, longitude: $0.longitude)
+                    } ?? LatLngData()
+
+                    let walk = PlannedWalk(
+                        id: UUID().uuidString,
+                        userId: "",
+                        title: title,
+                        description: description,
+                        startLocation: startLocation,
+                        startLocationName: "",
+                        routePolyline: polylineToSave.map { LatLngData(latitude: $0.latitude, longitude: $0.longitude) },
+                        estimatedDistanceMeters: distance,
+                        estimatedDurationSec: Int64(duration),
+                        plannedForDate: date.map { Int64($0.timeIntervalSince1970 * 1000) },
+                        notes: [],
+                        dogIds: [],
+                        poiIds: [],
+                        createdAt: Int64(Date().timeIntervalSince1970 * 1000),
+                        updatedAt: Int64(Date().timeIntervalSince1970 * 1000)
+                    )
+
+                    Task {
+                        do {
+                            let _ = try await repo.savePlannedWalk(walk)
+                            await MainActor.run {
+                                isPlanningMode = false
+                                mapViewModel.clearAllPlanningWaypoints()
+                            }
+                        } catch {
+                            print("Error saving planned walk: \(error.localizedDescription)")
+                        }
+                    }
+                }
+            )
+        }
         .onAppear {
             locationManager.startUpdatingLocation()
             mapViewModel.loadPOIs(near: locationManager.location)
@@ -205,6 +260,11 @@ struct MapScreen: View {
                     fogOfWarCoordinates.append(location)
                 }
             }
+        }
+        .onReceive(AppNavigator.shared.$pendingPlannedWalk) { walk in
+            guard let walk = walk else { return }
+            AppNavigator.shared.pendingPlannedWalk = nil
+            executePlannedWalk(walk)
         }
     }
 
@@ -271,6 +331,22 @@ struct MapScreen: View {
                 coordinate: zone.center,
                 kind: .offLeadZoneLabel(zone)
             ))
+        }
+
+        // Planning waypoints
+        if isPlanningMode {
+            let waypoints = mapViewModel.planningWaypoints
+            for (index, wp) in waypoints.enumerated() {
+                items.append(MapMarkerItem(
+                    id: "planning-wp-\(index)",
+                    coordinate: wp,
+                    kind: .planningWaypoint(
+                        index: index,
+                        isFirst: index == 0,
+                        isLast: index == waypoints.count - 1
+                    )
+                ))
+            }
         }
 
         return items
@@ -347,6 +423,16 @@ struct MapScreen: View {
                         .padding(.vertical, 2)
                         .background(Capsule().fill(.regularMaterial))
                         .foregroundColor(zType?.color ?? .gray)
+                case .planningWaypoint(let index, let isFirst, let isLast):
+                    ZStack {
+                        Circle()
+                            .fill(isFirst ? Color.green : (isLast ? Color.orange : Color.turquoise60))
+                            .frame(width: 28, height: 28)
+                            .shadow(radius: 3)
+                        Text("\(index + 1)")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                    }
                 }
             }
         }
@@ -360,14 +446,22 @@ struct MapScreen: View {
         if isPlanningMode {
             PlanningModeOverlay(
                 isActive: $isPlanningMode,
-                waypoints: planningWaypoints,
-                estimatedDistance: 0,
-                estimatedDuration: 0,
-                onAddWaypoint: { planningWaypoints.append($0) },
-                onRemoveLastWaypoint: { if !planningWaypoints.isEmpty { planningWaypoints.removeLast() } },
-                onSave: { },
+                waypoints: mapViewModel.planningWaypoints,
+                estimatedDistance: mapViewModel.plannedRouteDistance,
+                estimatedDuration: mapViewModel.plannedRouteDuration,
+                isLoopClosed: mapViewModel.isLoopClosed,
+                canCloseLoop: mapViewModel.planningWaypoints.count >= 3 && !mapViewModel.isLoopClosed,
+                closingSegmentPreview: mapViewModel.closingSegmentPreview,
+                mapCenterCoordinate: region.center,
+                isFetchingRoute: mapViewModel.isFetchingRoute,
+                useFootpathRouting: $mapViewModel.useFootpathRouting,
+                onAddWaypoint: { mapViewModel.addPlanningWaypoint($0) },
+                onRemoveLastWaypoint: { mapViewModel.removeLastPlanningWaypoint() },
+                onClearAll: { mapViewModel.clearAllPlanningWaypoints() },
+                onCloseLoop: { mapViewModel.closeLoop() },
+                onSave: { showSavePlannedWalkDialog = true },
                 onStartWalk: { isPlanningMode = false; startWalk() },
-                onCancel: { isPlanningMode = false; planningWaypoints.removeAll() }
+                onCancel: { isPlanningMode = false; mapViewModel.clearAllPlanningWaypoints() }
             )
         }
     }
@@ -532,6 +626,7 @@ struct MapMarkerItem: Identifiable {
         case hazard(HazardReport)
         case trailCondition(TrailCondition)
         case offLeadZoneLabel(OffLeadZone)
+        case planningWaypoint(index: Int, isFirst: Bool, isLast: Bool)
     }
 }
 

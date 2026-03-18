@@ -225,87 +225,295 @@ class UserRepository: ObservableObject {
         return allUsers.sorted { $0.pawPoints > $1.pawPoints }
     }
 
-    func addFriend(friendUserId: String) async throws {
+    // MARK: - Friend Request Workflow (matches Android FriendRepository)
+
+    /// Send a friend request to another user. Creates a doc in "friendships" with status PENDING.
+    func sendFriendRequest(toUserId: String) async throws {
         guard let userId = auth.currentUser?.uid else {
             throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
-        let connectionId = userId < friendUserId ? "\(userId)_\(friendUserId)" : "\(friendUserId)_\(userId)"
-        let connection: [String: Any] = [
-            "user1": min(userId, friendUserId),
-            "user2": max(userId, friendUserId),
-            "createdAt": FieldValue.serverTimestamp(),
-            "status": "active"
+        guard userId != toUserId else {
+            throw NSError(domain: "UserRepository", code: 400, userInfo: [NSLocalizedDescriptionKey: "Cannot send friend request to yourself"])
+        }
+
+        // Check for existing friendship in either direction
+        let existing = try await getFriendshipBetween(userId1: userId, userId2: toUserId)
+        if let existing = existing {
+            let status = existing["status"] as? String ?? ""
+            switch status {
+            case FriendStatus.pending.rawValue:
+                throw NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "Friend request already sent"])
+            case FriendStatus.accepted.rawValue:
+                throw NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "Already friends with this user"])
+            case FriendStatus.blocked.rawValue:
+                throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Cannot send friend request to this user"])
+            default:
+                break
+            }
+        }
+
+        let friendshipData: [String: Any] = [
+            "userId1": userId,
+            "userId2": toUserId,
+            "status": FriendStatus.pending.rawValue,
+            "requestedBy": userId,
+            "createdAt": FieldValue.serverTimestamp()
         ]
 
-        try await db.collection("connections").document(connectionId).setData(connection)
+        let docRef = try await db.collection("friendships").addDocument(data: friendshipData)
+
+        // Create notification for the target user
+        try? await createFriendNotification(
+            userId: toUserId,
+            type: "FRIEND_REQUEST",
+            title: "New Friend Request",
+            body: "You have a new friend request",
+            metadata: ["friendshipId": docRef.documentID, "fromUserId": userId]
+        )
+
+        print("Friend request sent: \(docRef.documentID)")
     }
 
-    func removeFriend(friendUserId: String) async throws {
+    /// Accept an incoming friend request. Updates status to ACCEPTED.
+    func acceptFriendRequest(friendshipId: String) async throws {
         guard let userId = auth.currentUser?.uid else {
             throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
-        let connectionId = userId < friendUserId ? "\(userId)_\(friendUserId)" : "\(friendUserId)_\(userId)"
-        try await db.collection("connections").document(connectionId).delete()
+        let doc = try await db.collection("friendships").document(friendshipId).getDocument()
+        guard let data = doc.data() else {
+            throw NSError(domain: "UserRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Friendship not found"])
+        }
+
+        let userId1 = data["userId1"] as? String ?? ""
+        let userId2 = data["userId2"] as? String ?? ""
+        let requestedBy = data["requestedBy"] as? String ?? ""
+
+        guard userId1 == userId || userId2 == userId else {
+            throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to accept this request"])
+        }
+
+        guard requestedBy != userId else {
+            throw NSError(domain: "UserRepository", code: 400, userInfo: [NSLocalizedDescriptionKey: "Cannot accept your own friend request"])
+        }
+
+        try await db.collection("friendships").document(friendshipId).updateData([
+            "status": FriendStatus.accepted.rawValue,
+            "acceptedAt": FieldValue.serverTimestamp()
+        ])
+
+        // Notify the requester
+        try? await createFriendNotification(
+            userId: requestedBy,
+            type: "FRIEND_ACCEPTED",
+            title: "Friend Request Accepted",
+            body: "Your friend request was accepted",
+            metadata: ["friendshipId": friendshipId, "fromUserId": userId]
+        )
+
+        print("Friend request accepted: \(friendshipId)")
     }
 
+    /// Reject/decline an incoming friend request. Deletes the friendship doc.
+    func rejectFriendRequest(friendshipId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+
+        let doc = try await db.collection("friendships").document(friendshipId).getDocument()
+        guard let data = doc.data() else {
+            throw NSError(domain: "UserRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Friendship not found"])
+        }
+
+        let userId1 = data["userId1"] as? String ?? ""
+        let userId2 = data["userId2"] as? String ?? ""
+
+        guard userId1 == userId || userId2 == userId else {
+            throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to decline this request"])
+        }
+
+        try await db.collection("friendships").document(friendshipId).delete()
+        print("Friend request declined: \(friendshipId)")
+    }
+
+    /// Remove an existing friend (delete the friendship doc).
+    func removeFriend(friendshipId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+
+        let doc = try await db.collection("friendships").document(friendshipId).getDocument()
+        guard let data = doc.data() else {
+            throw NSError(domain: "UserRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Friendship not found"])
+        }
+
+        let userId1 = data["userId1"] as? String ?? ""
+        let userId2 = data["userId2"] as? String ?? ""
+
+        guard userId1 == userId || userId2 == userId else {
+            throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to remove this friendship"])
+        }
+
+        try await db.collection("friendships").document(friendshipId).delete()
+        print("Friend removed: \(friendshipId)")
+    }
+
+    /// Remove friend by their user ID (convenience, looks up the friendship doc first).
+    func removeFriendByUserId(friendUserId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+
+        guard let friendship = try await getFriendshipBetween(userId1: userId, userId2: friendUserId),
+              let docId = friendship["docId"] as? String else {
+            throw NSError(domain: "UserRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Friendship not found"])
+        }
+
+        try await db.collection("friendships").document(docId).delete()
+        print("Friend removed by userId: \(friendUserId)")
+    }
+
+    /// Get the friendship status between the current user and another user.
+    func getFriendshipStatus(userId targetUserId: String) async throws -> (status: FriendStatus?, friendshipId: String?, requestedBy: String?) {
+        guard let userId = auth.currentUser?.uid else {
+            return (nil, nil, nil)
+        }
+
+        guard let friendship = try await getFriendshipBetween(userId1: userId, userId2: targetUserId) else {
+            return (nil, nil, nil)
+        }
+
+        let statusStr = friendship["status"] as? String ?? ""
+        let docId = friendship["docId"] as? String
+        let requestedBy = friendship["requestedBy"] as? String
+        return (FriendStatus(rawValue: statusStr), docId, requestedBy)
+    }
+
+    /// Real-time listener for accepted friends (uses "friendships" collection).
     func getFriends() -> AnyPublisher<[UserProfile], Error> {
         guard let userId = auth.currentUser?.uid else {
             return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
         }
 
         let publisher = PassthroughSubject<[UserProfile], Error>()
+        var friendIds1 = Set<String>()
+        var friendIds2 = Set<String>()
 
-        db.collection("connections")
-            .whereField("status", isEqualTo: "active")
+        // We need two listeners since Firestore can't do OR queries.
+        // Listener 1: where userId1 == currentUser and status == ACCEPTED
+        db.collection("friendships")
+            .whereField("userId1", isEqualTo: userId)
+            .whereField("status", isEqualTo: FriendStatus.accepted.rawValue)
             .addSnapshotListener { [weak self] snapshot, error in
                 if let error = error {
-                    publisher.send(completion: .failure(error))
+                    print("Friends listener (userId1) error: \(error.localizedDescription)")
                     return
                 }
 
-                guard let self = self, let snapshot = snapshot else {
-                    publisher.send([])
-                    return
-                }
-
-                var friendIds = Set<String>()
-
-                for doc in snapshot.documents {
+                friendIds1.removeAll()
+                for doc in snapshot?.documents ?? [] {
                     let data = doc.data()
-                    if let user1 = data["user1"] as? String, let user2 = data["user2"] as? String {
-                        if user1 == userId {
-                            friendIds.insert(user2)
-                        } else if user2 == userId {
-                            friendIds.insert(user1)
-                        }
+                    if let id2 = data["userId2"] as? String {
+                        friendIds1.insert(id2)
                     }
                 }
 
-                Task {
-                    do {
-                        if friendIds.isEmpty {
-                            publisher.send([])
-                        } else {
-                            var users: [UserProfile] = []
-                            for chunk in Array(friendIds).chunked(into: 10) {
-                                let snapshot = try await self.db.collection("users")
-                                    .whereField("id", in: chunk)
-                                    .getDocuments()
+                let allFriendIds = friendIds1.union(friendIds2)
+                self?.fetchUserProfiles(ids: Array(allFriendIds), publisher: publisher)
+            }
 
-                                let chunkUsers = try snapshot.documents.compactMap { try $0.data(as: UserProfile.self) }
-                                users.append(contentsOf: chunkUsers)
-                            }
-                            publisher.send(users)
-                        }
-                    } catch {
-                        publisher.send(completion: .failure(error))
+        // Listener 2: where userId2 == currentUser and status == ACCEPTED
+        db.collection("friendships")
+            .whereField("userId2", isEqualTo: userId)
+            .whereField("status", isEqualTo: FriendStatus.accepted.rawValue)
+            .addSnapshotListener { [weak self] snapshot, error in
+                if let error = error {
+                    print("Friends listener (userId2) error: \(error.localizedDescription)")
+                    return
+                }
+
+                friendIds2.removeAll()
+                for doc in snapshot?.documents ?? [] {
+                    let data = doc.data()
+                    if let id1 = data["userId1"] as? String {
+                        friendIds2.insert(id1)
                     }
                 }
+
+                let allFriendIds = friendIds1.union(friendIds2)
+                self?.fetchUserProfiles(ids: Array(allFriendIds), publisher: publisher)
             }
 
         return publisher.eraseToAnyPublisher()
+    }
+
+    // MARK: - Private helpers for friend system
+
+    private func fetchUserProfiles(ids: [String], publisher: PassthroughSubject<[UserProfile], Error>) {
+        if ids.isEmpty {
+            publisher.send([])
+            return
+        }
+
+        Task {
+            do {
+                var users: [UserProfile] = []
+                for chunk in ids.chunked(into: 10) {
+                    let snapshot = try await db.collection("users")
+                        .whereField("id", in: chunk)
+                        .getDocuments()
+                    let chunkUsers = try snapshot.documents.compactMap { try $0.data(as: UserProfile.self) }
+                    users.append(contentsOf: chunkUsers)
+                }
+                publisher.send(users)
+            } catch {
+                publisher.send(completion: .failure(error))
+            }
+        }
+    }
+
+    /// Look up an existing friendship doc between two users (in either direction).
+    private func getFriendshipBetween(userId1: String, userId2: String) async throws -> [String: Any]? {
+        // Check userId1 -> userId2
+        let snapshot1 = try await db.collection("friendships")
+            .whereField("userId1", isEqualTo: userId1)
+            .whereField("userId2", isEqualTo: userId2)
+            .getDocuments()
+
+        if let doc = snapshot1.documents.first {
+            var data = doc.data()
+            data["docId"] = doc.documentID
+            return data
+        }
+
+        // Check userId2 -> userId1 (reverse direction)
+        let snapshot2 = try await db.collection("friendships")
+            .whereField("userId1", isEqualTo: userId2)
+            .whereField("userId2", isEqualTo: userId1)
+            .getDocuments()
+
+        if let doc = snapshot2.documents.first {
+            var data = doc.data()
+            data["docId"] = doc.documentID
+            return data
+        }
+
+        return nil
+    }
+
+    /// Create a notification document for friend-related events.
+    private func createFriendNotification(userId: String, type: String, title: String, body: String, metadata: [String: String]) async throws {
+        let notification: [String: Any] = [
+            "userId": userId,
+            "type": type,
+            "title": title,
+            "body": body,
+            "read": false,
+            "metadata": metadata,
+            "createdAt": FieldValue.serverTimestamp()
+        ]
+        try await db.collection("notifications").addDocument(data: notification)
     }
 }
 

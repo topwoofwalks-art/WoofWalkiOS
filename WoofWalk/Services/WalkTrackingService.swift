@@ -1,6 +1,8 @@
 import Foundation
 import CoreLocation
+import CoreMotion
 import Combine
+import UIKit
 import UserNotifications
 
 struct WalkTrackingState {
@@ -24,6 +26,8 @@ class WalkTrackingService: ObservableObject {
     static let shared = WalkTrackingService()
 
     private let locationService: LocationService
+    private let motionService: MotionActivityService
+    private let filterPipeline = GPSFilterPipeline()
     private var cancellables = Set<AnyCancellable>()
 
     @Published var trackingState = WalkTrackingState()
@@ -39,26 +43,66 @@ class WalkTrackingService: ObservableObject {
     private var lastLocation: CLLocation?
     private var timer: Timer?
 
-    private let minAccuracyMeters: CLLocationAccuracy = 50.0
-    private let minDistanceMeters: CLLocationDistance = 2.0
-    private let autoPauseThresholdMps: CLLocationSpeed = 0.3
-    private let autoPauseTimeSeconds: TimeInterval = 30.0
+    /// Whether the current pause was triggered automatically by motion detection.
+    private var isAutoPaused: Bool = false
 
-    private init(locationService: LocationService = .shared) {
+    /// Minimum GPS movement (meters) that triggers step-count validation.
+    /// If GPS says we moved >30m but pedometer says 0 steps, the GPS point is drift.
+    private let gpsStepValidationDistance: Double = 30.0
+
+    /// Time window (seconds) to look back for recent steps when validating GPS.
+    private let gpsStepValidationWindow: TimeInterval = 10.0
+
+    private init(locationService: LocationService = .shared, motionService: MotionActivityService = .shared) {
         self.locationService = locationService
+        self.motionService = motionService
         setupLocationSubscription()
+        setupMotionSubscription()
     }
 
     private func setupLocationSubscription() {
         locationService.locationUpdatePublisher
-            .filter { [weak self] update in
-                guard let self = self else { return false }
-                return update.accuracy <= self.minAccuracyMeters && update.accuracy >= 0
-            }
             .sink { [weak self] update in
                 self?.handleLocationUpdate(update)
             }
             .store(in: &cancellables)
+    }
+
+    private func setupMotionSubscription() {
+        // Watch for stationary → auto-pause
+        motionService.$isStationary
+            .removeDuplicates()
+            .sink { [weak self] stationary in
+                guard let self else { return }
+                if stationary {
+                    self.handleMotionStationary()
+                } else {
+                    self.handleMotionResumed()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    // MARK: - Motion-Based Auto-Pause / Auto-Resume
+
+    private func handleMotionStationary() {
+        guard trackingState.isTracking, !trackingState.isPaused else { return }
+
+        isAutoPaused = true
+        trackingState.isPaused = true
+        timer?.invalidate()
+        showNotification(title: "Walk Auto-Paused", body: "You seem to be standing still")
+        print("[AutoPause] Motion-based auto-pause triggered (stationary for \(motionService.stationaryThreshold)s)")
+    }
+
+    private func handleMotionResumed() {
+        guard trackingState.isTracking, trackingState.isPaused, isAutoPaused else { return }
+
+        isAutoPaused = false
+        trackingState.isPaused = false
+        startTimer()
+        showNotification(title: "Walk Resumed", body: "Movement detected, tracking resumed")
+        print("[AutoPause] Motion-based auto-resume triggered")
     }
 
     // MARK: - Tracking Control
@@ -80,6 +124,10 @@ class WalkTrackingService: ObservableObject {
         totalElevationGain = 0
         lastLocation = nil
         lastLocationTime = nil
+
+        filterPipeline.start()
+        motionService.start()
+        isAutoPaused = false
 
         locationService.startUpdatingLocation(
             accuracy: kCLLocationAccuracyBest,
@@ -105,6 +153,7 @@ class WalkTrackingService: ObservableObject {
     func pauseTracking() {
         guard trackingState.isTracking, !trackingState.isPaused else { return }
 
+        isAutoPaused = false  // Manual pause overrides auto-pause state
         trackingState.isPaused = true
         timer?.invalidate()
         showNotification(title: "Walk Paused", body: "Tap to resume tracking")
@@ -114,6 +163,7 @@ class WalkTrackingService: ObservableObject {
     func resumeTracking() {
         guard trackingState.isTracking, trackingState.isPaused else { return }
 
+        isAutoPaused = false
         trackingState.isPaused = false
         startTimer()
         print("Walk tracking resumed")
@@ -124,7 +174,10 @@ class WalkTrackingService: ObservableObject {
 
         locationService.stopUpdatingLocation()
         locationService.stopUpdatingHeading()
+        motionService.stop()
+        filterPipeline.reset()
         timer?.invalidate()
+        isAutoPaused = false
 
         let endTime = Date()
         guard let start = startTime else { return nil }
@@ -166,7 +219,7 @@ class WalkTrackingService: ObservableObject {
     private func handleLocationUpdate(_ update: LocationUpdate) {
         guard trackingState.isTracking, !trackingState.isPaused else { return }
 
-        let location = CLLocation(
+        let rawLocation = CLLocation(
             coordinate: update.coordinate,
             altitude: update.altitude ?? 0,
             horizontalAccuracy: update.accuracy,
@@ -176,26 +229,44 @@ class WalkTrackingService: ObservableObject {
             timestamp: update.timestamp
         )
 
-        checkAutoPause(location: location)
+        // Run through the full GPS filter pipeline (accuracy, bearing, Kalman, jitter, speed gates)
+        guard let filtered = filterPipeline.process(rawLocation) else { return }
 
-        guard !trackingState.isPaused else { return }
+        // Step-count GPS drift validation: if GPS says >30m movement but pedometer shows 0 steps,
+        // the GPS point is likely drift (e.g. urban canyon multipath) - reject it.
+        let distanceFromLast = filterPipeline.lastAcceptedDistance
+        if distanceFromLast > gpsStepValidationDistance {
+            Task { [weak self] in
+                guard let self else { return }
+                let recentSteps = await self.motionService.recentSteps(inLast: self.gpsStepValidationWindow)
+                if recentSteps == 0 {
+                    print("[GPSDrift] Rejected GPS point: \(String(format: "%.1f", distanceFromLast))m movement but 0 steps in last \(self.gpsStepValidationWindow)s")
+                    // Don't accumulate this distance - it's phantom movement
+                    return
+                }
+                await self.acceptFilteredLocation(filtered: filtered, update: update, distanceFromLast: distanceFromLast)
+            }
+            return
+        }
 
+        // Normal path (distance <= threshold or step validation not needed)
+        acceptFilteredLocation(filtered: filtered, update: update, distanceFromLast: distanceFromLast)
+    }
+
+    /// Accepts a filtered GPS location and updates all tracking state.
+    /// Called from handleLocationUpdate directly, or after async step-count validation.
+    private func acceptFilteredLocation(filtered: CLLocation, update: LocationUpdate, distanceFromLast: Double) {
         let currentTime = Date()
         trackingState.gpsAccuracy = update.accuracy
         trackingState.gpsQuality = update.gpsQuality
         trackingState.currentSpeedMps = update.speed
         trackingState.currentBearing = update.course
 
-        if let lastLoc = lastLocation {
-            let distance = location.distance(from: lastLoc)
-
-            if distance >= minDistanceMeters {
-                totalDistanceMeters += distance
-                lastLocation = location
-            }
-        } else {
-            lastLocation = location
+        // Accumulate distance from the pipeline's jitter-gated measurement
+        if distanceFromLast > 0 {
+            totalDistanceMeters += distanceFromLast
         }
+        lastLocation = filtered
 
         if update.altitude != nil {
             if let prevElevation = lastElevation, let currentAltitude = update.altitude {
@@ -209,9 +280,9 @@ class WalkTrackingService: ObservableObject {
 
         let trackPoint = LocationTrackPoint(
             timestamp: update.timestamp.timeIntervalSince1970,
-            latitude: update.coordinate.latitude,
-            longitude: update.coordinate.longitude,
-            accuracy: update.accuracy
+            latitude: filtered.coordinate.latitude,
+            longitude: filtered.coordinate.longitude,
+            accuracy: filtered.horizontalAccuracy
         )
 
         trackPoints.append(trackPoint)
@@ -260,19 +331,6 @@ class WalkTrackingService: ObservableObject {
         print("Location: distance=\(totalDistanceMeters)m, pace=\(currentPace), speed=\(update.speed)m/s, GPS=\(update.gpsQuality)")
     }
 
-    private func checkAutoPause(location: CLLocation) {
-        guard let lastUpdate = lastLocationTime else { return }
-
-        let timeSinceLastUpdate = Date().timeIntervalSince(lastUpdate)
-
-        if location.speed < autoPauseThresholdMps &&
-           timeSinceLastUpdate > autoPauseTimeSeconds &&
-           !trackingState.isPaused {
-            pauseTracking()
-            showNotification(title: "Walk Auto-Paused", body: "You seem to be standing still")
-        }
-    }
-
     // MARK: - Timer
 
     private func startTimer() {
@@ -290,6 +348,7 @@ class WalkTrackingService: ObservableObject {
     // MARK: - Milestones
 
     private func triggerMilestone(km: Int) {
+        HapticFeedback.milestone()
         showNotification(title: "Milestone Reached!", body: "You've walked \(km)km")
         print("Milestone reached: \(km)km")
     }
