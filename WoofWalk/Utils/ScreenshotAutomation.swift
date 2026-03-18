@@ -9,7 +9,7 @@ class ScreenshotAutomation: ObservableObject {
         CommandLine.arguments.contains("-screenshot-mode")
     }
 
-    private let tabSettleDelay: TimeInterval = 5.0
+    private let tabSettleDelay: TimeInterval = 7.0
 
     func runAutomation() async {
         guard isScreenshotMode else { return }

@@ -105,26 +105,27 @@ jobs:
           echo "App launched, waiting for automation..."
 
           # Wait for app to fully load and render first tab (map)
-          sleep 8
+          # Automation: 5s UI settle + starts on map
+          sleep 10
           xcrun simctl io "iPhone 15" screenshot screenshots/01-map-tab.png
           echo "Captured: Map tab"
 
-          # Automation cycles: map(already captured) -> social -> discover -> profile
-          # Each tab has 5s delay, so: social at ~10s, discover at ~15s, profile at ~20s
-          sleep 7
+          # Automation: 7s per tab (map->social->discover->profile)
+          # Wait for automation to switch to social (7s settle)
+          sleep 10
           xcrun simctl io "iPhone 15" screenshot screenshots/02-social-tab.png
           echo "Captured: Social tab"
 
-          sleep 7
+          sleep 10
           xcrun simctl io "iPhone 15" screenshot screenshots/03-discover-tab.png
           echo "Captured: Discover tab"
 
-          sleep 7
+          sleep 10
           xcrun simctl io "iPhone 15" screenshot screenshots/04-profile-tab.png
           echo "Captured: Profile tab"
 
           # Automation goes back to map
-          sleep 5
+          sleep 8
           xcrun simctl io "iPhone 15" screenshot screenshots/05-map-final.png
           echo "Captured: Map final"
 
