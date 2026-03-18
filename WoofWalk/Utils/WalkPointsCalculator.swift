@@ -1,22 +1,6 @@
 import Foundation
 import CoreLocation
 
-struct TrackPoint {
-    let lat: Double
-    let lng: Double
-    let t: TimeInterval // milliseconds since epoch
-}
-
-struct WalkValidationResult {
-    let isValid: Bool
-    let points: Int
-    let basePoints: Int
-    let bonusPoints: Int
-    let penaltyPoints: Int
-    let violations: [String]
-    let reason: String
-}
-
 struct WalkPointsCalculator {
     // Base points
     static let basePoints = 10
@@ -207,7 +191,7 @@ struct WalkPointsCalculator {
             let p2 = points[i + 1]
 
             let distance = haversineDistance(lat1: p1.lat, lng1: p1.lng, lat2: p2.lat, lng2: p2.lng)
-            let timeDiff = (p2.t - p1.t) / 1000.0
+            let timeDiff = Double(p2.t - p1.t) / 1000.0
 
             if timeDiff > 0 {
                 let speed = distance / timeDiff
@@ -274,7 +258,7 @@ struct WalkPointsCalculator {
         var tooFrequentCount = 0
 
         for i in 0..<(points.count - 1) {
-            let timeDiff = (points[i + 1].t - points[i].t) / 1000.0
+            let timeDiff = Double(points[i + 1].t - points[i].t) / 1000.0
 
             if timeDiff < minPointSpacingSec {
                 tooFrequentCount += 1

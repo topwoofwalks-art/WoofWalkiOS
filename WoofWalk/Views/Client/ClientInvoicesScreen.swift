@@ -9,7 +9,7 @@ struct ClientInvoicesScreen: View {
         case paid = "Paid"
     }
 
-    private var filteredInvoices: [ClientInvoice] {
+    private var filteredInvoices: [ClientInvoiceItem] {
         switch selectedFilter {
         case .all: return sampleInvoices
         case .unpaid: return sampleInvoices.filter { !$0.isPaid }
@@ -93,7 +93,7 @@ struct ClientInvoicesScreen: View {
 
     // MARK: - Invoice Row
 
-    private func invoiceRow(_ invoice: ClientInvoice) -> some View {
+    private func invoiceRow(_ invoice: ClientInvoiceItem) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -164,21 +164,21 @@ struct ClientInvoicesScreen: View {
 
     // MARK: - Sample Data
 
-    private var sampleInvoices: [ClientInvoice] {
+    private var sampleInvoices: [ClientInvoiceItem] {
         [
-            ClientInvoice(id: "INV-001", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "18 Mar 2026", isPaid: false, items: ["1x Standard Walk (60 min)"]),
-            ClientInvoice(id: "INV-002", title: "Group Walk - Bella & Max", walkerName: "Pawsome Walks", amount: "£30.00", date: "17 Mar 2026", isPaid: false, items: ["2x Standard Walk (60 min)", "Group discount: -£0.00"]),
-            ClientInvoice(id: "INV-003", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "15 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
-            ClientInvoice(id: "INV-004", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "13 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
-            ClientInvoice(id: "INV-005", title: "Walk - Bella (Extended)", walkerName: "Pawsome Walks", amount: "£22.50", date: "10 Mar 2026", isPaid: true, items: ["1x Extended Walk (90 min)"]),
-            ClientInvoice(id: "INV-006", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "8 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
+            ClientInvoiceItem(id: "INV-001", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "18 Mar 2026", isPaid: false, items: ["1x Standard Walk (60 min)"]),
+            ClientInvoiceItem(id: "INV-002", title: "Group Walk - Bella & Max", walkerName: "Pawsome Walks", amount: "£30.00", date: "17 Mar 2026", isPaid: false, items: ["2x Standard Walk (60 min)", "Group discount: -£0.00"]),
+            ClientInvoiceItem(id: "INV-003", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "15 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
+            ClientInvoiceItem(id: "INV-004", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "13 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
+            ClientInvoiceItem(id: "INV-005", title: "Walk - Bella (Extended)", walkerName: "Pawsome Walks", amount: "£22.50", date: "10 Mar 2026", isPaid: true, items: ["1x Extended Walk (90 min)"]),
+            ClientInvoiceItem(id: "INV-006", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "8 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
         ]
     }
 }
 
 // MARK: - Client Invoice Model
 
-private struct ClientInvoice: Identifiable {
+private struct ClientInvoiceItem: Identifiable {
     let id: String
     let title: String
     let walkerName: String
@@ -188,157 +188,3 @@ private struct ClientInvoice: Identifiable {
     let items: [String]
 }
 
-// MARK: - Client Messages Screen
-
-struct ClientMessagesScreen: View {
-    @State private var messageText: String = ""
-    @State private var messages: [ClientMessage] = ClientMessage.sampleMessages
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Walker info header
-            walkerHeader
-
-            Divider()
-
-            // Messages
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(messages) { message in
-                            messageBubble(message)
-                                .id(message.id)
-                        }
-                    }
-                    .padding()
-                }
-                .onAppear {
-                    if let lastId = messages.last?.id {
-                        proxy.scrollTo(lastId, anchor: .bottom)
-                    }
-                }
-            }
-
-            Divider()
-
-            // Input bar
-            messageInputBar
-        }
-        .navigationTitle("Messages")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    // MARK: - Walker Header
-
-    private var walkerHeader: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "person.circle.fill")
-                .font(.title)
-                .foregroundColor(.accentColor)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Pawsome Walks")
-                    .font(.subheadline.bold())
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(Color.green)
-                        .frame(width: 6, height: 6)
-                    Text("Online")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                }
-            }
-            Spacer()
-            Button {
-                // Phone call
-            } label: {
-                Image(systemName: "phone.fill")
-                    .foregroundColor(.accentColor)
-                    .padding(8)
-                    .background(Circle().fill(Color.accentColor.opacity(0.1)))
-            }
-        }
-        .padding()
-        .background(Color(.systemGray6))
-    }
-
-    // MARK: - Message Bubble
-
-    private func messageBubble(_ message: ClientMessage) -> some View {
-        HStack {
-            if message.isFromUser { Spacer(minLength: 60) }
-
-            VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
-                Text(message.text)
-                    .font(.body)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(message.isFromUser ? Color.accentColor : Color(.systemGray5))
-                    .foregroundColor(message.isFromUser ? .white : .primary)
-                    .cornerRadius(18)
-
-                Text(message.time)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            }
-
-            if !message.isFromUser { Spacer(minLength: 60) }
-        }
-    }
-
-    // MARK: - Input Bar
-
-    private var messageInputBar: some View {
-        HStack(spacing: 8) {
-            Button {
-                // Attach photo
-            } label: {
-                Image(systemName: "photo")
-                    .foregroundColor(.secondary)
-            }
-
-            TextField("Type a message...", text: $messageText)
-                .textFieldStyle(.roundedBorder)
-
-            Button {
-                sendMessage()
-            } label: {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(messageText.isEmpty ? .secondary : .accentColor)
-            }
-            .disabled(messageText.isEmpty)
-        }
-        .padding()
-    }
-
-    // MARK: - Send Message
-
-    private func sendMessage() {
-        guard !messageText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        let newMessage = ClientMessage(
-            id: UUID().uuidString,
-            text: messageText,
-            time: "Just now",
-            isFromUser: true
-        )
-        messages.append(newMessage)
-        messageText = ""
-    }
-}
-
-// MARK: - Client Message Model
-
-private struct ClientMessage: Identifiable {
-    let id: String
-    let text: String
-    let time: String
-    let isFromUser: Bool
-
-    static let sampleMessages: [ClientMessage] = [
-        ClientMessage(id: "1", text: "Hi! Just confirming Bella's walk tomorrow at 9 AM?", time: "10:30 AM", isFromUser: true),
-        ClientMessage(id: "2", text: "Yes, confirmed! I'll be there at 9. Should I bring her harness?", time: "10:32 AM", isFromUser: false),
-        ClientMessage(id: "3", text: "Yes please, she walks much better with the harness. Thanks!", time: "10:35 AM", isFromUser: true),
-        ClientMessage(id: "4", text: "Perfect. I'll also bring some treats for training. See you tomorrow!", time: "10:36 AM", isFromUser: false),
-        ClientMessage(id: "5", text: "That sounds great. See you then!", time: "10:38 AM", isFromUser: true),
-    ]
-}

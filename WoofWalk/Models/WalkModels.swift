@@ -252,13 +252,13 @@ struct LiveWalkMetrics {
 
 // MARK: - Walk Validation Result
 struct WalkValidationResult {
-    var isValid: Bool
-    var points: Int
-    var basePoints: Int
-    var bonusPoints: Int
-    var penaltyPoints: Int
-    var reason: String
-    var violations: [String]
+    let isValid: Bool
+    let points: Int
+    let basePoints: Int
+    let bonusPoints: Int
+    let penaltyPoints: Int
+    let violations: [String]
+    let reason: String
 }
 
 // MARK: - Route Segment (speed-categorized, for walk analysis)
