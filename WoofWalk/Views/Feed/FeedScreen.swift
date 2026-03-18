@@ -16,7 +16,7 @@ struct FeedScreen: View {
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
                 .padding(.vertical, 8)
-                .onChange(of: viewModel.feedMode) { _, newMode in
+                .onChange(of: viewModel.feedMode) { newMode in
                     viewModel.switchMode(newMode)
                 }
 
@@ -38,11 +38,16 @@ struct FeedScreen: View {
                         }
 
                         if !viewModel.isLoading && viewModel.posts.isEmpty {
-                            ContentUnavailableView(
-                                "No Posts Yet",
-                                systemImage: "text.bubble",
-                                description: Text("Be the first to share a walk!")
-                            )
+                            VStack(spacing: 12) {
+                                Image(systemName: "text.bubble")
+                                    .font(.system(size: 48))
+                                    .foregroundColor(.secondary)
+                                Text("No Posts Yet")
+                                    .font(.title3.bold())
+                                Text("Be the first to share a walk!")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                             .padding(.top, 60)
                         }
                     }

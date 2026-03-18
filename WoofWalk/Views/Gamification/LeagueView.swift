@@ -279,7 +279,7 @@ class LeagueViewModel: ObservableObject {
         // End of current ISO week = next Monday 00:00:00 UTC
         guard let nextMonday = calendar.nextDate(
             after: now,
-            matching: DateComponents(weekday: 2, hour: 0, minute: 0, second: 0),
+            matching: DateComponents(hour: 0, minute: 0, second: 0, weekday: 2),
             matchingPolicy: .nextTime
         ) else {
             countdownText = "--"

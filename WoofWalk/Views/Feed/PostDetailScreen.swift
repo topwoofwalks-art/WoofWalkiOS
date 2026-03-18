@@ -12,7 +12,7 @@ struct PostDetailScreen: View {
         NavigationView {
             VStack {
                 ScrollView {
-                    WalkPostCard(post: post, onLike: {}, onComment: {}, onShare: {})
+                    WalkPostCard(post: post, onReaction: { _ in }, onComment: {}, onShare: {})
                         .padding()
 
                     Divider()
