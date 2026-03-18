@@ -1,4 +1,6 @@
 import SwiftUI
+import CoreLocation
+import MapKit
 
 struct RouteDestination: View {
     let route: AppRoute
@@ -33,7 +35,7 @@ struct RouteDestination: View {
         case .walkPhotoGallery(let walkId):
             PlaceholderView(title: "Walk Photos", icon: "photo.on.rectangle.angled", detail: walkId)
         case .dogStats(let dogId):
-            DogStatsScreen(dog: DogProfile(id: dogId, name: ""))
+            DogStatsDetailView(dogId: dogId, dogName: "")
         case .addDog:
             UnifiedDogFormView(onSave: { _ in })
         case .editDog:
@@ -110,7 +112,7 @@ struct RouteDestination: View {
 
         // Business
         case .businessInbox:
-            PlaceholderView(title: "Business Inbox", icon: "tray.fill")
+            BusinessInboxScreen()
         case .businessDashboard:
             PlaceholderView(title: "Business Dashboard", icon: "chart.bar.fill")
         case .businessSchedule:
@@ -142,26 +144,67 @@ struct RouteDestination: View {
         case .offLeadZones:
             PlaceholderView(title: "Off-Lead Zones", icon: "pawprint.fill")
         case .rainModeSettings:
-            PlaceholderView(title: "Rain Mode", icon: "cloud.rain.fill")
+            RainModeSettingsView()
         case .routeLibrary:
             RouteLibraryScreen()
         case .routeDetail(let routeId):
             RouteDetailScreen(routeId: routeId)
         case .nearbyPubs:
-            PlaceholderView(title: "Nearby Pubs", icon: "mug.fill")
+            NearbyPubsSheetWrapper()
         case .pubDetail(let pubId):
             PlaceholderView(title: "Pub Detail", icon: "mug.fill", detail: pubId)
 
         // Settings
         case .languageSettings:
-            PlaceholderView(title: "Language", icon: "globe")
+            LanguageSelectionView()
         case .autoReplySettings:
-            PlaceholderView(title: "Auto-Reply", icon: "arrowshape.turn.up.left.fill")
+            AwayModeSettingsWrapper()
         case .notificationSettings:
             PlaceholderView(title: "Notifications", icon: "bell.fill")
         case .privacySettings:
             PlaceholderView(title: "Privacy", icon: "lock.shield.fill")
         }
+    }
+}
+
+// MARK: - Wrapper views for screens requiring injected parameters
+
+/// Standalone wrapper that provides NearbyPubsSheet with location-based pub data.
+private struct NearbyPubsSheetWrapper: View {
+    @StateObject private var locationManager = LocationManager()
+    @State private var pubs: [POI] = []
+
+    var body: some View {
+        NearbyPubsSheet(
+            pubs: pubs,
+            userLocation: locationManager.location,
+            onSelect: { _ in },
+            onOpenInMaps: { pub in
+                let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: pub.lat, longitude: pub.lng))
+                let mapItem = MKMapItem(placemark: placemark)
+                mapItem.name = pub.title
+                mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking])
+            }
+        )
+    }
+}
+
+/// Standalone wrapper that manages state for AwayModeSettingsView bindings.
+private struct AwayModeSettingsWrapper: View {
+    @State private var isEnabled = false
+    @State private var autoReplyMessage = "Thanks for your message! I'm currently away and will respond when I'm back."
+    @State private var startDate = Date()
+    @State private var endDate = Date().addingTimeInterval(86400)
+
+    var body: some View {
+        AwayModeSettingsView(
+            isEnabled: $isEnabled,
+            autoReplyMessage: $autoReplyMessage,
+            startDate: $startDate,
+            endDate: $endDate,
+            onSave: {}
+        )
+        .navigationTitle("Auto-Reply")
     }
 }
 
