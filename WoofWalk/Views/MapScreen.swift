@@ -2,6 +2,7 @@ import SwiftUI
 import MapKit
 import CoreLocation
 import AVFoundation
+import Firebase
 import FirebaseAuth
 import FirebaseFirestore
 
@@ -291,10 +292,13 @@ struct MapScreen: View {
         .onAppear {
             locationManager.startUpdatingLocation()
             mapViewModel.loadPOIs(near: locationManager.location)
-            mapViewModel.loadHazardReports()
-            mapViewModel.loadTrailConditions()
-            mapViewModel.loadPublicDogs()
-            mapViewModel.loadLostDogs()
+            // Only load Firestore data if Firebase is configured
+            if FirebaseApp.app() != nil {
+                mapViewModel.loadHazardReports()
+                mapViewModel.loadTrailConditions()
+                mapViewModel.loadPublicDogs()
+                mapViewModel.loadLostDogs()
+            }
             // Sync map style from settings
             switch settingsViewModel.settings.mapStyle {
             case .standard: mapStyle = .standard
