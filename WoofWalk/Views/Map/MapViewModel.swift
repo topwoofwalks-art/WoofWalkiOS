@@ -120,6 +120,72 @@ class MapViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Load Hazard Reports from Firestore
+
+    func loadHazardReports() {
+        let db = Firestore.firestore()
+        db.collection("hazardReports")
+            .whereField("status", isEqualTo: "active")
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let docs = snapshot?.documents else {
+                    print("[MapViewModel] Failed to load hazards: \(error?.localizedDescription ?? "unknown")")
+                    return
+                }
+                self?.hazardReports = docs.compactMap { doc in
+                    let data = doc.data()
+                    guard let type = data["type"] as? String,
+                          let severity = data["severity"] as? String,
+                          let lat = data["lat"] as? Double,
+                          let lng = data["lng"] as? Double else { return nil }
+                    return HazardReport(
+                        id: doc.documentID,
+                        type: type,
+                        severity: severity,
+                        description: data["description"] as? String ?? "",
+                        lat: lat,
+                        lng: lng,
+                        reportedBy: data["reportedBy"] as? String ?? "",
+                        reportedAt: (data["reportedAt"] as? Timestamp)?.dateValue() ?? Date(),
+                        expiresAt: (data["expiresAt"] as? Timestamp)?.dateValue() ?? Date(),
+                        voteUp: data["voteUp"] as? Int ?? 0,
+                        voteDown: data["voteDown"] as? Int ?? 0
+                    )
+                }
+                print("[MapViewModel] Loaded \(self?.hazardReports.count ?? 0) hazard reports")
+            }
+    }
+
+    // MARK: - Load Trail Conditions from Firestore
+
+    func loadTrailConditions() {
+        let db = Firestore.firestore()
+        db.collection("trailConditions")
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let docs = snapshot?.documents else {
+                    print("[MapViewModel] Failed to load trail conditions: \(error?.localizedDescription ?? "unknown")")
+                    return
+                }
+                self?.trailConditions = docs.compactMap { doc in
+                    let data = doc.data()
+                    guard let type = data["type"] as? String,
+                          let lat = data["lat"] as? Double,
+                          let lng = data["lng"] as? Double else { return nil }
+                    return TrailCondition(
+                        id: doc.documentID,
+                        type: type,
+                        severity: data["severity"] as? Double ?? 0.5,
+                        note: data["note"] as? String ?? "",
+                        lat: lat,
+                        lng: lng,
+                        reportedBy: data["reportedBy"] as? String ?? "",
+                        voteUp: data["voteUp"] as? Int ?? 0,
+                        voteDown: data["voteDown"] as? Int ?? 0
+                    )
+                }
+                print("[MapViewModel] Loaded \(self?.trailConditions.count ?? 0) trail conditions")
+            }
+    }
+
     func togglePOIType(_ type: POI.POIType) {
         if selectedPOITypes.contains(type) {
             selectedPOITypes.remove(type)
@@ -175,6 +241,18 @@ class MapViewModel: ObservableObject {
     }
 
     private func savePooBagToAPI(_ drop: PooBagDrop) async throws {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        let data: [String: Any] = [
+            "userId": userId,
+            "lat": drop.coordinate.latitude,
+            "lng": drop.coordinate.longitude,
+            "droppedAt": Timestamp(date: drop.droppedAt),
+            "notes": drop.notes ?? "",
+            "collected": false
+        ]
+        try await db.collection("pooBagDrops").document(drop.id).setData(data)
+        print("[MapViewModel] Poo bag drop saved: \(drop.id)")
     }
 
     func startWalkTracking() {

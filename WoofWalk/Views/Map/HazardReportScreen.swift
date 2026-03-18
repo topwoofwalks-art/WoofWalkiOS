@@ -1,5 +1,7 @@
 import SwiftUI
 import CoreLocation
+import FirebaseAuth
+import FirebaseFirestore
 
 struct HazardReportScreen: View {
     @StateObject private var locationManager = LocationManager()
@@ -165,12 +167,33 @@ struct HazardReportScreen: View {
     // MARK: - Submit
 
     private func submitReport() {
-        guard selectedType != nil else { return }
+        guard let type = selectedType,
+              let location = locationManager.location else { return }
         isSubmitting = true
-        // Simulate submission delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+
+        let db = Firestore.firestore()
+        let userId = Auth.auth().currentUser?.uid ?? "anonymous"
+        let data: [String: Any] = [
+            "type": type.rawValue,
+            "severity": selectedSeverity.rawValue,
+            "description": descriptionText,
+            "lat": location.latitude,
+            "lng": location.longitude,
+            "reportedBy": userId,
+            "reportedAt": Timestamp(date: Date()),
+            "expiresAt": Timestamp(date: Date().addingTimeInterval(7 * 24 * 3600)),
+            "status": "active",
+            "voteUp": 0,
+            "voteDown": 0
+        ]
+
+        db.collection("hazardReports").addDocument(data: data) { error in
             isSubmitting = false
-            showSuccess = true
+            if let error = error {
+                print("[HazardReport] Failed to save: \(error.localizedDescription)")
+            } else {
+                showSuccess = true
+            }
         }
     }
 }

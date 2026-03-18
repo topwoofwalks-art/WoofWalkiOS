@@ -2,6 +2,8 @@ import SwiftUI
 import MapKit
 import CoreLocation
 import AVFoundation
+import FirebaseAuth
+import FirebaseFirestore
 
 struct MapScreen: View {
     @StateObject var mapViewModel = MapViewModel()
@@ -28,7 +30,12 @@ struct MapScreen: View {
     @State var showWalkSummary = false
     @State var clickedLocation: CLLocationCoordinate2D?
     @State var isTorchOn = false
-    @State var carLocation: CLLocationCoordinate2D?
+    @State var carLocation: CLLocationCoordinate2D? = {
+        let lat = UserDefaults.standard.double(forKey: "carLocationLat")
+        let lng = UserDefaults.standard.double(forKey: "carLocationLng")
+        guard lat != 0 || lng != 0 else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lng)
+    }()
     @State var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 51.5, longitude: -0.1),
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
@@ -154,17 +161,31 @@ struct MapScreen: View {
                 userLocation: locationManager.location,
                 onSubmit: { type, severity, note in
                     guard let location = locationManager.location else { return }
+                    let userId = Auth.auth().currentUser?.uid ?? "anonymous"
                     let condition = TrailCondition(
                         type: type.rawValue,
                         severity: severity,
                         note: note,
                         lat: location.latitude,
                         lng: location.longitude,
-                        reportedBy: "",
+                        reportedBy: userId,
                         voteUp: 0,
                         voteDown: 0
                     )
                     mapViewModel.trailConditions.append(condition)
+                    // Save to Firestore
+                    let db = Firestore.firestore()
+                    let data: [String: Any] = [
+                        "type": type.rawValue, "severity": severity,
+                        "note": note, "lat": location.latitude, "lng": location.longitude,
+                        "reportedBy": userId, "reportedAt": Timestamp(date: Date()),
+                        "voteUp": 0, "voteDown": 0
+                    ]
+                    db.collection("trailConditions").addDocument(data: data) { error in
+                        if let error = error {
+                            print("[MapScreen] Failed to save trail condition: \(error.localizedDescription)")
+                        }
+                    }
                 }
             )
         }
@@ -267,11 +288,17 @@ struct MapScreen: View {
         .onAppear {
             locationManager.startUpdatingLocation()
             mapViewModel.loadPOIs(near: locationManager.location)
+            mapViewModel.loadHazardReports()
+            mapViewModel.loadTrailConditions()
         }
         .onChange(of: locationManager.location) { newLocation in
             if let location = newLocation {
                 mapViewModel.updateWalkPolyline(with: location)
                 walkTrackingViewModel.updateLocation(location)
+                // Feed location to guidance for turn-by-turn tracking
+                if case .active = guidanceViewModel.guidanceState {
+                    guidanceViewModel.updateUserLocation(location)
+                }
                 if showFogOfWar && walkTrackingViewModel.isWalkActive {
                     fogOfWarCoordinates.append(location)
                 }
@@ -572,7 +599,18 @@ class WalkTrackingViewModel: ObservableObject {
         timer = nil
     }
 
+    private var lastLocation: CLLocationCoordinate2D?
+
     func updateLocation(_ location: CLLocationCoordinate2D) {
+        guard isWalkActive else { return }
+        if let last = lastLocation {
+            let distance = CLLocation(latitude: last.latitude, longitude: last.longitude)
+                .distance(from: CLLocation(latitude: location.latitude, longitude: location.longitude))
+            if distance > 1 && distance < 100 { // filter GPS jitter
+                walkDistance += distance
+            }
+        }
+        lastLocation = location
     }
 }
 

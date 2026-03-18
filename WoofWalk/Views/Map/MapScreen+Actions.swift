@@ -66,7 +66,8 @@ extension MapScreen {
     }
 
     func stopWalk() {
-        completedDistance = walkTrackingViewModel.walkDistance
+        // Use max of both sources - walkTrackingVM accumulates from GPS, mapViewModel from polyline
+        completedDistance = max(walkTrackingViewModel.walkDistance, mapViewModel.walkDistance)
         completedDuration = Int(walkTrackingViewModel.walkDuration)
         walkTrackingViewModel.stopWalk()
         mapViewModel.stopWalkTracking()
@@ -219,10 +220,18 @@ extension MapScreen {
         if carLocation == nil {
             if let location = locationManager.location {
                 carLocation = location
+                UserDefaults.standard.set(location.latitude, forKey: "carLocationLat")
+                UserDefaults.standard.set(location.longitude, forKey: "carLocationLng")
             }
         } else {
             showCarOptionsDialog = true
         }
+    }
+
+    func clearCarLocation() {
+        carLocation = nil
+        UserDefaults.standard.removeObject(forKey: "carLocationLat")
+        UserDefaults.standard.removeObject(forKey: "carLocationLng")
     }
 
     func callPhoneNumber(_ phone: String) {

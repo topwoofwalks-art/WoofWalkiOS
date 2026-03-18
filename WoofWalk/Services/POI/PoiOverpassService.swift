@@ -38,6 +38,14 @@ class PoiOverpassService {
           node(around:\(radiusMeters),\(lat),\(lng))["leisure"="picnic_table"];
           way(around:\(radiusMeters),\(lat),\(lng))["waterway"="waterfall"];
           way(around:\(radiusMeters),\(lat),\(lng))["natural"="waterfall"];
+          node(around:\(radiusMeters),\(lat),\(lng))["amenity"="pub"];
+          node(around:\(radiusMeters),\(lat),\(lng))["amenity"="bar"];
+          node(around:\(radiusMeters),\(lat),\(lng))["amenity"="cafe"]["dog"="yes"];
+          node(around:\(radiusMeters),\(lat),\(lng))["amenity"="restaurant"]["dog"="yes"];
+          node(around:\(radiusMeters),\(lat),\(lng))["amenity"="pub"]["dog"="yes"];
+          node(around:\(radiusMeters),\(lat),\(lng))["amenity"="toilet"];
+          node(around:\(radiusMeters),\(lat),\(lng))["amenity"="shelter"];
+          node(around:\(radiusMeters),\(lat),\(lng))["amenity"="veterinary"];
         );
         out center body;
         """
@@ -77,6 +85,15 @@ class PoiOverpassService {
         if tags["natural"] == "peak" || tags["natural"] == "hill" { return PoiType.landscape.rawValue }
         if tags["tourism"] == "viewpoint" { return PoiType.landscape.rawValue }
         if tags["waterway"] == "waterfall" || tags["natural"] == "waterfall" { return PoiType.landscape.rawValue }
+        if tags["amenity"] == "pub" || tags["amenity"] == "bar" { return PoiType.dogFriendlyPub.rawValue }
+        if tags["amenity"] == "cafe" { return PoiType.dogFriendlyCafe.rawValue }
+        if tags["amenity"] == "restaurant" { return PoiType.dogFriendlyRestaurant.rawValue }
+        if tags["amenity"] == "toilet" || tags["amenity"] == "toilets" { return PoiType.toilet.rawValue }
+        if tags["amenity"] == "shelter" { return PoiType.shelter.rawValue }
+        if tags["amenity"] == "veterinary" { return PoiType.vet.rawValue }
+        if tags["leisure"] == "picnic_table" { return PoiType.picnicTable.rawValue }
+        if tags["tourism"] == "picnic_site" { return PoiType.picnicSite.rawValue }
+        if tags["tourism"] == "attraction" { return PoiType.attraction.rawValue }
 
         return PoiType.amenity.rawValue
     }
