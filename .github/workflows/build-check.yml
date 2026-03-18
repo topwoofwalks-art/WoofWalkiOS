@@ -104,28 +104,29 @@ jobs:
           xcrun simctl launch "iPhone 15" com.woofwalk.ios -screenshot-mode
           echo "App launched, waiting for automation..."
 
-          # Wait for app to fully load and render first tab (map)
-          # Automation: 5s UI settle + starts on map
-          sleep 10
+          # Automation holds each tab for 12s. Capture in middle of each window.
+          # Map: automation holds 0-12s after launch
+          sleep 8
           xcrun simctl io "iPhone 15" screenshot screenshots/01-map-tab.png
           echo "Captured: Map tab"
 
-          # Automation: 7s per tab (map->social->discover->profile)
-          # Wait for automation to switch to social (7s settle)
+          # Social: automation switches at ~12s, holds until ~24s
           sleep 10
           xcrun simctl io "iPhone 15" screenshot screenshots/02-social-tab.png
           echo "Captured: Social tab"
 
-          sleep 10
+          # Discover: automation switches at ~24s, holds until ~36s
+          sleep 12
           xcrun simctl io "iPhone 15" screenshot screenshots/03-discover-tab.png
           echo "Captured: Discover tab"
 
-          sleep 10
+          # Profile: automation switches at ~36s, holds until ~48s
+          sleep 12
           xcrun simctl io "iPhone 15" screenshot screenshots/04-profile-tab.png
           echo "Captured: Profile tab"
 
-          # Automation goes back to map
-          sleep 8
+          # Map final: automation switches back at ~48s
+          sleep 10
           xcrun simctl io "iPhone 15" screenshot screenshots/05-map-final.png
           echo "Captured: Map final"
 

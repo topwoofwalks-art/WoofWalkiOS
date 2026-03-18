@@ -9,8 +9,6 @@ class ScreenshotAutomation: ObservableObject {
         CommandLine.arguments.contains("-screenshot-mode")
     }
 
-    private let tabSettleDelay: TimeInterval = 7.0
-
     func runAutomation() async {
         guard isScreenshotMode else { return }
 
@@ -34,24 +32,30 @@ class ScreenshotAutomation: ObservableObject {
             print("[ScreenshotAutomation] No credentials - continuing without sign-in")
         }
 
-        // Step 2: Wait for UI to settle
-        print("[ScreenshotAutomation] Waiting for UI to settle...")
-        try? await Task.sleep(nanoseconds: 5_000_000_000)
-
-        // Step 3: Cycle through tabs
-        let tabs: [AppTab] = [.map, .social, .discover, .profile]
-
-        for tab in tabs {
-            print("[ScreenshotAutomation] SWITCHING to: \(tab.rawValue)")
-            AppNavigator.shared.selectedTab = tab
-
-            try? await Task.sleep(nanoseconds: UInt64(tabSettleDelay * 1_000_000_000))
-            print("[ScreenshotAutomation] READY: \(tab.rawValue)")
-        }
-
-        // Step 4: Go back to map for final shot
+        // Step 2: Stay on map for first capture (CI captures at ~10s)
+        print("[ScreenshotAutomation] Holding MAP tab for capture...")
         AppNavigator.shared.selectedTab = .map
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        try? await Task.sleep(nanoseconds: 12_000_000_000) // Hold 12s for CI to capture map
+
+        // Step 3: Switch to social (CI captures at ~22s)
+        print("[ScreenshotAutomation] SWITCHING to: social")
+        AppNavigator.shared.selectedTab = .social
+        try? await Task.sleep(nanoseconds: 12_000_000_000) // Hold 12s
+
+        // Step 4: Switch to discover (CI captures at ~34s)
+        print("[ScreenshotAutomation] SWITCHING to: discover")
+        AppNavigator.shared.selectedTab = .discover
+        try? await Task.sleep(nanoseconds: 12_000_000_000) // Hold 12s
+
+        // Step 5: Switch to profile (CI captures at ~46s)
+        print("[ScreenshotAutomation] SWITCHING to: profile")
+        AppNavigator.shared.selectedTab = .profile
+        try? await Task.sleep(nanoseconds: 12_000_000_000) // Hold 12s
+
+        // Step 6: Back to map for final shot (CI captures at ~54s)
+        print("[ScreenshotAutomation] SWITCHING back to: map")
+        AppNavigator.shared.selectedTab = .map
+        try? await Task.sleep(nanoseconds: 3_000_000_000)
 
         print("[ScreenshotAutomation] COMPLETE")
     }
