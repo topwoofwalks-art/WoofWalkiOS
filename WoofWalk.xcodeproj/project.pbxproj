@@ -165,6 +165,7 @@
 		A1000001000000000000389 /* WalkPointsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000388 /* WalkPointsCalculator.swift */; };
 		A1000001000000000000391 /* WoofWalkBranding.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000390 /* WoofWalkBranding.swift */; };
 		A1000001000000000000645 /* ScreenshotAutomation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000644 /* ScreenshotAutomation.swift */; };
+		A1000001000000000000647 /* ButtonTestCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000646 /* ButtonTestCoordinator.swift */; };
 		A1000001000000000000393 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000392 /* AuthViewModel.swift */; };
 		A1000001000000000000395 /* DogProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000394 /* DogProfileViewModel.swift */; };
 		A1000001000000000000397 /* DynamicWorldViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000396 /* DynamicWorldViewModel.swift */; };
@@ -549,6 +550,7 @@
 		A1000001000000000000388 /* WalkPointsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkPointsCalculator.swift; sourceTree = "<group>"; };
 		A1000001000000000000390 /* WoofWalkBranding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WoofWalkBranding.swift; sourceTree = "<group>"; };
 		A1000001000000000000644 /* ScreenshotAutomation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotAutomation.swift; sourceTree = "<group>"; };
+		A1000001000000000000646 /* ButtonTestCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonTestCoordinator.swift; sourceTree = "<group>"; };
 		A1000001000000000000392 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		A1000001000000000000394 /* DogProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogProfileViewModel.swift; sourceTree = "<group>"; };
 		A1000001000000000000396 /* DynamicWorldViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldViewModel.swift; sourceTree = "<group>"; };
@@ -1036,6 +1038,7 @@
 				A1000001000000000000388 /* WalkPointsCalculator.swift */,
 				A1000001000000000000390 /* WoofWalkBranding.swift */,
 				A1000001000000000000644 /* ScreenshotAutomation.swift */,
+				A1000001000000000000646 /* ButtonTestCoordinator.swift */,
 				A1000001000000000000844 /* HapticFeedback.swift */,
 			);
 			path = Utils;
@@ -1851,6 +1854,7 @@
 				A1000001000000000000389 /* WalkPointsCalculator.swift in Sources */,
 				A1000001000000000000391 /* WoofWalkBranding.swift in Sources */,
 				A1000001000000000000645 /* ScreenshotAutomation.swift in Sources */,
+				A1000001000000000000647 /* ButtonTestCoordinator.swift in Sources */,
 				A1000001000000000000393 /* AuthViewModel.swift in Sources */,
 				A1000001000000000000395 /* DogProfileViewModel.swift in Sources */,
 				A1000001000000000000397 /* DynamicWorldViewModel.swift in Sources */,
