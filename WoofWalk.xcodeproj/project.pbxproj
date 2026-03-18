@@ -279,6 +279,7 @@
 		A1000001000000000000652 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000651 /* GoogleService-Info.plist */; };
 		A1000001000000000000811 /* InstagramStoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000810 /* InstagramStoryAdapter.swift */; };
 		A1000001000000000000813 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000812 /* NotificationService.swift */; };
+		A1000001000000000000929 /* VoiceGuidanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000928 /* VoiceGuidanceService.swift */; };
 		A1000001000000000000815 /* BusinessInboxScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000814 /* BusinessInboxScreen.swift */; };
 		A1000001000000000000817 /* QuickReplySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000816 /* QuickReplySheet.swift */; };
 		A1000001000000000000819 /* LanguageSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000818 /* LanguageSelectionView.swift */; };
@@ -592,6 +593,7 @@
 		A1000001000000000000651 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A1000001000000000000810 /* InstagramStoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstagramStoryAdapter.swift; sourceTree = "<group>"; };
 		A1000001000000000000812 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		A1000001000000000000928 /* VoiceGuidanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceGuidanceService.swift; sourceTree = "<group>"; };
 		A1000001000000000000814 /* BusinessInboxScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessInboxScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000816 /* QuickReplySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplySheet.swift; sourceTree = "<group>"; };
 		A1000001000000000000818 /* LanguageSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionView.swift; sourceTree = "<group>"; };
@@ -784,6 +786,7 @@
 				A1000001000000000000324 /* WalkTrackingService.swift */,
 				A1000001000000000000810 /* InstagramStoryAdapter.swift */,
 				A1000001000000000000812 /* NotificationService.swift */,
+				A1000001000000000000928 /* VoiceGuidanceService.swift */,
 				A1000001000000000000862 /* MedicationSchedulerService.swift */,
 				A1000001000000000000910 /* NetworkMonitor.swift */,
 				A1000001000000000000926 /* OfflineMessageQueue.swift */,
@@ -1722,6 +1725,7 @@
 				A1000001000000000000601 /* WalkShareCard.swift in Sources */,
 				A1000001000000000000811 /* InstagramStoryAdapter.swift in Sources */,
 				A1000001000000000000813 /* NotificationService.swift in Sources */,
+				A1000001000000000000929 /* VoiceGuidanceService.swift in Sources */,
 				A1000001000000000000815 /* BusinessInboxScreen.swift in Sources */,
 				A1000001000000000000817 /* QuickReplySheet.swift in Sources */,
 				A1000001000000000000871 /* AwayModeSettingsView.swift in Sources */,

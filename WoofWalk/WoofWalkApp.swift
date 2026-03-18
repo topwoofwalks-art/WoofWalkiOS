@@ -12,11 +12,16 @@ struct WoofWalkApp: App {
         } else {
             print("[WoofWalk] GoogleService-Info.plist not found - Firebase disabled")
         }
+
+        NotificationService.shared.configure()
     }
 
     var body: some Scene {
         WindowGroup {
             MainTabView()
+                .task {
+                    await NotificationService.shared.requestPermission()
+                }
                 .task {
                     await screenshotAutomation.runAutomation()
                 }
