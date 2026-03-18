@@ -443,7 +443,7 @@ struct BookingFlowScreen: View {
                 viewModel.currentStep = .selectDogs
             }
         }
-        .onChange(of: viewModel.bookingCreatedId) { _, newId in
+        .onChange(of: viewModel.bookingCreatedId) { newId in
             if newId != nil {
                 showSuccessAlert = true
             }

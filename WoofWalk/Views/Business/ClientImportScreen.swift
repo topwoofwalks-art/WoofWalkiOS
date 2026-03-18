@@ -220,7 +220,7 @@ struct ClientImportScreen: View {
                         .foregroundColor(.secondary)
                     Text("Go back and select a source to load clients.")
                         .font(.subheadline)
-                        .foregroundColor(.tertiary)
+                        .foregroundColor(Color(.tertiaryLabel))
                     Spacer()
                 }
             } else {
@@ -332,7 +332,7 @@ struct ClientImportScreen: View {
                 if !client.dogs.isEmpty {
                     Text("Dogs: \(client.dogs.joined(separator: ", "))")
                         .font(.caption2)
-                        .foregroundColor(.tertiary)
+                        .foregroundColor(Color(.tertiaryLabel))
                 }
             }
             Spacer()

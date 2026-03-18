@@ -202,28 +202,35 @@ struct BusinessWalkConsoleScreen: View {
 
     private var mapSection: some View {
         ZStack(alignment: .topLeading) {
-            Map {
-                // Current location marker
-                if let location = walkTracking.trackingState.polyline.last {
-                    Annotation("You", coordinate: location) {
-                        Circle()
-                            .fill(tealAccent)
-                            .frame(width: 14, height: 14)
-                            .overlay(
-                                Circle()
-                                    .stroke(.white, lineWidth: 2)
-                            )
-                            .shadow(radius: 4)
+            if #available(iOS 17.0, *) {
+                Map {
+                    // Current location marker
+                    if let location = walkTracking.trackingState.polyline.last {
+                        Annotation("You", coordinate: location) {
+                            Circle()
+                                .fill(tealAccent)
+                                .frame(width: 14, height: 14)
+                                .overlay(
+                                    Circle()
+                                        .stroke(.white, lineWidth: 2)
+                                )
+                                .shadow(radius: 4)
+                        }
+                    }
+
+                    // Route polyline
+                    if walkTracking.trackingState.polyline.count >= 2 {
+                        MapPolyline(coordinates: walkTracking.trackingState.polyline)
+                            .stroke(tealAccent, lineWidth: 4)
                     }
                 }
-
-                // Route polyline
-                if walkTracking.trackingState.polyline.count >= 2 {
-                    MapPolyline(coordinates: walkTracking.trackingState.polyline)
-                        .stroke(tealAccent, lineWidth: 4)
-                }
+                .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            } else {
+                Map(coordinateRegion: .constant(MKCoordinateRegion(
+                    center: walkTracking.trackingState.polyline.last ?? CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278),
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )))
             }
-            .mapStyle(.standard(pointsOfInterest: .excludingAll))
             .frame(maxWidth: .infinity)
             .frame(height: 250)
 

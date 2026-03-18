@@ -49,7 +49,7 @@ struct ClientHomeScreen: View {
         }
         .sheet(isPresented: $showAddDog) {
             NavigationStack {
-                DogProfileSheet()
+                DogProfileSheet(dog: nil, onDismiss: { showAddDog = false }, onSave: { _ in showAddDog = false })
             }
         }
         .fullScreenCover(isPresented: $showBookingFlow) {

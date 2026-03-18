@@ -46,6 +46,7 @@ class BookingDetailViewModel: ObservableObject {
 
         bookingRepository.getBookingById(bookingId)
             .receive(on: DispatchQueue.main)
+            .catch { _ in Just(nil) }
             .sink { [weak self] booking in
                 self?.booking = booking
                 self?.isLoading = false
