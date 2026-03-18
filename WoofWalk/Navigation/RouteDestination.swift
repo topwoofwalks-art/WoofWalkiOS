@@ -33,7 +33,7 @@ struct RouteDestination: View {
         case .liveShare(let walkId):
             LiveShareView(walkId: walkId, onStopSharing: {})
         case .walkPhotoGallery(let walkId):
-            PlaceholderView(title: "Walk Photos", icon: "photo.on.rectangle.angled", detail: walkId, description: "Browse and share photos captured during your walk")
+            WalkPhotoGalleryScreen(walkId: walkId)
         case .dogStats(let dogId):
             DogStatsDetailView(dogId: dogId, dogName: "")
         case .addDog:
@@ -54,7 +54,7 @@ struct RouteDestination: View {
         case .storyViewer(let userId):
             PlaceholderView(title: "Story Viewer", icon: "eye.fill", detail: userId, description: "Watch stories shared by other walkers in your community")
         case .publicProfile(let userId):
-            PlaceholderView(title: "Public Profile", icon: "person.crop.circle", detail: userId, description: "View walker profile, dogs, and walk history")
+            PublicProfileScreen(userId: userId)
         case .followList(let userId, let type):
             PlaceholderView(title: "\(type.capitalized)", icon: "person.2.fill", detail: userId, description: "Browse \(type) list and discover new walkers")
         case .reportPost(let postId):
@@ -161,9 +161,9 @@ struct RouteDestination: View {
         case .autoReplySettings:
             AwayModeSettingsWrapper()
         case .notificationSettings:
-            PlaceholderView(title: "Notifications", icon: "bell.fill", description: "Configure push notifications, hazard alerts, and reminders")
+            NotificationSettingsScreen()
         case .privacySettings:
-            PlaceholderView(title: "Privacy", icon: "lock.shield.fill", description: "Manage profile visibility, location sharing, and data preferences")
+            PrivacySettingsScreen()
         }
     }
 }
