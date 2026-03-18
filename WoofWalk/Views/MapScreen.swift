@@ -46,6 +46,7 @@ struct MapScreen: View {
     @State var showLivestockMode = false
     @State var showWalkingPaths = false
     @State var dismissedHazardIds: Set<String> = []
+    @State var showNightMode = false
     @State var showFogOfWar = false
     @State var fogOfWarCoordinates: [CLLocationCoordinate2D] = []
     @State var showTrailConditionSheet = false
@@ -73,6 +74,7 @@ struct MapScreen: View {
                 exploredCoordinates: fogOfWarCoordinates,
                 isEnabled: $showFogOfWar
             )
+            NightModeOverlay(isEnabled: $showNightMode)
         }
         .modifier(MapSheetModifiers(
             showSearchBar: $showSearchBar,
