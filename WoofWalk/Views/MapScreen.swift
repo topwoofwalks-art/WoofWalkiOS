@@ -350,7 +350,7 @@ struct MapScreen: View {
                 }
             }
         }
-        .ignoresSafeArea()
+        .ignoresSafeArea(edges: .top)
     }
 
     // MARK: - Planning Overlay

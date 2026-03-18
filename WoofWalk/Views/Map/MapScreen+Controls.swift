@@ -9,7 +9,7 @@ extension MapScreen {
     // MARK: - Controls Overlay
 
     var controlsOverlay: some View {
-        VStack {
+        VStack(spacing: 0) {
             topControls
             Spacer()
             guidanceOrWalkPanel
@@ -23,8 +23,6 @@ extension MapScreen {
     var topControls: some View {
         HStack(alignment: .top, spacing: 12) {
             compassView
-            Spacer()
-            WeatherWidget()
             Spacer()
             topRightControls
         }
@@ -48,10 +46,13 @@ extension MapScreen {
     // MARK: - Top Right Controls
 
     var topRightControls: some View {
-        HStack(spacing: 8) {
-            Button(action: { showSearchBar = true }) {
-                Image(systemName: "magnifyingglass")
-                    .controlButtonStyle()
+        VStack(spacing: 8) {
+            Button(action: handleCarButton) {
+                Image(systemName: "car.fill")
+                    .font(.title3)
+                    .foregroundColor(carLocation != nil ? .cyan : .primary)
+                    .padding(8)
+                    .background(Circle().fill(.regularMaterial))
             }
 
             Button(action: { showFilterSheet = true }) {
@@ -72,15 +73,9 @@ extension MapScreen {
                     .background(Circle().fill(.regularMaterial))
             }
 
-            Button(action: handleCarButton) {
-                Image(systemName: "car.fill")
-                    .font(.title3)
-                    .foregroundColor(carLocation != nil ? .cyan : .primary)
-                    .padding(8)
-                    .background(Circle().fill(.regularMaterial))
-            }
+            livestockModeButton
 
-            MapStyleToggle(selectedStyle: $mapStyle)
+            walkingPathsButton
         }
     }
 
@@ -125,10 +120,18 @@ extension MapScreen {
     // MARK: - Bottom Controls
 
     var bottomControls: some View {
-        HStack(alignment: .bottom) {
-            bottomLeftButtons
-            Spacer()
-            bottomRightButtons
+        ZStack(alignment: .bottom) {
+            HStack(alignment: .bottom) {
+                bottomLeftButtons
+                Spacer()
+                bottomRightButtons
+            }
+
+            // Walk button centered at bottom
+            VStack(spacing: 6) {
+                streakBadge
+                walkToggleButton
+            }
         }
         .padding()
     }
@@ -210,11 +213,6 @@ extension MapScreen {
 
             addPOIButton
             planningModeButton
-
-            // Streak badge (shown above walk toggle when streak > 0)
-            streakBadge
-
-            walkToggleButton
         }
     }
 

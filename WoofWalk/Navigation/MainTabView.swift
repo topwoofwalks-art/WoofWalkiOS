@@ -38,35 +38,46 @@ struct MainTabView: View {
                         }
                 }
                 .tabItem {
-                Label(AppTab.map.rawValue, systemImage: AppTab.map.icon)
-            }
-            .tag(AppTab.map)
+                    Label(AppTab.map.rawValue, systemImage: AppTab.map.icon)
+                }
+                .tag(AppTab.map)
 
-            NavigationStack {
-                SocialHubScreen()
-            }
-            .tabItem {
-                Label(AppTab.social.rawValue, systemImage: AppTab.social.icon)
-            }
-            .tag(AppTab.social)
+                NavigationStack {
+                    FeedScreen()
+                }
+                .tabItem {
+                    Label(AppTab.feed.rawValue, systemImage: AppTab.feed.icon)
+                }
+                .tag(AppTab.feed)
 
-            NavigationStack {
-                DiscoveryScreen()
-            }
-            .tabItem {
-                Label(AppTab.discover.rawValue, systemImage: AppTab.discover.icon)
-            }
-            .tag(AppTab.discover)
+                NavigationStack {
+                    SocialHubScreen()
+                }
+                .tabItem {
+                    Label(AppTab.social.rawValue, systemImage: AppTab.social.icon)
+                }
+                .tag(AppTab.social)
 
-            NavigationStack {
-                ProfileView()
+                NavigationStack {
+                    DiscoveryScreen()
+                }
+                .tabItem {
+                    Label(AppTab.discover.rawValue, systemImage: AppTab.discover.icon)
+                }
+                .tag(AppTab.discover)
+
+                NavigationStack {
+                    ProfileView()
+                }
+                .tabItem {
+                    Label(AppTab.profile.rawValue, systemImage: AppTab.profile.icon)
+                }
+                .tag(AppTab.profile)
             }
-            .tabItem {
-                Label(AppTab.profile.rawValue, systemImage: AppTab.profile.icon)
-            }
-            .tag(AppTab.profile)
-            }
-        } // TabView
+
+            // Ad banner area (matches Android bottom ad)
+            AdBannerPlaceholder()
+        }
         .task {
             await updateChecker.checkForUpdate()
         }

@@ -47,15 +47,17 @@ class AppNavigator: ObservableObject {
 
 enum AppTab: String, CaseIterable {
     case map = "Map"
+    case feed = "Feed"
     case social = "Social"
-    case discover = "Discover"
+    case discover = "Services"
     case profile = "Profile"
 
     var icon: String {
         switch self {
         case .map: return "map.fill"
+        case .feed: return "newspaper.fill"
         case .social: return "person.3.fill"
-        case .discover: return "magnifyingglass"
+        case .discover: return "square.grid.2x2.fill"
         case .profile: return "person.circle.fill"
         }
     }
