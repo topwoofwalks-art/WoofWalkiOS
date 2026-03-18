@@ -120,8 +120,36 @@ struct ProfileView: View {
                     .background(Capsule().fill(Color(red: 0/255, green: 160/255, blue: 176/255)))
             }
             .padding(.top, 8)
+
+            // Feature highlights
+            VStack(alignment: .leading, spacing: 12) {
+                Text("What you can do")
+                    .font(.headline)
+                    .padding(.horizontal)
+
+                featureRow(icon: "figure.walk", color: .blue, title: "Track Walks", desc: "GPS-tracked walks with stats")
+                featureRow(icon: "trophy.fill", color: .orange, title: "Earn Badges", desc: "Complete challenges and level up")
+                featureRow(icon: "person.3.fill", color: .purple, title: "Join Community", desc: "Share walks and connect with walkers")
+                featureRow(icon: "map.fill", color: .green, title: "Discover Places", desc: "Find dog-friendly pubs, parks & vets")
+            }
+            .padding(.top, 8)
         }
-        .padding(.top, 40)
+    }
+
+    private func featureRow(icon: String, color: Color, title: String, desc: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(color)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(color.opacity(0.12)))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline.bold())
+                Text(desc).font(.caption).foregroundColor(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.horizontal)
     }
 
     // MARK: - Profile Header with League Tier Badge
