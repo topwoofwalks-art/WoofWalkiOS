@@ -1,0 +1,344 @@
+import SwiftUI
+
+struct ClientInvoicesScreen: View {
+    @State private var selectedFilter: InvoiceFilter = .all
+
+    private enum InvoiceFilter: String, CaseIterable {
+        case all = "All"
+        case unpaid = "Unpaid"
+        case paid = "Paid"
+    }
+
+    private var filteredInvoices: [ClientInvoice] {
+        switch selectedFilter {
+        case .all: return sampleInvoices
+        case .unpaid: return sampleInvoices.filter { !$0.isPaid }
+        case .paid: return sampleInvoices.filter { $0.isPaid }
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Summary card
+            invoiceSummary
+                .padding()
+
+            // Filter
+            Picker("Filter", selection: $selectedFilter) {
+                ForEach(InvoiceFilter.allCases, id: \.self) { filter in
+                    Text(filter.rawValue).tag(filter)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+
+            // Invoice list
+            if filteredInvoices.isEmpty {
+                Spacer()
+                emptyState
+                Spacer()
+            } else {
+                List(filteredInvoices) { invoice in
+                    invoiceRow(invoice)
+                }
+                .listStyle(.plain)
+            }
+        }
+        .navigationTitle("Invoices")
+        .navigationBarTitleDisplayMode(.large)
+    }
+
+    // MARK: - Summary
+
+    private var invoiceSummary: some View {
+        HStack(spacing: 0) {
+            VStack(spacing: 4) {
+                Text("Outstanding")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("£45.00")
+                    .font(.title2.bold())
+                    .foregroundColor(.orange)
+            }
+            .frame(maxWidth: .infinity)
+
+            Divider().frame(height: 40)
+
+            VStack(spacing: 4) {
+                Text("Paid (Month)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("£120.00")
+                    .font(.title2.bold())
+                    .foregroundColor(.green)
+            }
+            .frame(maxWidth: .infinity)
+
+            Divider().frame(height: 40)
+
+            VStack(spacing: 4) {
+                Text("Total")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("£165.00")
+                    .font(.title2.bold())
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(16)
+    }
+
+    // MARK: - Invoice Row
+
+    private func invoiceRow(_ invoice: ClientInvoice) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(invoice.title)
+                        .font(.body.bold())
+                    Text(invoice.walkerName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text(invoice.amount)
+                    .font(.body.bold())
+                    .foregroundColor(invoice.isPaid ? .green : .orange)
+            }
+
+            HStack {
+                Image(systemName: "calendar")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(invoice.date)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+
+                if invoice.isPaid {
+                    Label("Paid", systemImage: "checkmark.circle.fill")
+                        .font(.caption.bold())
+                        .foregroundColor(.green)
+                } else {
+                    Button("Pay Now") {
+                        // Handle payment
+                    }
+                    .font(.caption.bold())
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.mini)
+                }
+            }
+
+            if !invoice.items.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(invoice.items, id: \.self) { item in
+                        HStack {
+                            Text("  \(item)")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "doc.text.magnifyingglass")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text("No Invoices")
+                .font(.headline)
+            Text("You don't have any \(selectedFilter == .all ? "" : selectedFilter.rawValue.lowercased() + " ")invoices.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: - Sample Data
+
+    private var sampleInvoices: [ClientInvoice] {
+        [
+            ClientInvoice(id: "INV-001", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "18 Mar 2026", isPaid: false, items: ["1x Standard Walk (60 min)"]),
+            ClientInvoice(id: "INV-002", title: "Group Walk - Bella & Max", walkerName: "Pawsome Walks", amount: "£30.00", date: "17 Mar 2026", isPaid: false, items: ["2x Standard Walk (60 min)", "Group discount: -£0.00"]),
+            ClientInvoice(id: "INV-003", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "15 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
+            ClientInvoice(id: "INV-004", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "13 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
+            ClientInvoice(id: "INV-005", title: "Walk - Bella (Extended)", walkerName: "Pawsome Walks", amount: "£22.50", date: "10 Mar 2026", isPaid: true, items: ["1x Extended Walk (90 min)"]),
+            ClientInvoice(id: "INV-006", title: "Walk - Bella", walkerName: "Pawsome Walks", amount: "£15.00", date: "8 Mar 2026", isPaid: true, items: ["1x Standard Walk (60 min)"]),
+        ]
+    }
+}
+
+// MARK: - Client Invoice Model
+
+private struct ClientInvoice: Identifiable {
+    let id: String
+    let title: String
+    let walkerName: String
+    let amount: String
+    let date: String
+    let isPaid: Bool
+    let items: [String]
+}
+
+// MARK: - Client Messages Screen
+
+struct ClientMessagesScreen: View {
+    @State private var messageText: String = ""
+    @State private var messages: [ClientMessage] = ClientMessage.sampleMessages
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Walker info header
+            walkerHeader
+
+            Divider()
+
+            // Messages
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(messages) { message in
+                            messageBubble(message)
+                                .id(message.id)
+                        }
+                    }
+                    .padding()
+                }
+                .onAppear {
+                    if let lastId = messages.last?.id {
+                        proxy.scrollTo(lastId, anchor: .bottom)
+                    }
+                }
+            }
+
+            Divider()
+
+            // Input bar
+            messageInputBar
+        }
+        .navigationTitle("Messages")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: - Walker Header
+
+    private var walkerHeader: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "person.circle.fill")
+                .font(.title)
+                .foregroundColor(.accentColor)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Pawsome Walks")
+                    .font(.subheadline.bold())
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 6, height: 6)
+                    Text("Online")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                }
+            }
+            Spacer()
+            Button {
+                // Phone call
+            } label: {
+                Image(systemName: "phone.fill")
+                    .foregroundColor(.accentColor)
+                    .padding(8)
+                    .background(Circle().fill(Color.accentColor.opacity(0.1)))
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+    }
+
+    // MARK: - Message Bubble
+
+    private func messageBubble(_ message: ClientMessage) -> some View {
+        HStack {
+            if message.isFromUser { Spacer(minLength: 60) }
+
+            VStack(alignment: message.isFromUser ? .trailing : .leading, spacing: 4) {
+                Text(message.text)
+                    .font(.body)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(message.isFromUser ? Color.accentColor : Color(.systemGray5))
+                    .foregroundColor(message.isFromUser ? .white : .primary)
+                    .cornerRadius(18)
+
+                Text(message.time)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+
+            if !message.isFromUser { Spacer(minLength: 60) }
+        }
+    }
+
+    // MARK: - Input Bar
+
+    private var messageInputBar: some View {
+        HStack(spacing: 8) {
+            Button {
+                // Attach photo
+            } label: {
+                Image(systemName: "photo")
+                    .foregroundColor(.secondary)
+            }
+
+            TextField("Type a message...", text: $messageText)
+                .textFieldStyle(.roundedBorder)
+
+            Button {
+                sendMessage()
+            } label: {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(messageText.isEmpty ? .secondary : .accentColor)
+            }
+            .disabled(messageText.isEmpty)
+        }
+        .padding()
+    }
+
+    // MARK: - Send Message
+
+    private func sendMessage() {
+        guard !messageText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        let newMessage = ClientMessage(
+            id: UUID().uuidString,
+            text: messageText,
+            time: "Just now",
+            isFromUser: true
+        )
+        messages.append(newMessage)
+        messageText = ""
+    }
+}
+
+// MARK: - Client Message Model
+
+private struct ClientMessage: Identifiable {
+    let id: String
+    let text: String
+    let time: String
+    let isFromUser: Bool
+
+    static let sampleMessages: [ClientMessage] = [
+        ClientMessage(id: "1", text: "Hi! Just confirming Bella's walk tomorrow at 9 AM?", time: "10:30 AM", isFromUser: true),
+        ClientMessage(id: "2", text: "Yes, confirmed! I'll be there at 9. Should I bring her harness?", time: "10:32 AM", isFromUser: false),
+        ClientMessage(id: "3", text: "Yes please, she walks much better with the harness. Thanks!", time: "10:35 AM", isFromUser: true),
+        ClientMessage(id: "4", text: "Perfect. I'll also bring some treats for training. See you tomorrow!", time: "10:36 AM", isFromUser: false),
+        ClientMessage(id: "5", text: "That sounds great. See you then!", time: "10:38 AM", isFromUser: true),
+    ]
+}

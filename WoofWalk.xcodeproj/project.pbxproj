@@ -326,6 +326,14 @@
 		A1000001000000000000953 /* WalkPhotoGalleryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000952 /* WalkPhotoGalleryScreen.swift */; };
 		A1000001000000000000955 /* NotificationSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000954 /* NotificationSettingsScreen.swift */; };
 		A1000001000000000000957 /* PrivacySettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000956 /* PrivacySettingsScreen.swift */; };
+		A1000001000000000000961 /* StoryViewerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000960 /* StoryViewerScreen.swift */; };
+		A1000001000000000000963 /* ReportPostSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000962 /* ReportPostSheet.swift */; };
+		A1000001000000000000965 /* BadgeDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000964 /* BadgeDetailSheet.swift */; };
+		A1000001000000000000967 /* BusinessScheduleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000966 /* BusinessScheduleScreen.swift */; };
+		A1000001000000000000969 /* BusinessClientsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000968 /* BusinessClientsScreen.swift */; };
+		A1000001000000000000971 /* BusinessEarningsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000970 /* BusinessEarningsScreen.swift */; };
+		A1000001000000000000973 /* ClientInvoicesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000972 /* ClientInvoicesScreen.swift */; };
+		A1000001000000000000975 /* HazardDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000974 /* HazardDetailScreen.swift */; };
 
 /* End PBXBuildFile section */
 
@@ -651,6 +659,14 @@
 		A1000001000000000000952 /* WalkPhotoGalleryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkPhotoGalleryScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000954 /* NotificationSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000956 /* PrivacySettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacySettingsScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000960 /* StoryViewerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewerScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000962 /* ReportPostSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportPostSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000964 /* BadgeDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeDetailSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000000966 /* BusinessScheduleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessScheduleScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000968 /* BusinessClientsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessClientsScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000970 /* BusinessEarningsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessEarningsScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000972 /* ClientInvoicesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientInvoicesScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000000974 /* HazardDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardDetailScreen.swift; sourceTree = "<group>"; };
 
 /* End PBXFileReference section */
 
@@ -741,6 +757,9 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000940 /* BusinessDashboardScreen.swift */,
+				A1000001000000000000966 /* BusinessScheduleScreen.swift */,
+				A1000001000000000000968 /* BusinessClientsScreen.swift */,
+				A1000001000000000000970 /* BusinessEarningsScreen.swift */,
 			);
 			path = Business;
 			sourceTree = "<group>";
@@ -750,6 +769,7 @@
 			children = (
 				A1000001000000000000942 /* ClientDashboardScreen.swift */,
 				A1000001000000000000944 /* ClientBookingsScreen.swift */,
+				A1000001000000000000972 /* ClientInvoicesScreen.swift */,
 			);
 			path = Client;
 			sourceTree = "<group>";
@@ -1219,6 +1239,7 @@
 			children = (
 				A1000001000000000000476 /* AchievementRevealCard.swift */,
 				A1000001000000000000706 /* BadgeGalleryScreen.swift */,
+				A1000001000000000000964 /* BadgeDetailSheet.swift */,
 				A1000001000000000000708 /* ChallengeDetailScreen.swift */,
 				A1000001000000000000478 /* ChallengesScreen.swift */,
 				A1000001000000000000480 /* LeagueView.swift */,
@@ -1281,6 +1302,7 @@
 				A1000001000000000000924 /* NightModeOverlay.swift */,
 				A1000001000000000000934 /* OffLeadZonesScreen.swift */,
 				A1000001000000000000922 /* WeatherWidget.swift */,
+				A1000001000000000000974 /* HazardDetailScreen.swift */,
 			);
 			path = Map;
 			sourceTree = "<group>";
@@ -1351,6 +1373,8 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000566 /* SocialHubScreen.swift */,
+				A1000001000000000000960 /* StoryViewerScreen.swift */,
+				A1000001000000000000962 /* ReportPostSheet.swift */,
 			);
 			path = Social;
 			sourceTree = "<group>";
@@ -1823,6 +1847,14 @@
 				A1000001000000000000953 /* WalkPhotoGalleryScreen.swift in Sources */,
 				A1000001000000000000955 /* NotificationSettingsScreen.swift in Sources */,
 				A1000001000000000000957 /* PrivacySettingsScreen.swift in Sources */,
+				A1000001000000000000961 /* StoryViewerScreen.swift in Sources */,
+				A1000001000000000000963 /* ReportPostSheet.swift in Sources */,
+				A1000001000000000000965 /* BadgeDetailSheet.swift in Sources */,
+				A1000001000000000000967 /* BusinessScheduleScreen.swift in Sources */,
+				A1000001000000000000969 /* BusinessClientsScreen.swift in Sources */,
+				A1000001000000000000971 /* BusinessEarningsScreen.swift in Sources */,
+				A1000001000000000000973 /* ClientInvoicesScreen.swift in Sources */,
+				A1000001000000000000975 /* HazardDetailScreen.swift in Sources */,
 
 			);
 			runOnlyForDeploymentPostprocessing = 0;

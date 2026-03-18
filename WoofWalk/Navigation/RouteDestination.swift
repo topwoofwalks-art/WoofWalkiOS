@@ -52,13 +52,13 @@ struct RouteDestination: View {
             CreatePostSheet(onPost: { _, _ in })
                 .navigationTitle("Create Story")
         case .storyViewer(let userId):
-            PlaceholderView(title: "Story Viewer", icon: "eye.fill", detail: userId, description: "Watch stories shared by other walkers in your community")
+            StoryViewerScreen(userId: userId)
         case .publicProfile(let userId):
             PublicProfileScreen(userId: userId)
         case .followList(let userId, let type):
-            PlaceholderView(title: "\(type.capitalized)", icon: "person.2.fill", detail: userId, description: "Browse \(type) list and discover new walkers")
+            FollowListScreen(userId: userId, type: type)
         case .reportPost(let postId):
-            PlaceholderView(title: "Report Post", icon: "exclamationmark.triangle.fill", detail: postId, description: "Flag inappropriate content for community moderators")
+            ReportPostSheet(postId: postId)
         case .challenges:
             ChallengesScreen()
         case .challengeDetail(let challengeId):
@@ -91,13 +91,13 @@ struct RouteDestination: View {
         case .badgeGallery:
             BadgeGalleryScreen()
         case .badgeDetail(let badgeId):
-            PlaceholderView(title: "Badge Detail", icon: "trophy.circle.fill", detail: badgeId, description: "View badge requirements, progress, and how to earn it")
+            BadgeDetailSheet(badgeId: badgeId)
         case .walkHistoryDetail(let walkId):
             WalkHistoryDetailScreen(walkId: walkId)
         case .milestones:
             MilestonesListScreen()
         case .levelUp:
-            PlaceholderView(title: "Level Up", icon: "arrow.up.circle.fill", description: "See your level progress and upcoming rewards")
+            LevelUpScreen()
         case .discovery:
             DiscoveryScreen()
         case .providerDetail(let providerId):
@@ -117,13 +117,13 @@ struct RouteDestination: View {
         case .businessDashboard:
             BusinessDashboardScreen()
         case .businessSchedule:
-            PlaceholderView(title: "Business Schedule", icon: "calendar", description: "View and manage your upcoming walk bookings")
+            BusinessScheduleScreen()
         case .businessClients:
-            PlaceholderView(title: "Business Clients", icon: "person.2.fill", description: "Manage your client list and dog profiles")
+            BusinessClientsScreen()
         case .businessEarnings:
-            PlaceholderView(title: "Business Earnings", icon: "sterlingsign.circle.fill", description: "Track revenue, invoices, and payment history")
+            BusinessEarningsScreen()
         case .businessSettings:
-            PlaceholderView(title: "Business Settings", icon: "gearshape.fill", description: "Configure service areas, pricing, and availability")
+            BusinessSettingsScreen()
 
         // Client
         case .clientBookings:
@@ -131,15 +131,15 @@ struct RouteDestination: View {
         case .clientDashboard:
             ClientDashboardScreen()
         case .clientInvoices:
-            PlaceholderView(title: "Invoices", icon: "doc.text.fill", description: "View and pay outstanding invoices")
+            ClientInvoicesScreen()
         case .clientMessages:
-            PlaceholderView(title: "Messages", icon: "bubble.left.and.bubble.right.fill", description: "Chat with your dog walker")
+            ClientMessagesScreen()
 
         // Map features
         case .hazardReport:
             HazardReportScreen()
         case .hazardDetail(let hazardId):
-            PlaceholderView(title: "Hazard Detail", icon: "exclamationmark.triangle", detail: hazardId, description: "View hazard details, severity, and community reports")
+            HazardDetailScreen(hazardId: hazardId)
         case .trailConditionReport:
             TrailConditionSheet(userLocation: nil, onSubmit: { _, _, _ in })
         case .offLeadZones:
@@ -153,7 +153,7 @@ struct RouteDestination: View {
         case .nearbyPubs:
             NearbyPubsSheetWrapper()
         case .pubDetail(let pubId):
-            PlaceholderView(title: "Pub Detail", icon: "mug.fill", detail: pubId, description: "View pub amenities, dog policy, photos, and directions")
+            PubDetailScreen(pubId: pubId)
 
         // Settings
         case .languageSettings:
