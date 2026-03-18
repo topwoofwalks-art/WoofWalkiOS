@@ -139,7 +139,7 @@ struct WalkReportCardView: View {
 
     private var shareButton: some View {
         Button(action: {
-            shareReportCard()
+            Task { @MainActor in shareReportCard() }
         }) {
             HStack(spacing: 8) {
                 Image(systemName: "square.and.arrow.up")
