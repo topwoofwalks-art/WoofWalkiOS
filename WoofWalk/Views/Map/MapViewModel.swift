@@ -106,11 +106,23 @@ class MapViewModel: ObservableObject {
     private func loadOverpassPOIs(near center: CLLocationCoordinate2D) {
         Task {
             do {
-                let osmPois = try await PoiManager.shared.fetchPoisWithCache(
+                let service = PoiOverpassService()
+                let query = PoiOverpassService.buildDogFriendlyQuery(
                     lat: center.latitude,
                     lng: center.longitude,
-                    radiusKm: 2.0
+                    radiusMeters: 2000
                 )
+                let response = try await service.query(query)
+                let osmPois = response.elements.map { element in
+                    Poi(
+                        id: "osm_\(element.id)",
+                        type: PoiOverpassService.mapOsmTypeToPoiType(tags: element.tags),
+                        title: element.tags?["name"] ?? "",
+                        desc: "",
+                        lat: element.lat,
+                        lng: element.lon
+                    )
+                }
                 let firestorePois = self.pois.filter { !$0.id.hasPrefix("osm_") }
                 self.pois = firestorePois + osmPois
                 print("[MapViewModel] Loaded \(osmPois.count) POIs from Overpass/OSM")
