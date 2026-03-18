@@ -822,10 +822,6 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000009 /* WoofWalk.app */,
-				A1000001000000000001164 /* BusinessTabView.swift */,
-				A1000001000000000001166 /* ClientTabView.swift */,
-				A1000001000000000001168 /* ModeAwareRootView.swift */,
-				A1000001000000000001182 /* PriceCalculator.swift */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -960,14 +956,6 @@
 				A1000001000000000000418 /* WalkHistoryViewModel.swift */,
 				A1000001000000000000420 /* WalkViewModel.swift */,
 				A1000001000000000000422 /* WalkingPathViewModel.swift */,
-				A1000001000000000001140 /* EventsScreen.swift */,
-				A1000001000000000001142 /* FriendsListScreen.swift */,
-				A1000001000000000001144 /* GroupWalksScreen.swift */,
-				A1000001000000000001146 /* LostDogsScreen.swift */,
-				A1000001000000000001148 /* SocialHubScreenV2.swift */,
-				A1000001000000000001150 /* AppModeSwitcher.swift */,
-				A1000001000000000001152 /* ProfileCardView.swift */,
-				A1000001000000000001154 /* StatsCards.swift */,
 				A1000001000000000001170 /* BusinessViewModel.swift */,
 				A1000001000000000001172 /* ClientHomeViewModel.swift */,
 				A1000001000000000001174 /* StoryViewModel.swift */,
@@ -1045,6 +1033,7 @@
 				A1000001000000000000380 /* LevelCalculator.swift */,
 				A1000001000000000000382 /* MapSnapshotCache.swift */,
 				A1000001000000000000384 /* MockData.swift */,
+				A1000001000000000001182 /* PriceCalculator.swift */,
 				A1000001000000000000386 /* StreakCalculator.swift */,
 				A1000001000000000000388 /* WalkPointsCalculator.swift */,
 				A1000001000000000000390 /* WoofWalkBranding.swift */,
@@ -1210,7 +1199,10 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000248 /* AppNavigator.swift */,
+				A1000001000000000001164 /* BusinessTabView.swift */,
+				A1000001000000000001166 /* ClientTabView.swift */,
 				A1000001000000000000250 /* MainTabView.swift */,
+				A1000001000000000001168 /* ModeAwareRootView.swift */,
 				A1000001000000000000252 /* NavigationViewModel.swift */,
 				A1000001000000000000254 /* Route.swift */,
 				A1000001000000000000256 /* RouteDestination.swift */,
@@ -1504,15 +1496,18 @@
 		A1000001000000000000635 /* Profile */ = {
 			isa = PBXGroup;
 			children = (
+				A1000001000000000001150 /* AppModeSwitcher.swift */,
 				A1000001000000000000542 /* DogDetailView.swift */,
 				A1000001000000000000544 /* DogFormView.swift */,
 				A1000001000000000000546 /* DogProfileSheet.swift */,
 				A1000001000000000000548 /* DogProfileView.swift */,
 				A1000001000000000000550 /* EditProfileView.swift */,
 				A1000001000000000000552 /* LeaderboardView.swift */,
-				A1000001000000000000554 /* ProfileView.swift */,
+				A1000001000000000001152 /* ProfileCardView.swift */,
 				A1000001000000000000556 /* ProfileStatsView.swift */,
+				A1000001000000000000554 /* ProfileView.swift */,
 				A1000001000000000000950 /* PublicProfileScreen.swift */,
+				A1000001000000000001154 /* StatsCards.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -1535,9 +1530,14 @@
 		A1000001000000000000637 /* Social */ = {
 			isa = PBXGroup;
 			children = (
-				A1000001000000000000566 /* SocialHubScreen.swift */,
-				A1000001000000000000960 /* StoryViewerScreen.swift */,
+				A1000001000000000001140 /* EventsScreen.swift */,
+				A1000001000000000001142 /* FriendsListScreen.swift */,
+				A1000001000000000001144 /* GroupWalksScreen.swift */,
+				A1000001000000000001146 /* LostDogsScreen.swift */,
 				A1000001000000000000962 /* ReportPostSheet.swift */,
+				A1000001000000000000566 /* SocialHubScreen.swift */,
+				A1000001000000000001148 /* SocialHubScreenV2.swift */,
+				A1000001000000000000960 /* StoryViewerScreen.swift */,
 			);
 			path = Social;
 			sourceTree = "<group>";
