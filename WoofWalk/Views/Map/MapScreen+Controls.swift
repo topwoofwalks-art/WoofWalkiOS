@@ -153,7 +153,7 @@ extension MapScreen {
            let nearestBin = mapViewModel.filteredPOIs
             .filter({ $0.poiType == .bin })
             .compactMap({ poi -> (POI, Double)? in
-                let distance = CLLocation(latitude: poi.latitude, longitude: poi.longitude)
+                let distance = CLLocation(latitude: poi.lat, longitude: poi.lng)
                     .distance(from: CLLocation(latitude: userLoc.latitude, longitude: userLoc.longitude))
                 return (poi, distance)
             })
