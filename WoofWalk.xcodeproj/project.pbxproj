@@ -310,7 +310,7 @@
 		A1000001000000000000871 /* RouteLibraryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000870 /* RouteLibraryScreen.swift */; };
 		A1000001000000000000873 /* WalkHistoryDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000872 /* WalkHistoryDetailScreen.swift */; };
 		A1000001000000000000875 /* WalkHistoryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000874 /* WalkHistoryScreen.swift */; };
-		A1000001000000000000915 /* WalkHistoryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000914 /* WalkHistoryRow.swift */; };
+
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -619,7 +619,7 @@
 		A1000001000000000000870 /* RouteLibraryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteLibraryScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000872 /* WalkHistoryDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryDetailScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000874 /* WalkHistoryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryScreen.swift; sourceTree = "<group>"; };
-		A1000001000000000000914 /* WalkHistoryRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryRow.swift; sourceTree = "<group>"; };
+
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1330,7 +1330,7 @@
 				A1000001000000000000860 /* WalkPhotoButton.swift */,
 				A1000001000000000000872 /* WalkHistoryDetailScreen.swift */,
 				A1000001000000000000874 /* WalkHistoryScreen.swift */,
-				A1000001000000000000914 /* WalkHistoryRow.swift */,
+
 			);
 			path = Walk;
 			sourceTree = "<group>";
@@ -1745,7 +1745,7 @@
 				A1000001000000000000875 /* WalkHistoryScreen.swift in Sources */,
 				A1000001000000000000911 /* NetworkMonitor.swift in Sources */,
 				A1000001000000000000913 /* DogStatsDetailView.swift in Sources */,
-				A1000001000000000000915 /* WalkHistoryRow.swift in Sources */,
+
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
