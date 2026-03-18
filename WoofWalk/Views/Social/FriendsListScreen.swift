@@ -439,13 +439,15 @@ struct AddFriendSheet: View {
                 }
 
                 // Load friendship statuses for results
-                for key in resultMap.keys {
+                let keys = Array(resultMap.keys)
+                for key in keys {
                     let statusResult = try await userRepository.getFriendshipStatus(userId: key)
                     resultMap[key]?.status = statusResult.status
                 }
 
+                let finalResults = Array(resultMap.values)
                 await MainActor.run {
-                    searchResults = Array(resultMap.values)
+                    searchResults = finalResults
                     isSearching = false
                 }
             } catch {

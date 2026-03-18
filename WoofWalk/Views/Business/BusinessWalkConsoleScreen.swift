@@ -225,14 +225,16 @@ struct BusinessWalkConsoleScreen: View {
                     }
                 }
                 .mapStyle(.standard(pointsOfInterest: .excludingAll))
+                .frame(maxWidth: .infinity)
+                .frame(height: 250)
             } else {
                 Map(coordinateRegion: .constant(MKCoordinateRegion(
                     center: walkTracking.trackingState.polyline.last ?? CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278),
                     span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 )))
+                .frame(maxWidth: .infinity)
+                .frame(height: 250)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 250)
 
             // GPS quality indicator
             if walkTracking.trackingState.isTracking {
