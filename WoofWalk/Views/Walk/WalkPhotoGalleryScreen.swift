@@ -47,7 +47,7 @@ struct WalkPhotoGalleryScreen: View {
             LazyVGrid(columns: columns, spacing: 4) {
                 ForEach(photos) { photo in
                     Button { selectedPhoto = photo } label: {
-                        AsyncImage(url: URL(string: photo.url)) { image in
+                        AsyncImage(url: URL(string: photo.photoUrl)) { image in
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
@@ -72,7 +72,7 @@ struct WalkPhotoGalleryScreen: View {
     private func fullScreenPhoto(_ photo: WalkPhoto) -> some View {
         NavigationStack {
             VStack(spacing: 0) {
-                AsyncImage(url: URL(string: photo.url)) { image in
+                AsyncImage(url: URL(string: photo.photoUrl)) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -83,13 +83,11 @@ struct WalkPhotoGalleryScreen: View {
                 .background(Color.black)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    if let date = photo.date {
-                        Label(date, systemImage: "calendar")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    if let location = photo.locationName {
-                        Label(location, systemImage: "mappin.and.ellipse")
+                    Label(photo.timestamp.formatted(date: .abbreviated, time: .shortened), systemImage: "calendar")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    if let caption = photo.caption {
+                        Label(caption, systemImage: "text.quote")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -104,7 +102,7 @@ struct WalkPhotoGalleryScreen: View {
                     Button("Done") { selectedPhoto = nil }
                 }
                 ToolbarItem(placement: .topBarLeading) {
-                    ShareLink(item: photo.url) {
+                    ShareLink(item: photo.photoUrl) {
                         Image(systemName: "square.and.arrow.up")
                     }
                 }
@@ -142,14 +140,7 @@ struct WalkPhotoGalleryScreen: View {
     }
 }
 
-// MARK: - Walk Photo Model
-
-struct WalkPhoto: Identifiable {
-    let id: String
-    let url: String
-    let date: String?
-    let locationName: String?
-}
+// WalkPhoto model is in Models/WalkModels.swift
 
 struct WalkPhotoGalleryScreen_Previews: PreviewProvider {
     static var previews: some View {
