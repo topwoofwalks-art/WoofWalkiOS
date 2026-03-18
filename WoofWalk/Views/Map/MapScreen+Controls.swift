@@ -190,6 +190,24 @@ extension MapScreen {
             // Nearby pubs
             pubsButton
 
+            // Night mode toggle
+            Button(action: { showNightMode.toggle() }) {
+                Image(systemName: showNightMode ? "moon.fill" : "moon")
+                    .font(.body)
+                    .foregroundColor(showNightMode ? .yellow : .primary)
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(.regularMaterial))
+            }
+
+            // Fog of war toggle
+            Button(action: { showFogOfWar.toggle() }) {
+                Image(systemName: showFogOfWar ? "eye.slash.fill" : "eye")
+                    .font(.body)
+                    .foregroundColor(showFogOfWar ? .purple : .primary)
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(.regularMaterial))
+            }
+
             addPOIButton
             planningModeButton
 
