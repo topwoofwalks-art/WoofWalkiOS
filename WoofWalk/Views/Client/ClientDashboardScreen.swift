@@ -28,7 +28,7 @@ struct ClientDashboardScreen: View {
                                 .foregroundColor(.secondary)
                             Text("Add your dog to get started with bookings")
                                 .font(.caption)
-                                .foregroundColor(.tertiary)
+                                .foregroundColor(.secondary.opacity(0.7))
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -57,7 +57,7 @@ struct ClientDashboardScreen: View {
                                 .foregroundColor(.secondary)
                             Text("Book a walk for your dog")
                                 .font(.caption)
-                                .foregroundColor(.tertiary)
+                                .foregroundColor(.secondary.opacity(0.7))
                         }
                         Spacer()
                         Button {
@@ -96,7 +96,7 @@ struct ClientDashboardScreen: View {
                                 .foregroundColor(.secondary)
                             Text("Find a walker in Discovery")
                                 .font(.caption)
-                                .foregroundColor(.tertiary)
+                                .foregroundColor(.secondary.opacity(0.7))
                         }
                         Spacer()
                     }
