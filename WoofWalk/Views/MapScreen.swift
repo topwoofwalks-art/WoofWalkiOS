@@ -39,7 +39,7 @@ struct MapScreen: View {
     }()
     @State var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 51.5, longitude: -0.1),
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
     )
     @State var showRoutePreview = false
     @State var routePreview: RoutePreview?

@@ -127,12 +127,12 @@ extension MapScreen {
 
     @ViewBuilder
     var nearestBinCard: some View {
-        if let userLoc = locationManager.location,
-           let nearestBin = mapViewModel.filteredPOIs
+        let refLocation = locationManager.location ?? region.center
+        if let nearestBin = mapViewModel.pois
             .filter({ $0.poiType == .bin })
             .compactMap({ poi -> (POI, Double)? in
                 let distance = CLLocation(latitude: poi.lat, longitude: poi.lng)
-                    .distance(from: CLLocation(latitude: userLoc.latitude, longitude: userLoc.longitude))
+                    .distance(from: CLLocation(latitude: refLocation.latitude, longitude: refLocation.longitude))
                 return (poi, distance)
             })
             .min(by: { $0.1 < $1.1 }) {
