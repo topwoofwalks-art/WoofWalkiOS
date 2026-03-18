@@ -11,7 +11,7 @@ struct MainTabView: View {
             if updateChecker.updateAvailable {
                 AppUpdateBanner(
                     currentVersion: updateChecker.currentVersion,
-                    latestVersion: updateChecker.latestVersion,
+                    latestVersion: updateChecker.latestVersion ?? updateChecker.currentVersion,
                     onUpdate: {
                         if let url = URL(string: "https://apps.apple.com/app/woofwalk/idXXXXXXXXX") {
                             UIApplication.shared.open(url)
