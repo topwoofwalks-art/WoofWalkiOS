@@ -204,16 +204,18 @@ extension MapScreen {
     var streakBadge: some View {
         if walkStreak > 0 {
             HStack(spacing: 4) {
-                Text("\u{1F525}")
+                Text("🔥")
+                    .font(.system(size: 16))
                 Text("\(walkStreak)")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundColor(Color(red: 255/255, green: 107/255, blue: 53/255))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.regularMaterial)
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
             )
         }
     }
