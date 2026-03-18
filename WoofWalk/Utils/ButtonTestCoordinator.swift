@@ -27,14 +27,31 @@ enum TestCommand: Equatable {
     // Walk flow
     case startWalk
     case stopWalk
-    // Verification
+    // Verification - L1
     case verifyMapLoaded
     case verifyPOIsVisible
     case verifyBinDistanceVisible
+    // Verification - L2 data flow
+    case verifyPOICount
+    case verifyBinCount
+    case verifyPubCount
+    case verifyMapViewModelState
+    case verifyWalkTrackingState
+    // Verification - L3 sheet content
+    case openFilterSheetAndVerify
+    case openPubsSheetAndVerify
+    case openTrailConditionSheet
+    case closeTrailConditionSheet
+    // L4 form submission
+    case submitQuickBin
+    case verifyBinAdded
+    // L5 walk lifecycle
+    case verifyWalkActive
+    case verifyWalkDistance
+    case verifyWalkStopped
 }
 
 /// Singleton coordinator for button-level testing.
-/// MapScreen observes `currentCommand` and executes it against its own @State vars.
 @MainActor
 class ButtonTestCoordinator: ObservableObject {
     static let shared = ButtonTestCoordinator()
@@ -49,7 +66,7 @@ class ButtonTestCoordinator: ObservableObject {
         // Wait for MapScreen to process
         try? await Task.sleep(nanoseconds: 500_000_000)
         // Wait for completion signal
-        for _ in 0..<20 { // max 10 seconds
+        for _ in 0..<20 {
             if commandCompleted { break }
             try? await Task.sleep(nanoseconds: 500_000_000)
         }

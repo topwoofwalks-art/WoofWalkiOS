@@ -393,6 +393,49 @@ struct MapScreen: View {
         case .verifyBinDistanceVisible:
             let bins = mapViewModel.pois.filter { $0.poiType == .bin }
             coord.reportResult("Bins loaded: \(bins.count)")
+        // L2 data flow verification
+        case .verifyPOICount:
+            coord.reportResult("Total POIs: \(mapViewModel.pois.count), filtered: \(mapViewModel.filteredPOIs.count)")
+        case .verifyBinCount:
+            let bins = mapViewModel.pois.filter { $0.poiType == .bin }
+            coord.reportResult("Bins: \(bins.count)")
+        case .verifyPubCount:
+            let pubs = mapViewModel.pois.filter { $0.poiType == .dogFriendlyPub }
+            coord.reportResult("Pubs: \(pubs.count)")
+        case .verifyMapViewModelState:
+            let state = "pois=\(mapViewModel.pois.count) hazards=\(mapViewModel.hazardReports.count) trails=\(mapViewModel.trailConditions.count) dogs=\(mapViewModel.publicDogs.count) lost=\(mapViewModel.lostDogs.count)"
+            coord.reportResult("MapVM: \(state)")
+        case .verifyWalkTrackingState:
+            coord.reportResult("Walk: active=\(walkTrackingViewModel.isWalkActive) dist=\(walkTrackingViewModel.walkDistance) dur=\(walkTrackingViewModel.walkDuration)")
+        // L3 sheet content
+        case .openFilterSheetAndVerify:
+            showFilterSheet = true
+            let typeCount = POI.POIType.allCases.count
+            coord.reportResult("Filter sheet opened, \(typeCount) POI types available")
+        case .openPubsSheetAndVerify:
+            showNearbyPubsSheet = true
+            let pubs = mapViewModel.pois.filter { $0.poiType == .dogFriendlyPub }
+            coord.reportResult("Pubs sheet opened, \(pubs.count) pubs available")
+        case .openTrailConditionSheet:
+            showTrailConditionSheet = true
+            coord.reportResult("Trail condition sheet opened")
+        case .closeTrailConditionSheet:
+            showTrailConditionSheet = false
+            coord.reportResult("Trail condition sheet closed")
+        // L4 form submission
+        case .submitQuickBin:
+            quickAddBin()
+            coord.reportResult("Quick bin submitted at current location")
+        case .verifyBinAdded:
+            let bins = mapViewModel.pois.filter { $0.poiType == .bin }
+            coord.reportResult("Bin count after add: \(bins.count)")
+        // L5 walk lifecycle
+        case .verifyWalkActive:
+            coord.reportResult("Walk active: \(walkTrackingViewModel.isWalkActive)")
+        case .verifyWalkDistance:
+            coord.reportResult("Walk distance: \(walkTrackingViewModel.walkDistance)m, duration: \(walkTrackingViewModel.walkDuration)s")
+        case .verifyWalkStopped:
+            coord.reportResult("Walk stopped: active=\(walkTrackingViewModel.isWalkActive) finalDist=\(walkTrackingViewModel.walkDistance)")
         case .none:
             break
         }
