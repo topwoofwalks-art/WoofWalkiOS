@@ -190,7 +190,7 @@ class MapViewModel: ObservableObject {
                         isNervous: data["isNervous"] as? Bool ?? false,
                         warningNote: data["warningNote"] as? String,
                         ownerName: data["ownerName"] as? String ?? "",
-                        photoURL: data["photoUrl"] as? String
+                        photoURL: (data["photoUrl"] as? String).flatMap { URL(string: $0) }
                     )
                 }
                 print("[MapViewModel] Loaded \(self?.publicDogs.count ?? 0) public dogs")
@@ -217,8 +217,8 @@ class MapViewModel: ObservableObject {
                         description: data["description"] as? String ?? "",
                         locationDescription: data["lastSeenLocation"] as? String ?? "",
                         reporterName: data["reporterName"] as? String ?? "",
-                        reporterPhone: data["reporterPhone"] as? String ?? "",
-                        photoURL: data["dogPhotoUrl"] as? String,
+                        reporterPhone: data["reporterPhone"] as? String,
+                        photoURL: (data["dogPhotoUrl"] as? String).flatMap { URL(string: $0) },
                         reportedAt: (data["reportedAt"] as? Timestamp)?.dateValue() ?? Date()
                     )
                 }

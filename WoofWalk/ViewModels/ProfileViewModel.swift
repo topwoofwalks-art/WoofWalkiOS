@@ -271,7 +271,14 @@ struct StatsRepository {
                             let data = doc.data()
                             guard let dist = data["distanceMeters"] as? Double,
                                   let dur = data["durationSec"] as? Int else { return nil }
-                            return WalkSession(id: doc.documentID, distanceMeters: dist, durationSec: dur)
+                            let startedAt = (data["startedAt"] as? Timestamp)?.dateValue() ?? Date()
+                            return WalkSession(
+                                id: doc.documentID,
+                                sessionId: doc.documentID,
+                                startedAt: startedAt,
+                                distanceMeters: dist,
+                                durationSec: dur
+                            )
                         } ?? []
                         promise(.success(sessions))
                     }
@@ -312,17 +319,16 @@ struct StatsRepository {
                     if let error = error {
                         promise(.failure(error))
                     } else {
-                        var counts: [String: Int] = [:]
-                        let fmt = DateFormatter()
-                        fmt.dateFormat = "yyyy-MM-dd"
+                        var counts: [Int: Int] = [:]
+                        let calendar = Calendar.current
                         for doc in snapshot?.documents ?? [] {
                             if let ts = doc.data()["startedAt"] as? Timestamp {
-                                let key = fmt.string(from: ts.dateValue())
-                                counts[key, default: 0] += 1
+                                let weekday = calendar.component(.weekday, from: ts.dateValue())
+                                counts[weekday, default: 0] += 1
                             }
                         }
-                        let result = counts.map { DailyWalkCount(date: $0.key, count: $0.value) }
-                            .sorted { $0.date < $1.date }
+                        let result = counts.map { DailyWalkCount(dayOfWeek: $0.key, walkCount: $0.value) }
+                            .sorted(by: { $0.dayOfWeek < $1.dayOfWeek })
                         promise(.success(result))
                     }
                 }
