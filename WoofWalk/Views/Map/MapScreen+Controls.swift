@@ -18,34 +18,9 @@ extension MapScreen {
         }
     }
 
-    // MARK: - Top Controls
+    // MARK: - Top Controls (left to right: car, filter, location, torch, fields, trails)
 
     var topControls: some View {
-        HStack(alignment: .top, spacing: 12) {
-            compassView
-            Spacer()
-            topRightControls
-        }
-        .padding()
-    }
-
-    // MARK: - Compass View (replaces helpButton)
-
-    var compassView: some View {
-        Button(action: { centerOnUser() }) {
-            Image(systemName: "location.north.fill")
-                .font(.title3)
-                .rotationEffect(.degrees(-locationManager.bearing))
-                .foregroundColor(.primary)
-                .padding(10)
-                .background(Circle().fill(.regularMaterial))
-        }
-        .animation(.easeInOut(duration: 0.3), value: locationManager.bearing)
-    }
-
-    // MARK: - Top Right Controls (horizontal row matching Android)
-
-    var topRightControls: some View {
         HStack(spacing: 8) {
             Button(action: handleCarButton) {
                 Image(systemName: "car.fill")
@@ -72,7 +47,12 @@ extension MapScreen {
                     .padding(8)
                     .background(Circle().fill(.regularMaterial))
             }
+
+            livestockModeButton
+
+            walkingPathsButton
         }
+        .padding()
     }
 
     // MARK: - Guidance / Walk Panel
@@ -132,6 +112,8 @@ extension MapScreen {
         .padding()
     }
 
+    // MARK: - Bottom Left (marketplace, bin distance, mark bin)
+
     var bottomLeftButtons: some View {
         VStack(alignment: .leading, spacing: 8) {
             nearestBinCard
@@ -139,11 +121,6 @@ extension MapScreen {
                 icon: "trash.fill",
                 color: .green,
                 action: quickAddBin
-            )
-            quickAddButton(
-                icon: "bag.fill",
-                color: .orange,
-                action: quickAddPooBag
             )
         }
     }
@@ -173,35 +150,25 @@ extension MapScreen {
         }
     }
 
-    @ViewBuilder
+    // MARK: - Bottom Right (rain mode, pubs, add POI)
+
     var bottomRightButtons: some View {
         VStack(spacing: 10) {
-            // Walk-active controls
-            if walkTrackingViewModel.isWalkActive {
-                Button(action: mapViewModel.cycleCameraMode) {
-                    Image(systemName: mapViewModel.cameraModeIcon)
-                        .font(.body)
-                        .foregroundColor(.white)
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(.blue))
-                }
-
-                livestockModeButton
-                walkingPathsButton
-            }
-
-            // Night mode (always visible)
-            Button(action: { showNightMode.toggle() }) {
-                Image(systemName: showNightMode ? "moon.fill" : "moon")
-                    .font(.body)
-                    .foregroundColor(showNightMode ? .yellow : .primary)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(.regularMaterial))
-            }
-
-            // Core buttons always visible
+            rainModeButton
+            pubsButton
             addPOIButton
-            planningModeButton
+        }
+    }
+
+    // MARK: - Rain Mode Button
+
+    var rainModeButton: some View {
+        Button(action: { showRainMode.toggle() }) {
+            Image(systemName: showRainMode ? "cloud.rain.fill" : "cloud.rain")
+                .font(.body)
+                .foregroundColor(showRainMode ? .white : .primary)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(showRainMode ? .blue : .regularMaterial))
         }
     }
 
@@ -244,10 +211,10 @@ extension MapScreen {
     var livestockModeButton: some View {
         Button(action: { showLivestockMode.toggle() }) {
             Image(systemName: showLivestockMode ? "hare.fill" : "hare")
-                .font(.body)
-                .foregroundColor(.white)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(showLivestockMode ? .brown : .blue.opacity(0.8)))
+                .font(.title3)
+                .foregroundColor(showLivestockMode ? .brown : .primary)
+                .padding(8)
+                .background(Circle().fill(.regularMaterial))
         }
     }
 
@@ -256,10 +223,10 @@ extension MapScreen {
     var walkingPathsButton: some View {
         Button(action: { showWalkingPaths.toggle() }) {
             Image(systemName: showWalkingPaths ? "point.topleft.down.to.point.bottomright.curvepath.fill" : "point.topleft.down.to.point.bottomright.curvepath")
-                .font(.body)
-                .foregroundColor(.white)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(showWalkingPaths ? .green : .blue.opacity(0.8)))
+                .font(.title3)
+                .foregroundColor(showWalkingPaths ? .green : .primary)
+                .padding(8)
+                .background(Circle().fill(.regularMaterial))
         }
     }
 
@@ -282,16 +249,6 @@ extension MapScreen {
                 .foregroundColor(.white)
                 .frame(width: 44, height: 44)
                 .background(Circle().fill(Color.turquoise60))
-        }
-    }
-
-    var planningModeButton: some View {
-        Button(action: { isPlanningMode.toggle() }) {
-            Image(systemName: isPlanningMode ? "pencil.circle.fill" : "pencil.circle")
-                .font(.body)
-                .foregroundColor(.white)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(isPlanningMode ? .orange : .blue.opacity(0.8)))
         }
     }
 

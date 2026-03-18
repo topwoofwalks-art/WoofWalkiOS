@@ -46,7 +46,7 @@ struct MapScreen: View {
     @State var showLivestockMode = false
     @State var showWalkingPaths = false
     @State var dismissedHazardIds: Set<String> = []
-    @State var showNightMode = false
+    @State var showRainMode = false
     @State var showFogOfWar = false
     @State var fogOfWarCoordinates: [CLLocationCoordinate2D] = []
     @State var showTrailConditionSheet = false
@@ -75,7 +75,23 @@ struct MapScreen: View {
                 exploredCoordinates: fogOfWarCoordinates,
                 isEnabled: $showFogOfWar
             )
-            NightModeOverlay(isEnabled: $showNightMode)
+            // Rain mode indicator overlay (visual only when active)
+            if showRainMode {
+                VStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "cloud.rain.fill")
+                            .font(.caption)
+                        Text("Rain Mode")
+                            .font(.caption.bold())
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(.blue.opacity(0.85)))
+                    .foregroundColor(.white)
+                    .padding(.top, 60)
+                    Spacer()
+                }
+            }
         }
         .modifier(MapSheetModifiers(
             showSearchBar: $showSearchBar,
