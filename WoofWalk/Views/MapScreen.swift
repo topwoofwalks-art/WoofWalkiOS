@@ -44,6 +44,7 @@ struct MapScreen: View {
     @State var routePreview: RoutePreview?
     @State var completedDistance: Double = 0
     @State var completedDuration: Int = 0
+    @StateObject var settingsViewModel = SettingsViewModel()
     @State var mapStyle: WoofWalkMapStyle = .standard
     @State var isPlanningMode = false
     @State var showSavePlannedWalkDialog = false
@@ -290,6 +291,14 @@ struct MapScreen: View {
             mapViewModel.loadPOIs(near: locationManager.location)
             mapViewModel.loadHazardReports()
             mapViewModel.loadTrailConditions()
+            mapViewModel.loadPublicDogs()
+            mapViewModel.loadLostDogs()
+            // Sync map style from settings
+            switch settingsViewModel.settings.mapStyle {
+            case .standard: mapStyle = .standard
+            case .hybrid: mapStyle = .hybrid
+            case .satellite: mapStyle = .satellite
+            }
         }
         .onChange(of: locationManager.location) { newLocation in
             if let location = newLocation {

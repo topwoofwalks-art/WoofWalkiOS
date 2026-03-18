@@ -155,6 +155,62 @@ class MapViewModel: ObservableObject {
             }
     }
 
+    // MARK: - Load Public Dogs from Firestore
+
+    func loadPublicDogs() {
+        let db = Firestore.firestore()
+        db.collection("publicDogs")
+            .whereField("isActive", isEqualTo: true)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let docs = snapshot?.documents else { return }
+                self?.publicDogs = docs.compactMap { doc -> PublicDog? in
+                    let data = doc.data()
+                    guard let lat = data["lat"] as? Double,
+                          let lng = data["lng"] as? Double else { return nil }
+                    return PublicDog(
+                        id: doc.documentID,
+                        name: data["name"] as? String ?? "Unknown",
+                        breed: data["breed"] as? String ?? "",
+                        coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                        isNervous: data["isNervous"] as? Bool ?? false,
+                        warningNote: data["warningNote"] as? String,
+                        ownerName: data["ownerName"] as? String ?? "",
+                        photoURL: data["photoUrl"] as? String
+                    )
+                }
+                print("[MapViewModel] Loaded \(self?.publicDogs.count ?? 0) public dogs")
+            }
+    }
+
+    // MARK: - Load Lost Dogs for Map
+
+    func loadLostDogs() {
+        let db = Firestore.firestore()
+        db.collection("lostDogs")
+            .whereField("status", isEqualTo: "LOST")
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let docs = snapshot?.documents else { return }
+                self?.lostDogs = docs.compactMap { doc -> LostDog? in
+                    let data = doc.data()
+                    guard let lat = data["lat"] as? Double,
+                          let lng = data["lng"] as? Double else { return nil }
+                    return LostDog(
+                        id: doc.documentID,
+                        name: data["dogName"] as? String ?? "Unknown",
+                        breed: data["dogBreed"] as? String ?? "",
+                        coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                        description: data["description"] as? String ?? "",
+                        locationDescription: data["lastSeenLocation"] as? String ?? "",
+                        reporterName: data["reporterName"] as? String ?? "",
+                        reporterPhone: data["reporterPhone"] as? String ?? "",
+                        photoURL: data["dogPhotoUrl"] as? String,
+                        reportedAt: (data["reportedAt"] as? Timestamp)?.dateValue() ?? Date()
+                    )
+                }
+                print("[MapViewModel] Loaded \(self?.lostDogs.count ?? 0) lost dogs")
+            }
+    }
+
     func togglePOIType(_ type: POI.POIType) {
         if selectedPOITypes.contains(type) {
             selectedPOITypes.remove(type)

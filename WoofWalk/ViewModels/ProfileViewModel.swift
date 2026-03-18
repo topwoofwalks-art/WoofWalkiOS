@@ -1,6 +1,8 @@
 import Foundation
 import Combine
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 enum LeaderboardType: String, CaseIterable {
     case global = "Global"
@@ -244,24 +246,87 @@ class ProfileViewModel: ObservableObject {
 }
 
 struct StatsRepository {
+    private let db = Firestore.firestore()
+
+    private var userId: String? {
+        Auth.auth().currentUser?.uid
+    }
+
+    private func walksCollection() -> CollectionReference? {
+        guard let uid = userId else { return nil }
+        return db.collection("users").document(uid).collection("walks")
+    }
+
     func getAllCompletedSessions() -> AnyPublisher<[WalkSession], Error> {
-        Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
+        guard let collection = walksCollection() else {
+            return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
+        }
+        return Future { promise in
+            collection.order(by: "startedAt", descending: true).limit(to: 100)
+                .getDocuments { snapshot, error in
+                    if let error = error {
+                        promise(.failure(error))
+                    } else {
+                        let sessions = snapshot?.documents.compactMap { doc -> WalkSession? in
+                            let data = doc.data()
+                            guard let dist = data["distanceMeters"] as? Double,
+                                  let dur = data["durationSec"] as? Int else { return nil }
+                            return WalkSession(id: doc.documentID, distanceMeters: dist, durationSec: dur)
+                        } ?? []
+                        promise(.success(sessions))
+                    }
+                }
+        }.eraseToAnyPublisher()
     }
 
     func getTotalDistance() async throws -> Double {
-        return 0.0
+        guard let collection = walksCollection() else { return 0 }
+        let snapshot = try await collection.getDocuments()
+        return snapshot.documents.reduce(0.0) { sum, doc in
+            sum + (doc.data()["distanceMeters"] as? Double ?? 0)
+        }
     }
 
     func getTotalDuration() async throws -> Int {
-        return 0
+        guard let collection = walksCollection() else { return 0 }
+        let snapshot = try await collection.getDocuments()
+        return snapshot.documents.reduce(0) { sum, doc in
+            sum + (doc.data()["durationSec"] as? Int ?? 0)
+        }
     }
 
     func getTotalWalkCount() async throws -> Int {
-        return 0
+        guard let collection = walksCollection() else { return 0 }
+        let snapshot = try await collection.getDocuments()
+        return snapshot.documents.count
     }
 
     func getWeeklyWalkCounts() -> AnyPublisher<[DailyWalkCount], Error> {
-        Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
+        guard let collection = walksCollection() else {
+            return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
+        }
+        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        return Future { promise in
+            collection.whereField("startedAt", isGreaterThan: Timestamp(date: weekAgo))
+                .getDocuments { snapshot, error in
+                    if let error = error {
+                        promise(.failure(error))
+                    } else {
+                        var counts: [String: Int] = [:]
+                        let fmt = DateFormatter()
+                        fmt.dateFormat = "yyyy-MM-dd"
+                        for doc in snapshot?.documents ?? [] {
+                            if let ts = doc.data()["startedAt"] as? Timestamp {
+                                let key = fmt.string(from: ts.dateValue())
+                                counts[key, default: 0] += 1
+                            }
+                        }
+                        let result = counts.map { DailyWalkCount(date: $0.key, count: $0.value) }
+                            .sorted { $0.date < $1.date }
+                        promise(.success(result))
+                    }
+                }
+        }.eraseToAnyPublisher()
     }
 }
 

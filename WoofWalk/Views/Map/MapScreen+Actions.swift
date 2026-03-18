@@ -105,6 +105,12 @@ extension MapScreen {
                 durationSeconds: completedDuration,
                 currentStreak: streakValue ?? 0
             )
+
+            // Schedule streak reminder notification for tomorrow
+            NotificationService.shared.scheduleStreakReminder(
+                streakDays: streakValue ?? 0,
+                dogName: "Your dog"
+            )
         }
     }
 

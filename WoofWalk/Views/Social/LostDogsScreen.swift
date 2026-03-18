@@ -1,8 +1,9 @@
 import SwiftUI
+import FirebaseFirestore
 
 struct LostDogsScreen: View {
     @State private var lostDogs: [LostDogItem] = []
-    @State private var isLoading = false
+    @State private var isLoading = true
 
     var body: some View {
         Group {
@@ -18,6 +19,36 @@ struct LostDogsScreen: View {
                 .listStyle(.plain)
             }
         }
+        .onAppear { loadLostDogs() }
+    }
+
+    private func loadLostDogs() {
+        let db = Firestore.firestore()
+        db.collection("lostDogs")
+            .whereField("status", isEqualTo: "LOST")
+            .order(by: "reportedAt", descending: true)
+            .limit(to: 50)
+            .addSnapshotListener { snapshot, error in
+                isLoading = false
+                guard let docs = snapshot?.documents else {
+                    print("[LostDogs] Failed to load: \(error?.localizedDescription ?? "unknown")")
+                    return
+                }
+                lostDogs = docs.compactMap { doc -> LostDogItem? in
+                    let data = doc.data()
+                    guard let name = data["dogName"] as? String else { return nil }
+                    return LostDogItem(
+                        id: doc.documentID,
+                        name: name,
+                        breed: data["dogBreed"] as? String ?? "Unknown",
+                        lastSeenLocation: data["lastSeenLocation"] as? String ?? "",
+                        reportedAt: (data["reportedAt"] as? Timestamp)?.dateValue() ?? Date(),
+                        photoUrl: data["dogPhotoUrl"] as? String,
+                        distance: nil
+                    )
+                }
+                print("[LostDogs] Loaded \(lostDogs.count) lost dogs")
+            }
     }
 
     private var emptyState: some View {
@@ -39,18 +70,6 @@ struct LostDogsScreen: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
-            Button(action: {}) {
-                Label("Report a Lost Dog", systemImage: "exclamationmark.triangle.fill")
-                    .font(.subheadline.bold())
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(
-                        Capsule().fill(Color(red: 0/255, green: 160/255, blue: 176/255))
-                    )
-            }
-            .padding(.top, 8)
-
             Spacer()
         }
     }
@@ -71,7 +90,6 @@ struct LostDogRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Dog photo placeholder
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(red: 0/255, green: 160/255, blue: 176/255).opacity(0.1))
                 .frame(width: 64, height: 64)
