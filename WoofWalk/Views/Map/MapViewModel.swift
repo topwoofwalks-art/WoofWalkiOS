@@ -9,7 +9,7 @@ import FirebaseFirestore
 class MapViewModel: ObservableObject {
     @Published var pois: [POI] = []
     @Published var filteredPOIs: [POI] = []
-    @Published var selectedPOITypes: Set<POI.POIType> = Set(POI.POIType.allCases)
+    @Published var selectedPOITypes: Set<POI.POIType> = [.bin, .bench, .toilet]
     @Published var walkPolyline: [CLLocationCoordinate2D] = []
     @Published var routePolyline: [CLLocationCoordinate2D] = []
     @Published var activeBagDrops: [PooBagDrop] = []
@@ -99,18 +99,31 @@ class MapViewModel: ObservableObject {
             )
             .store(in: &cancellables)
 
-        // Load from Overpass/OSM (with caching)
-        loadOverpassPOIs(near: queryCenter)
+        // Load from Overpass/OSM
+        loadOverpassPOIs(near: queryCenter, zoomSpan: 0.05)
     }
 
-    private func loadOverpassPOIs(near center: CLLocationCoordinate2D) {
+    /// Zoom-to-radius mapping matching Android's calculateRadiusFromZoom()
+    private func radiusFromZoom(_ zoomSpan: Double) -> Int {
+        // zoomSpan is latitudeDelta — smaller = more zoomed in
+        switch zoomSpan {
+        case ..<0.005:  return 300   // Very zoomed in
+        case ..<0.015:  return 800   // Street level
+        case ..<0.05:   return 1500  // Neighborhood
+        case ..<0.15:   return 3000  // District
+        default:        return 5000  // Wide area
+        }
+    }
+
+    func loadOverpassPOIs(near center: CLLocationCoordinate2D, zoomSpan: Double = 0.05) {
         Task {
             do {
+                let radius = radiusFromZoom(zoomSpan)
                 let service = PoiOverpassService()
                 let query = PoiOverpassService.buildDogFriendlyQuery(
                     lat: center.latitude,
                     lng: center.longitude,
-                    radiusMeters: 2000
+                    radiusMeters: radius
                 )
                 let response = try await service.query(query)
                 let osmPois = response.elements.map { element in

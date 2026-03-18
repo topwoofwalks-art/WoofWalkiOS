@@ -212,6 +212,7 @@ extension MapScreen {
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
             mapViewModel.loadPOIs(near: location)
+            mapViewModel.loadOverpassPOIs(near: location, zoomSpan: region.span.latitudeDelta)
         }
     }
 
