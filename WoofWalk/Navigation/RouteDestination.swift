@@ -115,7 +115,7 @@ struct RouteDestination: View {
         case .businessInbox:
             BusinessInboxScreen()
         case .businessDashboard:
-            PlaceholderView(title: "Business Dashboard", icon: "chart.bar.fill", description: "Overview of bookings, earnings, and client activity")
+            BusinessDashboardScreen()
         case .businessSchedule:
             PlaceholderView(title: "Business Schedule", icon: "calendar", description: "View and manage your upcoming walk bookings")
         case .businessClients:
@@ -127,9 +127,9 @@ struct RouteDestination: View {
 
         // Client
         case .clientBookings:
-            PlaceholderView(title: "My Bookings", icon: "calendar.badge.clock", description: "View upcoming and past walk bookings")
+            ClientBookingsScreen()
         case .clientDashboard:
-            PlaceholderView(title: "Client Dashboard", icon: "house.fill", description: "Your dog walking overview and quick actions")
+            ClientDashboardScreen()
         case .clientInvoices:
             PlaceholderView(title: "Invoices", icon: "doc.text.fill", description: "View and pay outstanding invoices")
         case .clientMessages:
