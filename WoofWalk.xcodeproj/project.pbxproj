@@ -292,7 +292,6 @@
 		A1000001000000000000811 /* InstagramStoryAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000810 /* InstagramStoryAdapter.swift */; };
 		A1000001000000000000813 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000812 /* NotificationService.swift */; };
 		A1000001000000000000929 /* VoiceGuidanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000928 /* VoiceGuidanceService.swift */; };
-		A1000001000000000000815 /* BusinessInboxScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000814 /* BusinessInboxScreen.swift */; };
 		A1000001000000000000817 /* QuickReplySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000816 /* QuickReplySheet.swift */; };
 		A1000001000000000000819 /* LanguageSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000818 /* LanguageSelectionView.swift */; };
 		A1000001000000000000821 /* RainModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000820 /* RainModeSettingsView.swift */; };
@@ -346,6 +345,48 @@
 		A1000001000000000000973 /* ClientInvoicesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000972 /* ClientInvoicesScreen.swift */; };
 		A1000001000000000000975 /* HazardDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000974 /* HazardDetailScreen.swift */; };
 
+		A1000001000000000001101 /* BusinessHomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001100 /* BusinessHomeScreen.swift */; };
+		A1000001000000000001103 /* BusinessInboxScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001102 /* BusinessInboxScreen.swift */; };
+		A1000001000000000001105 /* BusinessWalkConsoleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001104 /* BusinessWalkConsoleScreen.swift */; };
+		A1000001000000000001107 /* BusinessWelcomeDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001106 /* BusinessWelcomeDialog.swift */; };
+		A1000001000000000001109 /* ClientDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001108 /* ClientDetailScreen.swift */; };
+		A1000001000000000001111 /* ClientImportScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001110 /* ClientImportScreen.swift */; };
+		A1000001000000000001113 /* ScanKeyScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001112 /* ScanKeyScreen.swift */; };
+		A1000001000000000001115 /* BookingDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001114 /* BookingDetailScreen.swift */; };
+		A1000001000000000001117 /* BookingFlowScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001116 /* BookingFlowScreen.swift */; };
+		A1000001000000000001119 /* ClientHomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001118 /* ClientHomeScreen.swift */; };
+		A1000001000000000001121 /* ClientMessagesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001120 /* ClientMessagesScreen.swift */; };
+		A1000001000000000001123 /* PriceBreakdownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001122 /* PriceBreakdownView.swift */; };
+		A1000001000000000001125 /* ProviderSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001124 /* ProviderSearchView.swift */; };
+		A1000001000000000001127 /* MessageReactionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001126 /* MessageReactionPicker.swift */; };
+		A1000001000000000001129 /* AdBannerPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001128 /* AdBannerPlaceholder.swift */; };
+		A1000001000000000001131 /* ServiceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001130 /* ServiceCardView.swift */; };
+		A1000001000000000001133 /* DogReelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001132 /* DogReelCard.swift */; };
+		A1000001000000000001135 /* StoriesRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001134 /* StoriesRow.swift */; };
+		A1000001000000000001137 /* StoryViewerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001136 /* StoryViewerSheet.swift */; };
+		A1000001000000000001139 /* PointsGuideSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001138 /* PointsGuideSheet.swift */; };
+		A1000001000000000001141 /* EventsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001140 /* EventsScreen.swift */; };
+		A1000001000000000001143 /* FriendsListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001142 /* FriendsListScreen.swift */; };
+		A1000001000000000001145 /* GroupWalksScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001144 /* GroupWalksScreen.swift */; };
+		A1000001000000000001147 /* LostDogsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001146 /* LostDogsScreen.swift */; };
+		A1000001000000000001149 /* SocialHubScreenV2.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001148 /* SocialHubScreenV2.swift */; };
+		A1000001000000000001151 /* AppModeSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001150 /* AppModeSwitcher.swift */; };
+		A1000001000000000001153 /* ProfileCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001152 /* ProfileCardView.swift */; };
+		A1000001000000000001155 /* StatsCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001154 /* StatsCards.swift */; };
+		A1000001000000000001157 /* AppMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001156 /* AppMode.swift */; };
+		A1000001000000000001159 /* BookingInstructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001158 /* BookingInstructions.swift */; };
+		A1000001000000000001161 /* PriceBreakdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001160 /* PriceBreakdown.swift */; };
+		A1000001000000000001163 /* ClientKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001162 /* ClientKey.swift */; };
+		A1000001000000000001165 /* BusinessTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001164 /* BusinessTabView.swift */; };
+		A1000001000000000001167 /* ClientTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001166 /* ClientTabView.swift */; };
+		A1000001000000000001169 /* ModeAwareRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001168 /* ModeAwareRootView.swift */; };
+		A1000001000000000001171 /* BusinessViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001170 /* BusinessViewModel.swift */; };
+		A1000001000000000001173 /* ClientHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001172 /* ClientHomeViewModel.swift */; };
+		A1000001000000000001175 /* StoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001174 /* StoryViewModel.swift */; };
+		A1000001000000000001177 /* MotionActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001176 /* MotionActivityService.swift */; };
+		A1000001000000000001179 /* ProviderRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001178 /* ProviderRepository.swift */; };
+		A1000001000000000001181 /* StoryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001180 /* StoryRepository.swift */; };
+		A1000001000000000001183 /* PriceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001182 /* PriceCalculator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -632,7 +673,6 @@
 		A1000001000000000000810 /* InstagramStoryAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstagramStoryAdapter.swift; sourceTree = "<group>"; };
 		A1000001000000000000812 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		A1000001000000000000928 /* VoiceGuidanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceGuidanceService.swift; sourceTree = "<group>"; };
-		A1000001000000000000814 /* BusinessInboxScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessInboxScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000000816 /* QuickReplySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplySheet.swift; sourceTree = "<group>"; };
 		A1000001000000000000818 /* LanguageSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionView.swift; sourceTree = "<group>"; };
 		A1000001000000000000900 /* AwayModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwayModeSettingsView.swift; sourceTree = "<group>"; };
@@ -691,6 +731,48 @@
 		A1000001000000000000988 /* BookingServiceType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingServiceType.swift; sourceTree = "<group>"; };
 		A1000001000000000000990 /* BookingRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingRepository.swift; sourceTree = "<group>"; };
 
+		A1000001000000000001100 /* BusinessHomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessHomeScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001102 /* BusinessInboxScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessInboxScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001104 /* BusinessWalkConsoleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessWalkConsoleScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001106 /* BusinessWelcomeDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessWelcomeDialog.swift; sourceTree = "<group>"; };
+		A1000001000000000001108 /* ClientDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientDetailScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001110 /* ClientImportScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientImportScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001112 /* ScanKeyScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanKeyScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001114 /* BookingDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingDetailScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001116 /* BookingFlowScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingFlowScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001118 /* ClientHomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientHomeScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001120 /* ClientMessagesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientMessagesScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001122 /* PriceBreakdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceBreakdownView.swift; sourceTree = "<group>"; };
+		A1000001000000000001124 /* ProviderSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderSearchView.swift; sourceTree = "<group>"; };
+		A1000001000000000001126 /* MessageReactionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageReactionPicker.swift; sourceTree = "<group>"; };
+		A1000001000000000001128 /* AdBannerPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdBannerPlaceholder.swift; sourceTree = "<group>"; };
+		A1000001000000000001130 /* ServiceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceCardView.swift; sourceTree = "<group>"; };
+		A1000001000000000001132 /* DogReelCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogReelCard.swift; sourceTree = "<group>"; };
+		A1000001000000000001134 /* StoriesRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoriesRow.swift; sourceTree = "<group>"; };
+		A1000001000000000001136 /* StoryViewerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewerSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000001138 /* PointsGuideSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointsGuideSheet.swift; sourceTree = "<group>"; };
+		A1000001000000000001140 /* EventsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001142 /* FriendsListScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsListScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001144 /* GroupWalksScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupWalksScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001146 /* LostDogsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LostDogsScreen.swift; sourceTree = "<group>"; };
+		A1000001000000000001148 /* SocialHubScreenV2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialHubScreenV2.swift; sourceTree = "<group>"; };
+		A1000001000000000001150 /* AppModeSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModeSwitcher.swift; sourceTree = "<group>"; };
+		A1000001000000000001152 /* ProfileCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCardView.swift; sourceTree = "<group>"; };
+		A1000001000000000001154 /* StatsCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsCards.swift; sourceTree = "<group>"; };
+		A1000001000000000001156 /* AppMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMode.swift; sourceTree = "<group>"; };
+		A1000001000000000001158 /* BookingInstructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingInstructions.swift; sourceTree = "<group>"; };
+		A1000001000000000001160 /* PriceBreakdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceBreakdown.swift; sourceTree = "<group>"; };
+		A1000001000000000001162 /* ClientKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientKey.swift; sourceTree = "<group>"; };
+		A1000001000000000001164 /* BusinessTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessTabView.swift; sourceTree = "<group>"; };
+		A1000001000000000001166 /* ClientTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientTabView.swift; sourceTree = "<group>"; };
+		A1000001000000000001168 /* ModeAwareRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeAwareRootView.swift; sourceTree = "<group>"; };
+		A1000001000000000001170 /* BusinessViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000001172 /* ClientHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientHomeViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000001174 /* StoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000001176 /* MotionActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivityService.swift; sourceTree = "<group>"; };
+		A1000001000000000001178 /* ProviderRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000001180 /* StoryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000001182 /* PriceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceCalculator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -740,6 +822,10 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000009 /* WoofWalk.app */,
+				A1000001000000000001164 /* BusinessTabView.swift */,
+				A1000001000000000001166 /* ClientTabView.swift */,
+				A1000001000000000001168 /* ModeAwareRootView.swift */,
+				A1000001000000000001182 /* PriceCalculator.swift */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -750,6 +836,8 @@
 				A1000001000000000000984 /* Booking.swift */,
 				A1000001000000000000986 /* BookingStatus.swift */,
 				A1000001000000000000988 /* BookingServiceType.swift */,
+				A1000001000000000001158 /* BookingInstructions.swift */,
+				A1000001000000000001160 /* PriceBreakdown.swift */,
 			);
 			path = Booking;
 			sourceTree = "<group>";
@@ -758,6 +846,7 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000992 /* Booking */,
+				A1000001000000000001184 /* Business */,
 				A1000001000000000000606 /* Discovery */,
 				A1000001000000000000607 /* Dog */,
 				A1000001000000000000608 /* DynamicWorld */,
@@ -783,6 +872,7 @@
 				A1000001000000000000242 /* UserSettings.swift */,
 				A1000001000000000000244 /* Walk.swift */,
 				A1000001000000000000246 /* WalkModels.swift */,
+				A1000001000000000001156 /* AppMode.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -794,6 +884,13 @@
 				A1000001000000000000966 /* BusinessScheduleScreen.swift */,
 				A1000001000000000000968 /* BusinessClientsScreen.swift */,
 				A1000001000000000000970 /* BusinessEarningsScreen.swift */,
+				A1000001000000000001100 /* BusinessHomeScreen.swift */,
+				A1000001000000000001102 /* BusinessInboxScreen.swift */,
+				A1000001000000000001104 /* BusinessWalkConsoleScreen.swift */,
+				A1000001000000000001106 /* BusinessWelcomeDialog.swift */,
+				A1000001000000000001108 /* ClientDetailScreen.swift */,
+				A1000001000000000001110 /* ClientImportScreen.swift */,
+				A1000001000000000001112 /* ScanKeyScreen.swift */,
 			);
 			path = Business;
 			sourceTree = "<group>";
@@ -804,6 +901,12 @@
 				A1000001000000000000942 /* ClientDashboardScreen.swift */,
 				A1000001000000000000944 /* ClientBookingsScreen.swift */,
 				A1000001000000000000972 /* ClientInvoicesScreen.swift */,
+				A1000001000000000001114 /* BookingDetailScreen.swift */,
+				A1000001000000000001116 /* BookingFlowScreen.swift */,
+				A1000001000000000001118 /* ClientHomeScreen.swift */,
+				A1000001000000000001120 /* ClientMessagesScreen.swift */,
+				A1000001000000000001122 /* PriceBreakdownView.swift */,
+				A1000001000000000001124 /* ProviderSearchView.swift */,
 			);
 			path = Client;
 			sourceTree = "<group>";
@@ -857,6 +960,17 @@
 				A1000001000000000000418 /* WalkHistoryViewModel.swift */,
 				A1000001000000000000420 /* WalkViewModel.swift */,
 				A1000001000000000000422 /* WalkingPathViewModel.swift */,
+				A1000001000000000001140 /* EventsScreen.swift */,
+				A1000001000000000001142 /* FriendsListScreen.swift */,
+				A1000001000000000001144 /* GroupWalksScreen.swift */,
+				A1000001000000000001146 /* LostDogsScreen.swift */,
+				A1000001000000000001148 /* SocialHubScreenV2.swift */,
+				A1000001000000000001150 /* AppModeSwitcher.swift */,
+				A1000001000000000001152 /* ProfileCardView.swift */,
+				A1000001000000000001154 /* StatsCards.swift */,
+				A1000001000000000001170 /* BusinessViewModel.swift */,
+				A1000001000000000001172 /* ClientHomeViewModel.swift */,
+				A1000001000000000001174 /* StoryViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -885,6 +999,7 @@
 				A1000001000000000000862 /* MedicationSchedulerService.swift */,
 				A1000001000000000000910 /* NetworkMonitor.swift */,
 				A1000001000000000000926 /* OfflineMessageQueue.swift */,
+				A1000001000000000001176 /* MotionActivityService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -901,6 +1016,8 @@
 				A1000001000000000000270 /* MilestoneRepository.swift */,
 				A1000001000000000000994 /* PlannedWalkRepository.swift */,
 				A1000001000000000000272 /* UserRepository.swift */,
+				A1000001000000000001178 /* ProviderRepository.swift */,
+				A1000001000000000001180 /* StoryRepository.swift */,
 			);
 			path = Repositories;
 			sourceTree = "<group>";
@@ -1209,8 +1326,8 @@
 				A1000001000000000000440 /* ChatMessageRow.swift */,
 				A1000001000000000000442 /* DateSeparator.swift */,
 				A1000001000000000000444 /* PhotoMessagePicker.swift */,
-				A1000001000000000000814 /* BusinessInboxScreen.swift */,
 				A1000001000000000000816 /* QuickReplySheet.swift */,
+				A1000001000000000001126 /* MessageReactionPicker.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -1222,6 +1339,8 @@
 				A1000001000000000000448 /* BackgroundLocationPrompt.swift */,
 				A1000001000000000000450 /* CustomTextField.swift */,
 				A1000001000000000000452 /* ResponsiveLayout.swift */,
+				A1000001000000000001128 /* AdBannerPlaceholder.swift */,
+				A1000001000000000001130 /* ServiceCardView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1270,6 +1389,9 @@
 				A1000001000000000000470 /* PostDetailScreen.swift */,
 				A1000001000000000000472 /* ReactionPicker.swift */,
 				A1000001000000000000474 /* WalkPostCard.swift */,
+				A1000001000000000001132 /* DogReelCard.swift */,
+				A1000001000000000001134 /* StoriesRow.swift */,
+				A1000001000000000001136 /* StoryViewerSheet.swift */,
 			);
 			path = Feed;
 			sourceTree = "<group>";
@@ -1287,6 +1409,7 @@
 				A1000001000000000000930 /* MilestonesListScreen.swift */,
 				A1000001000000000000484 /* StreakBanner.swift */,
 				A1000001000000000000846 /* AnimationModifiers.swift */,
+				A1000001000000000001138 /* PointsGuideSheet.swift */,
 			);
 			path = Gamification;
 			sourceTree = "<group>";
@@ -1496,6 +1619,14 @@
 				A1000001000000000000842 /* KalmanFilter.swift */,
 			);
 			path = GPS;
+			sourceTree = "<group>";
+		};
+		A1000001000000000001184 /* Business */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001000000000001162 /* ClientKey.swift */,
+			);
+			path = Business;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1848,7 +1979,6 @@
 				A1000001000000000000811 /* InstagramStoryAdapter.swift in Sources */,
 				A1000001000000000000813 /* NotificationService.swift in Sources */,
 				A1000001000000000000929 /* VoiceGuidanceService.swift in Sources */,
-				A1000001000000000000815 /* BusinessInboxScreen.swift in Sources */,
 				A1000001000000000000817 /* QuickReplySheet.swift in Sources */,
 				A1000001000000000000871 /* AwayModeSettingsView.swift in Sources */,
 				A1000001000000000000819 /* LanguageSelectionView.swift in Sources */,
@@ -1908,6 +2038,48 @@
 				A1000001000000000000987 /* BookingStatus.swift in Sources */,
 				A1000001000000000000989 /* BookingServiceType.swift in Sources */,
 				A1000001000000000000991 /* BookingRepository.swift in Sources */,
+				A1000001000000000001101 /* BusinessHomeScreen.swift in Sources */,
+				A1000001000000000001103 /* BusinessInboxScreen.swift in Sources */,
+				A1000001000000000001105 /* BusinessWalkConsoleScreen.swift in Sources */,
+				A1000001000000000001107 /* BusinessWelcomeDialog.swift in Sources */,
+				A1000001000000000001109 /* ClientDetailScreen.swift in Sources */,
+				A1000001000000000001111 /* ClientImportScreen.swift in Sources */,
+				A1000001000000000001113 /* ScanKeyScreen.swift in Sources */,
+				A1000001000000000001115 /* BookingDetailScreen.swift in Sources */,
+				A1000001000000000001117 /* BookingFlowScreen.swift in Sources */,
+				A1000001000000000001119 /* ClientHomeScreen.swift in Sources */,
+				A1000001000000000001121 /* ClientMessagesScreen.swift in Sources */,
+				A1000001000000000001123 /* PriceBreakdownView.swift in Sources */,
+				A1000001000000000001125 /* ProviderSearchView.swift in Sources */,
+				A1000001000000000001127 /* MessageReactionPicker.swift in Sources */,
+				A1000001000000000001129 /* AdBannerPlaceholder.swift in Sources */,
+				A1000001000000000001131 /* ServiceCardView.swift in Sources */,
+				A1000001000000000001133 /* DogReelCard.swift in Sources */,
+				A1000001000000000001135 /* StoriesRow.swift in Sources */,
+				A1000001000000000001137 /* StoryViewerSheet.swift in Sources */,
+				A1000001000000000001139 /* PointsGuideSheet.swift in Sources */,
+				A1000001000000000001141 /* EventsScreen.swift in Sources */,
+				A1000001000000000001143 /* FriendsListScreen.swift in Sources */,
+				A1000001000000000001145 /* GroupWalksScreen.swift in Sources */,
+				A1000001000000000001147 /* LostDogsScreen.swift in Sources */,
+				A1000001000000000001149 /* SocialHubScreenV2.swift in Sources */,
+				A1000001000000000001151 /* AppModeSwitcher.swift in Sources */,
+				A1000001000000000001153 /* ProfileCardView.swift in Sources */,
+				A1000001000000000001155 /* StatsCards.swift in Sources */,
+				A1000001000000000001157 /* AppMode.swift in Sources */,
+				A1000001000000000001159 /* BookingInstructions.swift in Sources */,
+				A1000001000000000001161 /* PriceBreakdown.swift in Sources */,
+				A1000001000000000001163 /* ClientKey.swift in Sources */,
+				A1000001000000000001165 /* BusinessTabView.swift in Sources */,
+				A1000001000000000001167 /* ClientTabView.swift in Sources */,
+				A1000001000000000001169 /* ModeAwareRootView.swift in Sources */,
+				A1000001000000000001171 /* BusinessViewModel.swift in Sources */,
+				A1000001000000000001173 /* ClientHomeViewModel.swift in Sources */,
+				A1000001000000000001175 /* StoryViewModel.swift in Sources */,
+				A1000001000000000001177 /* MotionActivityService.swift in Sources */,
+				A1000001000000000001179 /* ProviderRepository.swift in Sources */,
+				A1000001000000000001181 /* StoryRepository.swift in Sources */,
+				A1000001000000000001183 /* PriceCalculator.swift in Sources */,
 
 			);
 			runOnlyForDeploymentPostprocessing = 0;
