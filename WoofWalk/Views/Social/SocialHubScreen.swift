@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SocialHubScreen: View {
     @State private var selectedTab = 0
+    @State private var showCreatePost = false
 
     var body: some View {
         NavigationStack {
@@ -40,11 +41,19 @@ struct SocialHubScreen: View {
             }
             .navigationTitle("Social")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button(action: { showCreatePost = true }) {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.turquoise60)
+                    }
+
                     NavigationLink(destination: ChatListScreen()) {
                         Image(systemName: "bubble.left.and.bubble.right")
                     }
                 }
+            }
+            .sheet(isPresented: $showCreatePost) {
+                CreatePostSheet(onPost: { _, _ in })
             }
         }
     }

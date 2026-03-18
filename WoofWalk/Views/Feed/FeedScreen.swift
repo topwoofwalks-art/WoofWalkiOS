@@ -5,22 +5,87 @@ struct FeedScreen: View {
     @State private var showCreatePost = false
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Tab picker
-                Picker("Feed", selection: $viewModel.feedMode) {
-                    ForEach(FeedMode.allCases) { mode in
-                        Text(mode.rawValue).tag(mode)
+        VStack(spacing: 0) {
+            // Stories row
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    // "Your Story" button
+                    VStack(spacing: 4) {
+                        ZStack(alignment: .bottomTrailing) {
+                            Circle()
+                                .fill(Color(red: 0/255, green: 160/255, blue: 176/255).opacity(0.15))
+                                .frame(width: 64, height: 64)
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .font(.title2)
+                                        .foregroundColor(Color(red: 0/255, green: 160/255, blue: 176/255))
+                                )
+
+                            Circle()
+                                .fill(Color(red: 0/255, green: 160/255, blue: 176/255))
+                                .frame(width: 22, height: 22)
+                                .overlay(
+                                    Image(systemName: "plus")
+                                        .font(.caption2.bold())
+                                        .foregroundColor(.white)
+                                )
+                                .offset(x: 2, y: 2)
+                        }
+
+                        Text("Your Story")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    // Placeholder story circles
+                    ForEach(0..<5, id: \.self) { i in
+                        VStack(spacing: 4) {
+                            Circle()
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [Color(red: 0/255, green: 160/255, blue: 176/255), .orange],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2
+                                )
+                                .frame(width: 64, height: 64)
+                                .overlay(
+                                    Circle()
+                                        .fill(Color.gray.opacity(0.2))
+                                        .padding(3)
+                                        .overlay(
+                                            Image(systemName: "pawprint.fill")
+                                                .foregroundColor(.gray.opacity(0.5))
+                                        )
+                                )
+
+                            Text("Dog \(i + 1)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
                     }
                 }
-                .pickerStyle(.segmented)
                 .padding(.horizontal)
-                .padding(.vertical, 8)
-                .onChange(of: viewModel.feedMode) { newMode in
-                    viewModel.switchMode(newMode)
-                }
+            }
+            .padding(.vertical, 8)
 
-                ScrollView {
+            // Tab picker
+            Picker("Feed", selection: $viewModel.feedMode) {
+                ForEach(FeedMode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .onChange(of: viewModel.feedMode) { newMode in
+                viewModel.switchMode(newMode)
+            }
+
+            ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(viewModel.posts) { post in
                             WalkPostCard(
@@ -68,23 +133,14 @@ struct FeedScreen: View {
                 }
                 .refreshable { viewModel.refresh() }
             }
-            .navigationTitle("Feed")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showCreatePost = true }) {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundColor(.turquoise60)
-                    }
-                }
-            }
-            .sheet(isPresented: $showCreatePost) {
-                CreatePostSheet(onPost: { text, photoUrl in
-                    viewModel.createPost(text: text, photoUrl: photoUrl)
-                })
-            }
-            .sheet(item: $viewModel.selectedPost) { post in
-                PostDetailScreen(post: post)
-            }
+        }
+        .sheet(isPresented: $showCreatePost) {
+            CreatePostSheet(onPost: { text, photoUrl in
+                viewModel.createPost(text: text, photoUrl: photoUrl)
+            })
+        }
+        .sheet(item: $viewModel.selectedPost) { post in
+            PostDetailScreen(post: post)
         }
     }
 }
