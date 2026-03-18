@@ -1,5 +1,6 @@
 import SwiftUI
 import MapKit
+import CoreLocation
 
 // MARK: - MapScreen Controls Extension
 
@@ -131,7 +132,8 @@ extension MapScreen {
     }
 
     var bottomLeftButtons: some View {
-        VStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
+            nearestBinCard
             quickAddButton(
                 icon: "trash.fill",
                 color: .green,
@@ -146,26 +148,45 @@ extension MapScreen {
     }
 
     @ViewBuilder
+    var nearestBinCard: some View {
+        if let userLoc = locationManager.location,
+           let nearestBin = mapViewModel.filteredPOIs
+            .filter({ $0.poiType == .bin })
+            .compactMap({ poi -> (POI, Double)? in
+                let distance = CLLocation(latitude: poi.latitude, longitude: poi.longitude)
+                    .distance(from: CLLocation(latitude: userLoc.latitude, longitude: userLoc.longitude))
+                return (poi, distance)
+            })
+            .min(by: { $0.1 < $1.1 }) {
+
+            HStack(spacing: 6) {
+                Image(systemName: "trash.fill")
+                    .font(.caption)
+                    .foregroundColor(.green)
+                Text(FormatUtils.formatDistance(nearestBin.1))
+                    .font(.caption.bold())
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 8).fill(.regularMaterial))
+        }
+    }
+
+    @ViewBuilder
     var bottomRightButtons: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             if walkTrackingViewModel.isWalkActive {
                 Button(action: mapViewModel.cycleCameraMode) {
                     Image(systemName: mapViewModel.cameraModeIcon)
-                        .font(.title3)
+                        .font(.body)
                         .foregroundColor(.white)
-                        .padding(12)
+                        .frame(width: 44, height: 44)
                         .background(Circle().fill(.blue))
                 }
             }
 
             // Nearby pubs
             pubsButton
-
-            // Livestock mode toggle
-            livestockModeButton
-
-            // Walking paths toggle
-            walkingPathsButton
 
             addPOIButton
             planningModeButton
@@ -202,9 +223,9 @@ extension MapScreen {
     var pubsButton: some View {
         Button(action: { showNearbyPubsSheet = true }) {
             Image(systemName: "mug.fill")
-                .font(.title3)
+                .font(.body)
                 .foregroundColor(.white)
-                .padding(12)
+                .frame(width: 44, height: 44)
                 .background(Circle().fill(Color(hex: 0xFF8F00)))
         }
     }
@@ -214,9 +235,9 @@ extension MapScreen {
     var livestockModeButton: some View {
         Button(action: { showLivestockMode.toggle() }) {
             Image(systemName: showLivestockMode ? "hare.fill" : "hare")
-                .font(.title3)
+                .font(.body)
                 .foregroundColor(.white)
-                .padding(12)
+                .frame(width: 44, height: 44)
                 .background(Circle().fill(showLivestockMode ? .brown : .blue.opacity(0.8)))
         }
     }
@@ -226,9 +247,9 @@ extension MapScreen {
     var walkingPathsButton: some View {
         Button(action: { showWalkingPaths.toggle() }) {
             Image(systemName: showWalkingPaths ? "point.topleft.down.to.point.bottomright.curvepath.fill" : "point.topleft.down.to.point.bottomright.curvepath")
-                .font(.title3)
+                .font(.body)
                 .foregroundColor(.white)
-                .padding(12)
+                .frame(width: 44, height: 44)
                 .background(Circle().fill(showWalkingPaths ? .green : .blue.opacity(0.8)))
         }
     }
@@ -238,9 +259,9 @@ extension MapScreen {
     var addPOIButton: some View {
         Button(action: addPOI) {
             Image(systemName: "plus")
-                .font(.title2)
+                .font(.body)
                 .foregroundColor(.white)
-                .padding(16)
+                .frame(width: 44, height: 44)
                 .background(Circle().fill(.blue))
         }
     }
@@ -248,20 +269,28 @@ extension MapScreen {
     var planningModeButton: some View {
         Button(action: { isPlanningMode.toggle() }) {
             Image(systemName: isPlanningMode ? "pencil.circle.fill" : "pencil.circle")
-                .font(.title2)
+                .font(.body)
                 .foregroundColor(.white)
-                .padding(16)
+                .frame(width: 44, height: 44)
                 .background(Circle().fill(isPlanningMode ? .orange : .blue.opacity(0.8)))
         }
     }
 
     var walkToggleButton: some View {
         Button(action: toggleWalk) {
-            Image(systemName: walkTrackingViewModel.isWalkActive ? "stop.fill" : "play.fill")
-                .font(.title2)
-                .foregroundColor(.white)
-                .padding(16)
-                .background(Circle().fill(walkTrackingViewModel.isWalkActive ? .red : .green))
+            HStack(spacing: 8) {
+                Image(systemName: walkTrackingViewModel.isWalkActive ? "stop.fill" : "play.fill")
+                    .font(.title3)
+                Text(walkTrackingViewModel.isWalkActive ? "Stop" : "Walk")
+                    .font(.headline)
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(
+                Capsule().fill(walkTrackingViewModel.isWalkActive ? .red : Color(red: 0/255, green: 160/255, blue: 176/255))
+            )
+            .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
         }
     }
 
