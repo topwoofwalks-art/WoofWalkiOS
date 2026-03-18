@@ -131,7 +131,7 @@ class MapViewModel: ObservableObject {
                     print("[MapViewModel] Failed to load hazards: \(error?.localizedDescription ?? "unknown")")
                     return
                 }
-                self?.hazardReports = docs.compactMap { doc in
+                self?.hazardReports = docs.compactMap { doc -> HazardReport? in
                     let data = doc.data()
                     guard let type = data["type"] as? String,
                           let severity = data["severity"] as? String,
@@ -165,7 +165,7 @@ class MapViewModel: ObservableObject {
                     print("[MapViewModel] Failed to load trail conditions: \(error?.localizedDescription ?? "unknown")")
                     return
                 }
-                self?.trailConditions = docs.compactMap { doc in
+                self?.trailConditions = docs.compactMap { doc -> TrailCondition? in
                     let data = doc.data()
                     guard let type = data["type"] as? String,
                           let lat = data["lat"] as? Double,
