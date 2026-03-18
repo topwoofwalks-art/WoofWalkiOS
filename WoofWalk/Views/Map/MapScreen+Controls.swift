@@ -43,10 +43,10 @@ extension MapScreen {
         .animation(.easeInOut(duration: 0.3), value: locationManager.bearing)
     }
 
-    // MARK: - Top Right Controls
+    // MARK: - Top Right Controls (horizontal row matching Android)
 
     var topRightControls: some View {
-        VStack(spacing: 8) {
+        HStack(spacing: 8) {
             Button(action: handleCarButton) {
                 Image(systemName: "car.fill")
                     .font(.title3)
@@ -72,10 +72,6 @@ extension MapScreen {
                     .padding(8)
                     .background(Circle().fill(.regularMaterial))
             }
-
-            livestockModeButton
-
-            walkingPathsButton
         }
     }
 
@@ -180,6 +176,7 @@ extension MapScreen {
     @ViewBuilder
     var bottomRightButtons: some View {
         VStack(spacing: 10) {
+            // Walk-active controls
             if walkTrackingViewModel.isWalkActive {
                 Button(action: mapViewModel.cycleCameraMode) {
                     Image(systemName: mapViewModel.cameraModeIcon)
@@ -188,12 +185,12 @@ extension MapScreen {
                         .frame(width: 44, height: 44)
                         .background(Circle().fill(.blue))
                 }
+
+                livestockModeButton
+                walkingPathsButton
             }
 
-            // Nearby pubs
-            pubsButton
-
-            // Night mode toggle
+            // Night mode (always visible)
             Button(action: { showNightMode.toggle() }) {
                 Image(systemName: showNightMode ? "moon.fill" : "moon")
                     .font(.body)
@@ -202,17 +199,8 @@ extension MapScreen {
                     .background(Circle().fill(.regularMaterial))
             }
 
-            // Fog of war toggle
-            Button(action: { showFogOfWar.toggle() }) {
-                Image(systemName: showFogOfWar ? "eye.slash.fill" : "eye")
-                    .font(.body)
-                    .foregroundColor(showFogOfWar ? .purple : .primary)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(.regularMaterial))
-            }
-
+            // Core buttons always visible
             addPOIButton
-            plannedWalksButton
             planningModeButton
         }
     }
