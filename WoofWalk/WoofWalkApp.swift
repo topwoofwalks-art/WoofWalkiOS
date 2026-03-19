@@ -1,12 +1,14 @@
 import SwiftUI
 import Firebase
+import FirebaseAuth
 
 @main
 struct WoofWalkApp: App {
     @StateObject private var screenshotAutomation = ScreenshotAutomation.shared
+    @StateObject private var authViewModel = AuthViewModel()
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     init() {
-        // Only configure Firebase if GoogleService-Info.plist exists
         if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
             FirebaseApp.configure()
         } else {
@@ -16,15 +18,67 @@ struct WoofWalkApp: App {
         NotificationService.shared.configure()
     }
 
+    private var isTestMode: Bool {
+        screenshotAutomation.isScreenshotMode || screenshotAutomation.isFullTestMode
+    }
+
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .task {
-                    await NotificationService.shared.requestPermission()
+            Group {
+                if isTestMode {
+                    // CI/test mode: skip onboarding and auth, go straight to app
+                    // Auth is handled by ScreenshotAutomation.attemptSignIn()
+                    MainTabView()
+                } else if !hasCompletedOnboarding {
+                    OnboardingView(onComplete: {
+                        hasCompletedOnboarding = true
+                    })
+                } else if authViewModel.authState == .authenticated {
+                    MainTabView()
+                } else {
+                    AuthRootView(authViewModel: authViewModel)
                 }
-                .task {
-                    await screenshotAutomation.runAutomation()
-                }
+            }
+            .task {
+                await NotificationService.shared.requestPermission()
+            }
+            .task {
+                await screenshotAutomation.runAutomation()
+            }
+        }
+    }
+}
+
+/// Auth flow: login / signup / forgot password
+struct AuthRootView: View {
+    @ObservedObject var authViewModel: AuthViewModel
+    @State private var showSignup = false
+    @State private var showForgotPassword = false
+
+    var body: some View {
+        NavigationView {
+            if authViewModel.authState == .loading {
+                ProgressView("Signing in...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if showSignup {
+                SignupView(
+                    onNavigateToLogin: { showSignup = false },
+                    onSignupSuccess: { }
+                )
+            } else if showForgotPassword {
+                ForgotPasswordView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            Button("Back") { showForgotPassword = false }
+                        }
+                    }
+            } else {
+                LoginView(
+                    onNavigateToSignup: { showSignup = true },
+                    onNavigateToForgotPassword: { showForgotPassword = true },
+                    onLoginSuccess: { }
+                )
+            }
         }
     }
 }

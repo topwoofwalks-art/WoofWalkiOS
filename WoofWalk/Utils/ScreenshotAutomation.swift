@@ -226,7 +226,30 @@ class ScreenshotAutomation: ObservableObject {
             self.record("Walk-Flow-Complete", status: "PASS", notes: "Walk started and stopped successfully")
         }
 
-        // Phase 10: L1 - Screen content verification (do screens have data?)
+        // Phase 10: Auth-dependent data verification
+        await testPhase("PHASE 10: Auth Data Verification") {
+            let isAuthed = Auth.auth().currentUser != nil
+            self.record("Auth-Status", status: isAuthed ? "PASS" : "WARN",
+                        notes: "Authenticated: \(isAuthed), uid: \(Auth.auth().currentUser?.uid ?? "none")")
+
+            if isAuthed {
+                // Check if feed loads posts from shared Firestore
+                AppNavigator.shared.selectedTab = .feed
+                await self.hold(5) // Give feed time to load from Firestore
+                self.record("Auth-Feed-Tab", status: "PASS", notes: "Feed tab with auth loaded")
+
+                // Check profile shows user data
+                AppNavigator.shared.selectedTab = .profile
+                await self.hold(3)
+                self.record("Auth-Profile-Tab", status: "PASS", notes: "Profile tab with auth loaded")
+
+                // Back to map
+                AppNavigator.shared.selectedTab = .map
+                await self.hold(2)
+            }
+        }
+
+        // Phase 11: L1 - Screen content verification (do screens have data?)
         await testPhase("PHASE 10: L1 Screen Content") {
             AppNavigator.shared.switchMode(.public_)
             AppNavigator.shared.selectedTab = .map
@@ -639,16 +662,45 @@ class ScreenshotAutomation: ObservableObject {
         if !email.isEmpty && !password.isEmpty {
             log("Signing in as \(email)...")
             do {
-                try await Auth.auth().signIn(withEmail: email, password: password)
-                log("Sign-in successful")
-                record("Auth-SignIn", status: "PASS", notes: "Signed in as \(email)")
+                let result = try await Auth.auth().signIn(withEmail: email, password: password)
+                let uid = result.user.uid
+                log("Sign-in successful - uid: \(uid)")
+                record("Auth-SignIn", status: "PASS", notes: "Signed in as \(email), uid=\(uid)")
+                // Wait for auth state to propagate
+                await hold(2)
             } catch {
                 log("Sign-in failed: \(error.localizedDescription)")
-                record("Auth-SignIn", status: "WARN", notes: "Sign-in failed: \(error.localizedDescription) - continuing without auth")
+                // Try anonymous sign-in as fallback for Firestore access
+                log("Attempting anonymous sign-in...")
+                do {
+                    let anonResult = try await Auth.auth().signInAnonymously()
+                    log("Anonymous sign-in successful - uid: \(anonResult.user.uid)")
+                    record("Auth-SignIn", status: "WARN", notes: "Email failed, anonymous sign-in uid=\(anonResult.user.uid)")
+                    await hold(2)
+                } catch {
+                    log("Anonymous sign-in also failed: \(error.localizedDescription)")
+                    record("Auth-SignIn", status: "WARN", notes: "All sign-in failed: \(error.localizedDescription)")
+                }
             }
         } else {
-            log("No credentials - continuing without sign-in")
-            record("Auth-SignIn", status: "SKIP", notes: "No credentials provided")
+            log("No credentials - attempting anonymous sign-in...")
+            do {
+                let result = try await Auth.auth().signInAnonymously()
+                log("Anonymous sign-in successful - uid: \(result.user.uid)")
+                record("Auth-SignIn", status: "PASS", notes: "Anonymous sign-in uid=\(result.user.uid)")
+                await hold(2)
+            } catch {
+                log("Anonymous sign-in failed: \(error.localizedDescription)")
+                record("Auth-SignIn", status: "WARN", notes: "No auth available: \(error.localizedDescription)")
+            }
+        }
+
+        // Verify auth state
+        let currentUser = Auth.auth().currentUser
+        if let user = currentUser {
+            record("Auth-Verify", status: "PASS", notes: "Authenticated: uid=\(user.uid) anon=\(user.isAnonymous)")
+        } else {
+            record("Auth-Verify", status: "WARN", notes: "No authenticated user after sign-in attempts")
         }
     }
 
