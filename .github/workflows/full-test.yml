@@ -105,8 +105,12 @@ jobs:
             xcrun simctl install "$DEVICE" "${{ steps.app.outputs.path }}"
             sleep 2
 
-            # Launch in full test mode
-            xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE" -full-test-mode > test-results/app-output-run$RETRY.log 2>&1 &
+            # Launch in full test mode with credentials as args
+            xcrun simctl launch --console-pty "$DEVICE" "$BUNDLE" \
+              -full-test-mode \
+              -test-email "${TEST_EMAIL:-}" \
+              -test-password "${TEST_PASSWORD:-}" \
+              > test-results/app-output-run$RETRY.log 2>&1 &
             APP_PID=$!
 
             # Wait for test to complete (max 5 minutes per run)

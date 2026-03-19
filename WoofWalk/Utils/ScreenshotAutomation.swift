@@ -653,10 +653,19 @@ class ScreenshotAutomation: ObservableObject {
 
     // MARK: - Utilities
 
+    /// Read a launch argument value: -key value
+    private func launchArg(_ key: String) -> String? {
+        let args = CommandLine.arguments
+        guard let idx = args.firstIndex(of: "-\(key)"), idx + 1 < args.count else { return nil }
+        return args[idx + 1]
+    }
+
     private func attemptSignIn() async {
-        let email = ProcessInfo.processInfo.environment["TEST_EMAIL"]
+        let email = launchArg("test-email")
+            ?? ProcessInfo.processInfo.environment["TEST_EMAIL"]
             ?? UserDefaults.standard.string(forKey: "TEST_EMAIL") ?? ""
-        let password = ProcessInfo.processInfo.environment["TEST_PASSWORD"]
+        let password = launchArg("test-password")
+            ?? ProcessInfo.processInfo.environment["TEST_PASSWORD"]
             ?? UserDefaults.standard.string(forKey: "TEST_PASSWORD") ?? ""
 
         if !email.isEmpty && !password.isEmpty {
