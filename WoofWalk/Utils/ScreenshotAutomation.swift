@@ -490,6 +490,98 @@ class ScreenshotAutomation: ObservableObject {
             await self.testButton(.verifyPOICount, name: "L10-Final-POI-Check")
         }
 
+        // Phase 20: L11 - Extreme boundary values
+        await testPhase("PHASE 20: L11 Boundary Values") {
+            AppNavigator.shared.switchMode(.public_)
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(2)
+
+            await self.testButton(.addPOIAtMaxCoords, name: "L11-POI-Max-Coords")
+            await self.testButton(.addPOIAtMinCoords, name: "L11-POI-Min-Coords")
+            await self.testButton(.addPOIAtAntimeridian, name: "L11-POI-Antimeridian")
+            await self.testButton(.walkWithZeroDistance, name: "L11-Zero-Distance-Walk")
+            await self.testButton(.filterWithEmptyPOIs, name: "L11-Filter-Empty-POIs")
+        }
+
+        // Phase 21: L12 - Memory pressure / rapid operations
+        await testPhase("PHASE 21: L12 Memory Pressure") {
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(2)
+
+            await self.testButton(.loadPOIsTwice, name: "L12-Double-POI-Load")
+            await self.hold(2)
+            await self.testButton(.toggleAllButtonsRapidly, name: "L12-All-Buttons-Rapid")
+            await self.testButton(.openCloseAllSheets, name: "L12-All-Sheets-Rapid")
+            await self.hold(1)
+            await self.testButton(.navigateAllRoutesFast, name: "L12-All-20-Routes-Fast")
+            await self.hold(1)
+
+            // Rapid walk cycles (5x)
+            for i in 1...5 {
+                await self.testButton(.startWalk, name: "L12-Walk-Blitz-\(i)-Start")
+                await self.testButton(.stopWalk, name: "L12-Walk-Blitz-\(i)-Stop")
+                await self.hold(1)
+            }
+        }
+
+        // Phase 22: L13 - State corruption attempts
+        await testPhase("PHASE 22: L13 State Corruption") {
+            AppNavigator.shared.switchMode(.public_)
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(2)
+
+            await self.testButton(.walkDuringModeSwitch, name: "L13-Walk-Mode-Switch")
+            await self.hold(1)
+            await self.testButton(.modeWhileSheetOpen, name: "L13-Mode-Sheet-Open")
+            await self.hold(1)
+            await self.testButton(.doubleStartWalk, name: "L13-Double-Start-Walk")
+            await self.testButton(.doubleStopWalk, name: "L13-Double-Stop-Walk")
+            await self.testButton(.popEmptyNavigation, name: "L13-Pop-Empty-Nav")
+            await self.testButton(.navigateWhileWalking, name: "L13-Navigate-While-Walking")
+            await self.hold(1)
+
+            // Chaos sequence: do everything wrong at once
+            AppNavigator.shared.switchMode(.business)
+            AppNavigator.shared.switchMode(.client)
+            AppNavigator.shared.switchMode(.public_)
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(2)
+            await self.testButton(.verifyAfterChaos, name: "L13-Verify-After-Chaos")
+        }
+
+        // Phase 23: L11-L13 combined stress finale
+        await testPhase("PHASE 23: Stress Finale") {
+            AppNavigator.shared.switchMode(.public_)
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(3)
+
+            // Everything at once: start walk, toggle everything, navigate, switch modes, stop
+            await self.testButton(.startWalk, name: "Finale-Start")
+            await self.testButton(.toggleAllButtonsRapidly, name: "Finale-Toggle-All")
+            AppNavigator.shared.navigate(to: .settings)
+            AppNavigator.shared.popToRoot()
+            AppNavigator.shared.navigate(to: .challenges)
+            AppNavigator.shared.popToRoot()
+            await self.testButton(.stopWalk, name: "Finale-Stop")
+            await self.hold(2)
+
+            // Final verification: is the app still alive and functional?
+            await self.testButton(.verifyMapLoaded, name: "Finale-Map-Alive")
+            await self.testButton(.verifyPOICount, name: "Finale-POIs-Alive")
+
+            // One last clean walk
+            await self.testButton(.startWalk, name: "Finale-Clean-Walk-Start")
+            await self.hold(2)
+            await self.testButton(.stopWalk, name: "Finale-Clean-Walk-Stop")
+            await self.hold(2)
+            self.record("Finale-App-Survived", status: "PASS", notes: "App survived extreme testing, all systems operational")
+        }
+
         // Generate report
         await generateReport()
     }

@@ -66,6 +66,25 @@ enum TestCommand: Equatable {
     case rapidTabSwitch
     case rapidRouteNavigation
     case stressTestFilterToggle
+    // L11 extreme - boundary values
+    case addPOIAtMaxCoords
+    case addPOIAtMinCoords
+    case addPOIAtAntimeridian
+    case walkWithZeroDistance
+    case filterWithEmptyPOIs
+    case verifyAfterChaos
+    // L12 extreme - memory pressure
+    case loadPOIsTwice
+    case toggleAllButtonsRapidly
+    case openCloseAllSheets
+    case navigateAllRoutesFast
+    // L13 extreme - state corruption
+    case walkDuringModeSwitch
+    case modeWhileSheetOpen
+    case doubleStartWalk
+    case doubleStopWalk
+    case popEmptyNavigation
+    case navigateWhileWalking
 }
 
 /// Singleton coordinator for button-level testing.

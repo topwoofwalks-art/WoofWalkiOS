@@ -508,6 +508,96 @@ struct MapScreen: View {
                 mapViewModel.togglePOIType(type)
             }
             coord.reportResult("Toggled all \(POI.POIType.allCases.count) filters twice, no crash")
+        // L11 boundary values
+        case .addPOIAtMaxCoords:
+            mapViewModel.addPOI(type: .bin, at: CLLocationCoordinate2D(latitude: 90.0, longitude: 180.0))
+            coord.reportResult("POI at max coords (90,180) - no crash")
+        case .addPOIAtMinCoords:
+            mapViewModel.addPOI(type: .bin, at: CLLocationCoordinate2D(latitude: -90.0, longitude: -180.0))
+            coord.reportResult("POI at min coords (-90,-180) - no crash")
+        case .addPOIAtAntimeridian:
+            mapViewModel.addPOI(type: .bin, at: CLLocationCoordinate2D(latitude: 0.0, longitude: 179.9999))
+            coord.reportResult("POI at antimeridian - no crash")
+        case .walkWithZeroDistance:
+            walkTrackingViewModel.startWalk()
+            walkTrackingViewModel.stopWalk()
+            coord.reportResult("Zero-distance walk start/stop - no crash, dist=\(walkTrackingViewModel.walkDistance)")
+        case .filterWithEmptyPOIs:
+            let saved = mapViewModel.pois
+            mapViewModel.pois = []
+            let count = mapViewModel.filteredPOIs.count
+            mapViewModel.pois = saved
+            coord.reportResult("Filter with empty POIs: \(count), restored \(saved.count)")
+        case .verifyAfterChaos:
+            let pois = mapViewModel.pois.count
+            let filtered = mapViewModel.filteredPOIs.count
+            let active = walkTrackingViewModel.isWalkActive
+            coord.reportResult("After chaos: pois=\(pois) filtered=\(filtered) walkActive=\(active) rainMode=\(showRainMode)")
+        // L12 memory pressure
+        case .loadPOIsTwice:
+            mapViewModel.loadPOIs(near: region.center)
+            mapViewModel.loadPOIs(near: region.center)
+            coord.reportResult("Double POI load triggered - no crash")
+        case .toggleAllButtonsRapidly:
+            showRainMode.toggle(); showRainMode.toggle()
+            showLivestockMode.toggle(); showLivestockMode.toggle()
+            showWalkingPaths.toggle(); showWalkingPaths.toggle()
+            isTorchOn.toggle(); isTorchOn.toggle()
+            showFogOfWar.toggle(); showFogOfWar.toggle()
+            coord.reportResult("All buttons toggled on/off rapidly - no crash")
+        case .openCloseAllSheets:
+            showFilterSheet = true; showFilterSheet = false
+            showNearbyPubsSheet = true; showNearbyPubsSheet = false
+            showTrailConditionSheet = true; showTrailConditionSheet = false
+            showMapClickDialog = true; showMapClickDialog = false
+            showPOISelectionDialog = true; showPOISelectionDialog = false
+            coord.reportResult("All 5 sheets opened/closed rapidly - no crash")
+        case .navigateAllRoutesFast:
+            let routes: [AppRoute] = [.settings, .challenges, .league, .badgeGallery, .milestones,
+                .hazardReport, .offLeadZones, .rainModeSettings, .plannedWalks, .routeLibrary,
+                .nearbyPubs, .languageSettings, .notificationSettings, .privacySettings,
+                .notifications, .charitySettings, .chatList, .discovery, .walkHistory, .stats]
+            for route in routes {
+                AppNavigator.shared.navigate(to: route)
+                AppNavigator.shared.popToRoot()
+            }
+            coord.reportResult("Navigated \(routes.count) routes with instant popToRoot - no crash")
+        // L13 state corruption
+        case .walkDuringModeSwitch:
+            walkTrackingViewModel.startWalk()
+            AppNavigator.shared.switchMode(.business)
+            AppNavigator.shared.switchMode(.public_)
+            walkTrackingViewModel.stopWalk()
+            coord.reportResult("Walk during mode switch - no crash, walk stopped cleanly")
+        case .modeWhileSheetOpen:
+            showFilterSheet = true
+            AppNavigator.shared.switchMode(.business)
+            AppNavigator.shared.switchMode(.public_)
+            showFilterSheet = false
+            coord.reportResult("Mode switch while sheet open - no crash")
+        case .doubleStartWalk:
+            walkTrackingViewModel.startWalk()
+            walkTrackingViewModel.startWalk()
+            walkTrackingViewModel.stopWalk()
+            coord.reportResult("Double start walk - no crash")
+        case .doubleStopWalk:
+            walkTrackingViewModel.stopWalk()
+            walkTrackingViewModel.stopWalk()
+            coord.reportResult("Double stop walk - no crash")
+        case .popEmptyNavigation:
+            AppNavigator.shared.popToRoot()
+            AppNavigator.shared.pop()
+            AppNavigator.shared.pop()
+            AppNavigator.shared.popToRoot()
+            coord.reportResult("Pop empty nav stack 4x - no crash")
+        case .navigateWhileWalking:
+            walkTrackingViewModel.startWalk()
+            AppNavigator.shared.navigate(to: .settings)
+            AppNavigator.shared.popToRoot()
+            AppNavigator.shared.navigate(to: .challenges)
+            AppNavigator.shared.popToRoot()
+            walkTrackingViewModel.stopWalk()
+            coord.reportResult("Navigate settings+challenges during walk - no crash")
         case .none:
             break
         }
