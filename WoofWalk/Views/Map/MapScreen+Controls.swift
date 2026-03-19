@@ -28,6 +28,7 @@ extension MapScreen {
                     .foregroundColor(carLocation != nil ? .cyan : .primary)
                     .padding(8)
                     .background(Circle().fill(.regularMaterial))
+                    .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
             }
 
             Button(action: { showFilterSheet = true }) {
@@ -46,6 +47,7 @@ extension MapScreen {
                     .foregroundColor(isTorchOn ? .yellow : .primary)
                     .padding(8)
                     .background(Circle().fill(.regularMaterial))
+                    .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
             }
 
             livestockModeButton
@@ -176,6 +178,7 @@ extension MapScreen {
                         Circle().fill(.regularMaterial)
                     }
                 }
+                .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
         }
     }
 
@@ -210,6 +213,7 @@ extension MapScreen {
                 .foregroundColor(.white)
                 .frame(width: 44, height: 44)
                 .background(Circle().fill(Color(hex: 0xFF8F00)))
+                .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
         }
     }
 
@@ -228,6 +232,7 @@ extension MapScreen {
                 .foregroundColor(showLivestockMode ? .brown : .primary)
                 .padding(8)
                 .background(Circle().fill(.regularMaterial))
+                .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
         }
     }
 
@@ -254,6 +259,7 @@ extension MapScreen {
                 .foregroundColor(showWalkingPaths ? .green : .primary)
                 .padding(8)
                 .background(Circle().fill(.regularMaterial))
+                .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
         }
     }
 
@@ -266,6 +272,7 @@ extension MapScreen {
                 .foregroundColor(.white)
                 .frame(width: 44, height: 44)
                 .background(Circle().fill(.blue))
+                .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
         }
     }
 
@@ -306,6 +313,7 @@ extension MapScreen {
                 .foregroundColor(.white)
                 .padding(12)
                 .background(Circle().fill(color))
+                .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
         }
     }
 }
@@ -319,5 +327,6 @@ extension View {
             .foregroundColor(.primary)
             .padding(8)
             .background(Circle().fill(.regularMaterial))
+            .overlay(Circle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
     }
 }
