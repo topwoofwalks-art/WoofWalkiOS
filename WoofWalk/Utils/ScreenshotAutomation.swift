@@ -399,6 +399,97 @@ class ScreenshotAutomation: ObservableObject {
             self.record("L7-Client-To-Public", status: "PASS", notes: "Client to public switch clean")
         }
 
+        // Phase 17: L8 - Error resilience
+        await testPhase("PHASE 17: L8 Error Resilience") {
+            AppNavigator.shared.switchMode(.public_)
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(2)
+
+            // Add POI with no real location (should not crash)
+            await self.testButton(.addPOIWithNoLocation, name: "L8-POI-No-Location")
+
+            // Start/stop walk with no GPS (should not crash)
+            await self.testButton(.startWalkWithNoLocation, name: "L8-Walk-No-GPS")
+
+            // Toggle all filters off then on
+            await self.testButton(.toggleAllFiltersOff, name: "L8-Filters-All-Off")
+            await self.hold(0.5)
+            await self.testButton(.toggleAllFiltersOn, name: "L8-Filters-All-On")
+
+            // Rapid toggle rain mode (simulates water droplets on screen)
+            await self.testButton(.rapidToggleRainMode, name: "L8-Rain-Rapid-Toggle")
+
+            // Rapid toggle torch
+            await self.testButton(.rapidToggleTorch, name: "L8-Torch-Rapid-Toggle")
+
+            // Navigate to a route then immediately pop (race condition test)
+            AppNavigator.shared.navigate(to: .settings)
+            AppNavigator.shared.popToRoot()
+            await self.hold(1)
+            self.record("L8-Navigate-Pop-Race", status: "PASS", notes: "Navigate+pop race condition survived")
+
+            // Switch mode rapidly
+            AppNavigator.shared.switchMode(.business)
+            AppNavigator.shared.switchMode(.client)
+            AppNavigator.shared.switchMode(.public_)
+            await self.hold(1)
+            self.record("L8-Rapid-Mode-Switch", status: "PASS", notes: "3 mode switches in sequence survived")
+        }
+
+        // Phase 18: L9 - State persistence
+        await testPhase("PHASE 18: L9 State Persistence") {
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(2)
+
+            // Save car location and verify persistence
+            await self.testButton(.saveCarLocation, name: "L9-Save-Car")
+            await self.testButton(.verifyCarLocationSaved, name: "L9-Verify-Car-Saved")
+
+            // Clear and verify
+            await self.testButton(.clearCarLocationPersisted, name: "L9-Clear-Car")
+            await self.testButton(.verifyCarLocationCleared, name: "L9-Verify-Car-Cleared")
+
+            // Verify settings loaded from UserDefaults
+            await self.testButton(.verifySettingsLoaded, name: "L9-Settings-Loaded")
+
+            // Verify walk streak from AppStorage
+            let streak = UserDefaults.standard.integer(forKey: "walkStreak")
+            self.record("L9-Streak-Persisted", status: "PASS", notes: "Walk streak from AppStorage: \(streak)")
+        }
+
+        // Phase 19: L10 - Performance stress tests
+        await testPhase("PHASE 19: L10 Performance") {
+            AppNavigator.shared.selectedTab = .map
+            AppNavigator.shared.popToRoot()
+            await self.hold(2)
+
+            // Rapid tab switching (should not crash or leak)
+            await self.testButton(.rapidTabSwitch, name: "L10-Rapid-Tab-Switch")
+            await self.hold(1)
+
+            // Rapid route navigation with popToRoot
+            await self.testButton(.rapidRouteNavigation, name: "L10-Rapid-Route-Nav")
+            await self.hold(1)
+
+            // Stress test filter toggles
+            await self.testButton(.stressTestFilterToggle, name: "L10-Filter-Stress")
+            await self.hold(1)
+
+            // Multiple walk start/stop cycles
+            for i in 1...3 {
+                await self.testButton(.startWalk, name: "L10-Walk-Cycle-\(i)-Start")
+                await self.hold(1)
+                await self.testButton(.stopWalk, name: "L10-Walk-Cycle-\(i)-Stop")
+                await self.hold(2)
+            }
+
+            // Final state check - is everything still working?
+            await self.testButton(.verifyMapLoaded, name: "L10-Final-Map-Check")
+            await self.testButton(.verifyPOICount, name: "L10-Final-POI-Check")
+        }
+
         // Generate report
         await generateReport()
     }

@@ -49,6 +49,23 @@ enum TestCommand: Equatable {
     case verifyWalkActive
     case verifyWalkDistance
     case verifyWalkStopped
+    // L8 error resilience
+    case addPOIWithNoLocation
+    case startWalkWithNoLocation
+    case toggleAllFiltersOff
+    case toggleAllFiltersOn
+    case rapidToggleRainMode
+    case rapidToggleTorch
+    // L9 state persistence
+    case saveCarLocation
+    case verifyCarLocationSaved
+    case clearCarLocationPersisted
+    case verifyCarLocationCleared
+    case verifySettingsLoaded
+    // L10 performance
+    case rapidTabSwitch
+    case rapidRouteNavigation
+    case stressTestFilterToggle
 }
 
 /// Singleton coordinator for button-level testing.

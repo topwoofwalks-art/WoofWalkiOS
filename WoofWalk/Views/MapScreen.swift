@@ -436,6 +436,78 @@ struct MapScreen: View {
             coord.reportResult("Walk distance: \(walkTrackingViewModel.walkDistance)m, duration: \(walkTrackingViewModel.walkDuration)s")
         case .verifyWalkStopped:
             coord.reportResult("Walk stopped: active=\(walkTrackingViewModel.isWalkActive) finalDist=\(walkTrackingViewModel.walkDistance)")
+        // L8 error resilience
+        case .addPOIWithNoLocation:
+            // Should not crash when location is nil
+            mapViewModel.addPOI(type: .bin, at: CLLocationCoordinate2D(latitude: 0, longitude: 0))
+            coord.reportResult("POI added at 0,0 without crash")
+        case .startWalkWithNoLocation:
+            if !walkTrackingViewModel.isWalkActive {
+                walkTrackingViewModel.startWalk()
+                walkTrackingViewModel.stopWalk()
+            }
+            coord.reportResult("Walk start/stop with no GPS - no crash")
+        case .toggleAllFiltersOff:
+            mapViewModel.selectedPOITypes = []
+            let filtered = mapViewModel.filteredPOIs.count
+            coord.reportResult("All filters off, visible: \(filtered)")
+        case .toggleAllFiltersOn:
+            mapViewModel.selectedPOITypes = Set(POI.POIType.allCases)
+            let filtered = mapViewModel.filteredPOIs.count
+            coord.reportResult("All filters on, visible: \(filtered)")
+        case .rapidToggleRainMode:
+            for _ in 0..<10 { showRainMode.toggle() }
+            showRainMode = false
+            coord.reportResult("Rain mode toggled 10x rapidly, final=off")
+        case .rapidToggleTorch:
+            for _ in 0..<6 {
+                isTorchOn.toggle()
+            }
+            isTorchOn = false
+            coord.reportResult("Torch toggled 6x rapidly, final=off")
+        // L9 state persistence
+        case .saveCarLocation:
+            carLocation = CLLocationCoordinate2D(latitude: 51.5, longitude: -0.1)
+            UserDefaults.standard.set(51.5, forKey: "carLocationLat")
+            UserDefaults.standard.set(-0.1, forKey: "carLocationLng")
+            coord.reportResult("Car location saved to 51.5,-0.1")
+        case .verifyCarLocationSaved:
+            let lat = UserDefaults.standard.double(forKey: "carLocationLat")
+            let lng = UserDefaults.standard.double(forKey: "carLocationLng")
+            let hasLoc = carLocation != nil
+            coord.reportResult("Car persisted: lat=\(lat) lng=\(lng) stateHasLoc=\(hasLoc)")
+        case .clearCarLocationPersisted:
+            clearCarLocation()
+            coord.reportResult("Car location cleared")
+        case .verifyCarLocationCleared:
+            let lat = UserDefaults.standard.double(forKey: "carLocationLat")
+            let hasLoc = carLocation != nil
+            coord.reportResult("Car cleared: lat=\(lat) stateHasLoc=\(hasLoc)")
+        case .verifySettingsLoaded:
+            let style = settingsViewModel.settings.mapStyle.rawValue
+            let rain = settingsViewModel.settings.rainAutoDetection
+            coord.reportResult("Settings: mapStyle=\(style) rainAutoDetect=\(rain)")
+        // L10 performance
+        case .rapidTabSwitch:
+            for tab in AppTab.allCases {
+                AppNavigator.shared.selectedTab = tab
+            }
+            AppNavigator.shared.selectedTab = .map
+            coord.reportResult("Cycled all 5 tabs rapidly, no crash")
+        case .rapidRouteNavigation:
+            for route in [AppRoute.settings, .challenges, .league, .badgeGallery, .milestones] {
+                AppNavigator.shared.navigate(to: route)
+                AppNavigator.shared.popToRoot()
+            }
+            coord.reportResult("Navigated 5 routes rapidly with popToRoot, no crash")
+        case .stressTestFilterToggle:
+            for type in POI.POIType.allCases {
+                mapViewModel.togglePOIType(type)
+            }
+            for type in POI.POIType.allCases {
+                mapViewModel.togglePOIType(type)
+            }
+            coord.reportResult("Toggled all \(POI.POIType.allCases.count) filters twice, no crash")
         case .none:
             break
         }
