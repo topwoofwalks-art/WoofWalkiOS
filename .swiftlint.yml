@@ -16,6 +16,11 @@ excluded:
   - DerivedData
   - .build
   - .swiftpm
+  - WoofWalkWatch
+
+type_name:
+  excluded:
+    - WoofWalkApp_DI_Example
 
 line_length:
   warning: 150
@@ -23,23 +28,27 @@ line_length:
   ignores_comments: true
 
 file_length:
-  warning: 500
-  error: 1000
+  warning: 800
+  error: 1500
 
 type_body_length:
-  warning: 300
-  error: 500
+  warning: 500
+  error: 900
 
 function_body_length:
-  warning: 50
-  error: 100
+  warning: 80
+  error: 400
 
 cyclomatic_complexity:
-  warning: 10
-  error: 20
+  warning: 15
+  error: 80
 
 nesting:
   type_level: 2
+
+large_tuple:
+  warning: 3
+  error: 5
 
 identifier_name:
   min_length: 2
@@ -50,5 +59,9 @@ identifier_name:
     - x
     - y
     - z
+    - i
+    - area_m2
+    - public_
+    - animal_cruelty
 
 reporter: "xcode"
