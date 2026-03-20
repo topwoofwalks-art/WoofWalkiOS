@@ -1,7 +1,9 @@
-import Foundation
-import WatchKit
-import CoreMotion
 import CoreLocation
+import CoreMotion
+import Foundation
+import HealthKit
+import WatchConnectivity
+import WatchKit
 
 class WatchSettings: ObservableObject {
     static let shared = WatchSettings()
@@ -95,6 +97,3 @@ class WatchSettings: ObservableObject {
         WatchSessionManager.shared.session?.sendMessage(capabilities, replyHandler: nil)
     }
 }
-
-import HealthKit
-import WatchConnectivity

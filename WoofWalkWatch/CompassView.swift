@@ -1,6 +1,6 @@
-import SwiftUI
-import CoreMotion
 import CoreLocation
+import CoreMotion
+import SwiftUI
 
 struct CompassView: View {
     @EnvironmentObject var sessionManager: WatchSessionManager

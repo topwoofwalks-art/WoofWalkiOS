@@ -629,7 +629,7 @@ struct ClientImportScreen: View {
             let fields = parseCSVLine(lines[i])
             guard !fields.isEmpty else { continue }
 
-            let name = nameIdx.flatMap { $0 < fields.count ? fields[$0] : nil } ?? (fields.count > 0 ? fields[0] : "")
+            let name = nameIdx.flatMap { $0 < fields.count ? fields[$0] : nil } ?? (!fields.isEmpty ? fields[0] : "")
             guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
 
             let email = emailIdx.flatMap { $0 < fields.count ? fields[$0] : nil } ?? (fields.count > 1 ? fields[1] : "")

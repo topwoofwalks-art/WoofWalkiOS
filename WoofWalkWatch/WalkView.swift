@@ -1,6 +1,6 @@
-import SwiftUI
 import CoreLocation
 import HealthKit
+import SwiftUI
 
 struct WalkView: View {
     @EnvironmentObject var sessionManager: WatchSessionManager

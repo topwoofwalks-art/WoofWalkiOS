@@ -84,7 +84,7 @@ final class POIManagementUITests: XCTestCase {
         XCTAssertTrue(mapView.waitForExistence(timeout: 5))
 
         let poiMarkers = app.otherElements.matching(identifier: "POIMarker")
-        if poiMarkers.count > 0 {
+        if !poiMarkers.isEmpty {
             poiMarkers.element(boundBy: 0).tap()
 
             let poiDetailSheet = app.sheets["POI Details"]
@@ -97,7 +97,7 @@ final class POIManagementUITests: XCTestCase {
         mapView.tap()
 
         let poiMarkers = app.otherElements.matching(identifier: "POIMarker")
-        if poiMarkers.count > 0 {
+        if !poiMarkers.isEmpty {
             poiMarkers.element(boundBy: 0).tap()
 
             let upvoteButton = app.buttons["Upvote"]

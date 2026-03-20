@@ -75,7 +75,7 @@ struct FieldDrawingMode: View {
             }
             .disabled(!canComplete)
 
-            if vertices.count > 0 && vertices.count < 3 {
+            if !vertices.isEmpty && vertices.count < 3 {
                 HStack {
                     Image(systemName: "info.circle")
                         .foregroundStyle(.blue)
