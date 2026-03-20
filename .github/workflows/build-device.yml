@@ -1,0 +1,88 @@
+name: Build for Device
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build IPA
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 15.4
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Add GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -n "$GOOGLE_SERVICE_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_PLIST" | base64 --decode > WoofWalk/GoogleService-Info.plist
+          fi
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-v2-${{ hashFiles('Podfile') }}
+          restore-keys: pods-v2-
+
+      - name: Install CocoaPods
+        run: pod install --repo-update
+
+      - name: Build for device (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace WoofWalk.xcworkspace \
+            -scheme WoofWalk \
+            -sdk iphoneos \
+            -configuration Debug \
+            -destination generic/platform=iOS \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY=- \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            ENABLE_USER_SCRIPT_SANDBOXING=NO \
+            2>&1 | tee build.log | xcpretty
+
+      - name: Package app
+        run: |
+          APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "WoofWalk.app" -path "*/Debug-iphoneos/*" | head -1)
+          echo "Found app at: $APP_PATH"
+
+          # Inject GoogleService-Info.plist
+          if [ -f WoofWalk/GoogleService-Info.plist ]; then
+            cp WoofWalk/GoogleService-Info.plist "$APP_PATH/GoogleService-Info.plist"
+          fi
+
+          # Create IPA-like structure
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -r WoofWalk-unsigned.ipa Payload/
+          echo "IPA created: $(ls -lh WoofWalk-unsigned.ipa)"
+
+          # Also zip the .app directly for Sideloadly
+          cd "$(dirname "$APP_PATH")"
+          zip -r "$GITHUB_WORKSPACE/WoofWalk.app.zip" WoofWalk.app
+          echo "App zip: $(ls -lh $GITHUB_WORKSPACE/WoofWalk.app.zip)"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: WoofWalk-IPA
+          path: WoofWalk-unsigned.ipa
+
+      - name: Upload App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: WoofWalk-App
+          path: WoofWalk.app.zip
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
