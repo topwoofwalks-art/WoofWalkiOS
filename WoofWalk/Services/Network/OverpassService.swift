@@ -47,8 +47,15 @@ class OverpassService {
           node(around:\(radiusMeters),\(latitude),\(longitude))["leisure"="picnic_table"];
           way(around:\(radiusMeters),\(latitude),\(longitude))["waterway"="waterfall"];
           way(around:\(radiusMeters),\(latitude),\(longitude))["natural"="waterfall"];
+          way(around:\(radiusMeters),\(latitude),\(longitude))["leisure"="dog_park"];
+          way(around:\(radiusMeters),\(latitude),\(longitude))["leisure"="park"];
+          way(around:\(radiusMeters),\(latitude),\(longitude))["amenity"="drinking_water"];
+          way(around:\(radiusMeters),\(latitude),\(longitude))["amenity"="fountain"];
+          way(around:\(radiusMeters),\(latitude),\(longitude))["tourism"="viewpoint"];
+          way(around:\(radiusMeters),\(latitude),\(longitude))["tourism"="attraction"];
+          way(around:\(radiusMeters),\(latitude),\(longitude))["tourism"="picnic_site"];
         );
-        out center body;
+        out center body 500;
         """
     }
 

@@ -270,7 +270,19 @@ class RoutingViewModel: ObservableObject {
 
                 smoothUturns(points: &waypoints)
 
-                print("[RoutingVM] Final route has \(waypoints.count) waypoints (\(pentagonWaypoints.count) pentagon + POIs)")
+                // Snap all waypoints to nearest walkable road
+                var snappedWaypoints = [CLLocationCoordinate2D]()
+                for wp in waypoints {
+                    if let snapped = await snapToNearestWalkable(location: wp) {
+                        snappedWaypoints.append(snapped)
+                    } else {
+                        snappedWaypoints.append(wp)
+                    }
+                }
+                waypoints = snappedWaypoints
+                print("[RoutingVM] Snapped \(snappedWaypoints.count) waypoints to walkable roads")
+
+                print("[RoutingVM] Final route has \(waypoints.count) waypoints (\(pentagonWaypoints.count) ellipse + POIs)")
 
                 let updatedPreview: RoutePreview
                 if !routePoiNames.isEmpty {
@@ -674,48 +686,61 @@ class RoutingViewModel: ObservableObject {
 
     // MARK: - Waypoint Generation
     private func generateCircularWaypointPattern(userLocation: CLLocationCoordinate2D, viaPoint: CLLocationCoordinate2D, desiredDistance: Double) -> [CLLocationCoordinate2D] {
+        // ELLIPSE-BASED WAYPOINT GENERATION
+        // Distributes 4-6 waypoints on an ellipse centered on the MIDPOINT between user and tap.
+        // This creates a true circular loop instead of a zigzag/lollipop shape.
         var waypoints = [CLLocationCoordinate2D]()
 
-        let centerlineBearing = calculateBearing(from: userLocation, to: viaPoint)
-        let distanceToDestination = calculateHaversineDistance(from: userLocation, to: viaPoint)
+        // Center on midpoint between user and tapped point for a true loop
+        let centerLat = (userLocation.latitude + viaPoint.latitude) / 2.0
+        let centerLon = (userLocation.longitude + viaPoint.longitude) / 2.0
+        let center = CLLocationCoordinate2D(latitude: centerLat, longitude: centerLon)
 
-        let deviationAngle = 45.0
-        let deviationDistance = 100.0
+        // Ellipse radius: circumference ~= desiredDistance, accounting for road routing overhead (~1.3x)
+        let radius = desiredDistance / (2 * Double.pi * 1.3)
 
-        let targetWaypointDistance = desiredDistance * 0.65
+        // Orient along the user-to-via bearing for a natural loop shape
+        let orientationBearing = calculateBearing(from: userLocation, to: viaPoint)
+        let eccentricity = 1.2  // Fixed eccentricity for deterministic routes
 
-        let numZigzags: Int = {
+        // Scale waypoint count based on distance
+        let numWaypoints: Int = {
             switch desiredDistance {
-            case ..<1500: return 1
-            case 1500..<3000: return 2
-            case 3000..<5000: return 3
-            default: return 4
+            case ..<1500: return 4
+            case 1500..<3000: return 5
+            default: return 6
             }
         }()
 
-        var currentPosition = userLocation
-        var isLeftTurn = true
+        let majorRadius = radius * eccentricity
+        let minorRadius = radius
 
-        print("[RoutingVM] Generating zigzag route: desiredDistance=\(Int(desiredDistance))m, waypoints=\(numZigzags) (distance-scaled), deviation=\(Int(deviationDistance))m at \(Int(deviationAngle))°")
+        print("[RoutingVM] Generating ellipse waypoints: center=\(centerLat),\(centerLon) (midpoint), radius=\(Int(radius))m, eccentricity=\(String(format: "%.2f", eccentricity)), orientation=\(Int(orientationBearing))° (user-to-via), points=\(numWaypoints)")
 
-        for i in 0..<numZigzags {
-            let deviationDirection = isLeftTurn ? deviationAngle : -deviationAngle
-            let waypointBearing = (centerlineBearing + deviationDirection).truncatingRemainder(dividingBy: 360)
+        for i in 0..<numWaypoints {
+            // Distribute points evenly around the ellipse
+            let angle = (2 * Double.pi * Double(i) / Double(numWaypoints))
 
-            let progressAlongCenterline = Double(i + 1) / Double(numZigzags)
-            let distanceAlongCenterline = distanceToDestination * progressAlongCenterline * 0.8
+            // Calculate ellipse point in local coordinates
+            let localX = majorRadius * cos(angle)
+            let localY = minorRadius * sin(angle)
 
-            let centerlinePoint = calculateDestination(start: userLocation, bearing: centerlineBearing, distance: distanceAlongCenterline)
-            let waypoint = calculateDestination(start: centerlinePoint, bearing: waypointBearing, distance: deviationDistance)
+            // Rotate by orientation bearing
+            let orientRad = orientationBearing.toRadians()
+            let rotatedX = localX * cos(orientRad) - localY * sin(orientRad)
+            let rotatedY = localX * sin(orientRad) + localY * cos(orientRad)
 
+            // Convert to distance and bearing from center
+            let distance = sqrt(rotatedX * rotatedX + rotatedY * rotatedY)
+            let bearing = atan2(rotatedX, rotatedY).toDegrees()
+
+            let waypoint = calculateDestination(start: center, bearing: (bearing + 360).truncatingRemainder(dividingBy: 360), distance: distance)
             waypoints.append(waypoint)
-            currentPosition = waypoint
-            isLeftTurn.toggle()
 
-            print("[RoutingVM]   Zigzag \(i+1): \(isLeftTurn ? "RIGHT" : "LEFT") deviation at \(Int(distanceAlongCenterline))m along centerline")
+            print("[RoutingVM]   Ellipse point \(i+1): bearing=\(Int(bearing))°, distance=\(Int(distance))m")
         }
 
-        print("[RoutingVM] Generated \(waypoints.count) zigzag waypoints for \(Int(desiredDistance))m walk")
+        print("[RoutingVM] Generated \(waypoints.count) ellipse waypoints for \(Int(desiredDistance))m circular walk")
 
         return waypoints
     }
@@ -793,9 +818,22 @@ class RoutingViewModel: ObservableObject {
     }
 
     private func distanceToLineSegment(point: CLLocationCoordinate2D, lineStart: CLLocationCoordinate2D, lineEnd: CLLocationCoordinate2D) -> Double {
-        let distanceToStart = calculateHaversineDistance(from: point, to: lineStart)
-        let distanceToEnd = calculateHaversineDistance(from: point, to: lineEnd)
-        return min(distanceToStart, distanceToEnd)
+        let lineLength = calculateHaversineDistance(from: lineStart, to: lineEnd)
+        if lineLength == 0.0 { return calculateHaversineDistance(from: point, to: lineStart) }
+
+        // Project point onto the line segment using parametric t
+        let dx = lineEnd.latitude - lineStart.latitude
+        let dy = lineEnd.longitude - lineStart.longitude
+        let px = point.latitude - lineStart.latitude
+        let py = point.longitude - lineStart.longitude
+
+        var t = (px * dx + py * dy) / (dx * dx + dy * dy)
+        t = max(0.0, min(1.0, t))
+
+        let projectedLat = lineStart.latitude + t * dx
+        let projectedLng = lineStart.longitude + t * dy
+
+        return calculateHaversineDistance(from: point, to: CLLocationCoordinate2D(latitude: projectedLat, longitude: projectedLng))
     }
 
     // MARK: - U-turn Smoothing
@@ -808,9 +846,24 @@ class RoutingViewModel: ObservableObject {
             let ang = angleAtB(a: a, b: b, c: c)
             if ang > Double(minAngleDeg) {
                 let bearing = calculateBearing(from: a, to: b)
-                let perp = (bearing + 90).truncatingRemainder(dividingBy: 360)
-                points[i] = calculateDestination(start: b, bearing: perp, distance: jitterMeters)
-                print("[RoutingVM] Smoothed U-turn at waypoint \(i): angle=\(Int(ang))° -> nudged \(Int(jitterMeters))m perpendicular")
+                // Try both perpendicular directions, pick the one farther from existing path
+                let perpRight = (bearing + 90).truncatingRemainder(dividingBy: 360)
+                let perpLeft = (bearing + 270).truncatingRemainder(dividingBy: 360)
+                let candidateRight = calculateDestination(start: b, bearing: perpRight, distance: jitterMeters)
+                let candidateLeft = calculateDestination(start: b, bearing: perpLeft, distance: jitterMeters)
+
+                // Pick the candidate that's farther from both neighbors
+                let rightMinDist = min(
+                    calculateHaversineDistance(from: candidateRight, to: a),
+                    calculateHaversineDistance(from: candidateRight, to: c)
+                )
+                let leftMinDist = min(
+                    calculateHaversineDistance(from: candidateLeft, to: a),
+                    calculateHaversineDistance(from: candidateLeft, to: c)
+                )
+
+                points[i] = rightMinDist >= leftMinDist ? candidateRight : candidateLeft
+                print("[RoutingVM] Smoothed U-turn at waypoint \(i): angle=\(Int(ang))° -> nudged \(Int(jitterMeters))m perpendicular (\(rightMinDist >= leftMinDist ? "right" : "left"))")
             }
             i += 1
         }
@@ -828,8 +881,8 @@ class RoutingViewModel: ObservableObject {
         var grid = Set<Int64>()
 
         func key(_ p: CLLocationCoordinate2D) -> Int64 {
-            let kx = Int64(floor(p.latitude * 5000))
-            let ky = Int64(floor(p.longitude * 5000))
+            let kx = Int64(floor(p.latitude * 10000))
+            let ky = Int64(floor(p.longitude * 10000))
             return (kx << 32) ^ ky
         }
 
@@ -931,6 +984,95 @@ class RoutingViewModel: ObservableObject {
         )
 
         return CLLocationCoordinate2D(latitude: lat2.toDegrees(), longitude: lng2.toDegrees())
+    }
+
+    // MARK: - Path Snapping
+    /// Snap a location to the nearest footpath, path, or bridleway using Overpass API.
+    /// Prefers off-road walking routes over roads. Falls back to OSRM Nearest (foot profile)
+    /// if no path/footway/bridleway is found within search radius.
+    func snapToNearestWalkable(location: CLLocationCoordinate2D) async -> CLLocationCoordinate2D? {
+        let searchRadius = 200  // metres
+
+        // First try: find nearest footpath/path/bridleway via Overpass
+        do {
+            let query = """
+            [out:json][timeout:5];
+            (
+              way(around:\(searchRadius),\(location.latitude),\(location.longitude))["highway"="footway"];
+              way(around:\(searchRadius),\(location.latitude),\(location.longitude))["highway"="path"];
+              way(around:\(searchRadius),\(location.latitude),\(location.longitude))["highway"="bridleway"];
+              way(around:\(searchRadius),\(location.latitude),\(location.longitude))["highway"="track"];
+              way(around:\(searchRadius),\(location.latitude),\(location.longitude))["highway"="pedestrian"];
+            );
+            out geom 10;
+            """
+
+            let overpassURL = "https://overpass-api.de/api/interpreter"
+            var urlComponents = URLComponents(string: overpassURL)!
+            urlComponents.queryItems = [URLQueryItem(name: "data", value: query)]
+
+            if let url = urlComponents.url {
+                let (data, _) = try await URLSession.shared.data(from: url)
+
+                struct OverpassGeomResponse: Codable {
+                    let elements: [OverpassGeomElement]?
+                }
+                struct OverpassGeomElement: Codable {
+                    let geometry: [OverpassGeomNode]?
+                    let tags: [String: String]?
+                }
+                struct OverpassGeomNode: Codable {
+                    let lat: Double
+                    let lon: Double
+                }
+
+                let response = try JSONDecoder().decode(OverpassGeomResponse.self, from: data)
+
+                var bestSnap: CLLocationCoordinate2D?
+                var bestDistance = Double.greatestFiniteMagnitude
+
+                for element in response.elements ?? [] {
+                    for node in element.geometry ?? [] {
+                        let nodeCoord = CLLocationCoordinate2D(latitude: node.lat, longitude: node.lon)
+                        let dist = calculateHaversineDistance(from: location, to: nodeCoord)
+                        if dist < bestDistance {
+                            bestDistance = dist
+                            bestSnap = nodeCoord
+                        }
+                    }
+                }
+
+                if let snap = bestSnap, bestDistance < Double(searchRadius) {
+                    let pathType = response.elements?.first?.tags?["highway"] ?? "path"
+                    print("[RoutingVM] Snapped to \(pathType): \(Int(bestDistance))m away")
+                    return snap
+                }
+            }
+        } catch {
+            print("[RoutingVM] Overpass path query failed, falling back to OSRM: \(error)")
+        }
+
+        // Fallback: OSRM Nearest with foot profile (prefers footways but may return roads)
+        do {
+            let coordinates = "\(location.longitude),\(location.latitude)"
+            var urlComponents = URLComponents(string: "\(osrmBaseURL)/nearest/v1/foot/\(coordinates)")!
+            urlComponents.queryItems = [URLQueryItem(name: "number", value: "1")]
+
+            guard let url = urlComponents.url else { return nil }
+
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(OsrmNearestResponse.self, from: data)
+
+            if response.code == "Ok", let waypoint = response.waypoints?.first {
+                let snapped = CLLocationCoordinate2D(latitude: waypoint.location[1], longitude: waypoint.location[0])
+                print("[RoutingVM] Snapped to OSRM nearest (fallback): \(waypoint.name) (\(Int(calculateHaversineDistance(from: location, to: snapped)))m away)")
+                return snapped
+            }
+            return nil
+        } catch {
+            print("[RoutingVM] Snap to walkable failed: \(error)")
+            return nil
+        }
     }
 
     // MARK: - Polyline Encoding/Decoding
