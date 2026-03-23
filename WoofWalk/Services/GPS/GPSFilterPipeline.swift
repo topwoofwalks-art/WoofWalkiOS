@@ -22,11 +22,15 @@ final class GPSFilterPipeline {
     /// Minimum elapsed time before a bearing reversal is considered an outlier (seconds).
     private let bearingTimeWindow: TimeInterval = 5
     /// Warmup period during which accuracy threshold is relaxed (seconds).
-    private let warmupDuration: TimeInterval = 60
+    private let warmupDuration: TimeInterval = 30
     /// Accuracy threshold during warmup (meters).
-    private let warmupAccuracyThreshold: CLLocationDistance = 50
+    private let warmupAccuracyThreshold: CLLocationDistance = 20
     /// Accuracy threshold after warmup (meters).
-    private let normalAccuracyThreshold: CLLocationDistance = 30
+    private let normalAccuracyThreshold: CLLocationDistance = 10
+    /// Fallback threshold when no good fix received in 15s (meters).
+    private let fallbackAccuracyThreshold: CLLocationDistance = 20
+    /// Time without accepted fix before fallback kicks in (seconds).
+    private let fallbackTimeout: TimeInterval = 15
     /// Minimum time between accepted points for jitter gate (seconds).
     private let jitterTimeGate: TimeInterval = 3
 
@@ -83,13 +87,19 @@ final class GPSFilterPipeline {
         let ts = location.timestamp.timeIntervalSinceReferenceDate
         let accMeters = location.horizontalAccuracy
 
-        // 1. Adaptive accuracy gate: relaxed to 100 m during first 60 s warmup, then 75 m
+        // 1. Accuracy gate: 20m warmup, 10m normal, 20m fallback if no fix in 15s
         guard accMeters >= 0 else { return nil }
 
         let warmupElapsed = isStarted ? (ts - walkStartTime) : warmupDuration + 1
-        let accuracyThreshold = warmupElapsed < warmupDuration
-            ? warmupAccuracyThreshold
-            : normalAccuracyThreshold
+        let timeSinceLastAccepted = lastAcceptedTime > 0 ? (ts - lastAcceptedTime) : 0
+        let accuracyThreshold: CLLocationDistance
+        if warmupElapsed < warmupDuration {
+            accuracyThreshold = warmupAccuracyThreshold
+        } else if timeSinceLastAccepted > fallbackTimeout {
+            accuracyThreshold = fallbackAccuracyThreshold
+        } else {
+            accuracyThreshold = normalAccuracyThreshold
+        }
 
         guard accMeters <= accuracyThreshold else {
             return nil
