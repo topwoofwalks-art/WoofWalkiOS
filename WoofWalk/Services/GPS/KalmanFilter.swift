@@ -31,8 +31,8 @@ final class KalmanFilter {
     // MARK: - Initialisation
 
     /// - Parameter processNoise: Tuning knob for the process model.
-    ///   Default `0.00005` works well for walking-pace GPS on phones.
-    init(processNoise: Double = 0.00005) {
+    ///   Default `0.00001` matches Android's tighter ~1m walking uncertainty.
+    init(processNoise: Double = 0.00001) {
         self.processNoise = processNoise
     }
 

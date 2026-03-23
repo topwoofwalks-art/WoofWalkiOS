@@ -16,7 +16,7 @@ final class GPSFilterPipeline {
 
     /// Maximum acceptable speed between consecutive points (m/s).
     /// 4.2 m/s ~ 15.12 km/h — a brisk run; anything faster is likely a GPS jump.
-    private let maxSpeed: Double = 4.2
+    private let maxSpeed: Double = 2.5  // 2.5 m/s = 9 km/h, max realistic walking+jogging
     /// Maximum acceptable bearing change to detect snap-back artefacts (degrees).
     private let maxBearingChange: Double = 150
     /// Minimum elapsed time before a bearing reversal is considered an outlier (seconds).
@@ -24,9 +24,9 @@ final class GPSFilterPipeline {
     /// Warmup period during which accuracy threshold is relaxed (seconds).
     private let warmupDuration: TimeInterval = 60
     /// Accuracy threshold during warmup (meters).
-    private let warmupAccuracyThreshold: CLLocationDistance = 100
+    private let warmupAccuracyThreshold: CLLocationDistance = 50
     /// Accuracy threshold after warmup (meters).
-    private let normalAccuracyThreshold: CLLocationDistance = 75
+    private let normalAccuracyThreshold: CLLocationDistance = 30
     /// Minimum time between accepted points for jitter gate (seconds).
     private let jitterTimeGate: TimeInterval = 3
 
@@ -46,10 +46,27 @@ final class GPSFilterPipeline {
     private var walkStartTime: TimeInterval = 0
     private var isStarted: Bool = false
 
+    /// Pedometer state for step-based validation.
+    private var stepCountAtLastAccepted: Int = 0
+    private var currentStepCount: Int = 0
+
+    /// Compass heading for bearing validation.
+    private var compassHeading: Double?
+
     /// Distance from last accepted point (available after process() returns non-nil).
     private(set) var lastAcceptedDistance: Double = 0
 
     // MARK: - Public API
+
+    /// Update current step count from pedometer.
+    func updateStepCount(_ steps: Int) {
+        currentStepCount = steps
+    }
+
+    /// Update compass heading from CLLocationManager.
+    func updateCompassHeading(_ heading: Double) {
+        compassHeading = heading
+    }
 
     /// Call once when the walk starts to begin the warmup timer.
     func start() {
@@ -110,7 +127,7 @@ final class GPSFilterPipeline {
 
         // 4. Jitter gate: prevent stationary GPS drift from accumulating phantom distance.
         //    Min distance = max(2 m, accuracy × 0.1); also require 3 s between accepted points.
-        let minDistance = max(2.0, accMeters * 0.1)
+        let minDistance = max(2.0, min(accMeters * accMeters / 100.0, 15.0))
         var distanceFromLast: Double = 0
         var timeDelta: TimeInterval = 0
 
@@ -137,11 +154,40 @@ final class GPSFilterPipeline {
             }
         }
 
+        // 6. Pedometer validation
+        if lastAcceptedTime > 0 && timeDelta > 3 {
+            let stepsSince = currentStepCount - stepCountAtLastAccepted
+            let expectedDistance = Double(stepsSince) * 0.7
+
+            // GPS claims much more than steps justify
+            if stepsSince >= 2 && distanceFromLast > expectedDistance * 3.0 && distanceFromLast > 10 {
+                return nil
+            }
+
+            // GPS claims movement but zero steps
+            if distanceFromLast > 10 && stepsSince == 0 && timeDelta > 3 {
+                return nil
+            }
+        }
+
+        // 7. Compass heading validation
+        if let heading = compassHeading, distanceFromLast > 5 {
+            let gpsBearing = bearingBetween(
+                from: CLLocationCoordinate2D(latitude: lastAcceptedLat, longitude: lastAcceptedLng),
+                to: CLLocationCoordinate2D(latitude: filteredLat, longitude: filteredLng)
+            )
+            let bearingDiff = abs(angleDifference(gpsBearing, heading))
+            if bearingDiff > 90 {
+                return nil  // GPS says we moved sideways/backwards relative to compass
+            }
+        }
+
         // Update accepted point tracking
         lastAcceptedLat = filteredLat
         lastAcceptedLng = filteredLng
         lastAcceptedTime = ts
         lastAcceptedDistance = distanceFromLast
+        stepCountAtLastAccepted = currentStepCount
 
         return CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: filteredLat, longitude: filteredLng),
@@ -166,6 +212,9 @@ final class GPSFilterPipeline {
         lastAcceptedDistance = 0
         walkStartTime = 0
         isStarted = false
+        stepCountAtLastAccepted = 0
+        currentStepCount = 0
+        compassHeading = nil
     }
 
     // MARK: - Geometry Helpers
