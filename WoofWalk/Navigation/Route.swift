@@ -75,6 +75,7 @@ enum AppRoute: Hashable {
     case clientInvoices
     case clientMessages
     case providerSearch(serviceType: String)
+    case booking(providerId: String?)
 
     // Map features
     case hazardReport
@@ -149,6 +150,7 @@ enum AppRoute: Hashable {
         case .clientInvoices: hasher.combine("clientInvoices")
         case .clientMessages: hasher.combine("clientMessages")
         case .providerSearch(let type): hasher.combine("providerSearch"); hasher.combine(type)
+        case .booking(let id): hasher.combine("booking"); hasher.combine(id)
         case .hazardReport: hasher.combine("hazardReport")
         case .hazardDetail(let id): hasher.combine("hazardDetail"); hasher.combine(id)
         case .trailConditionReport: hasher.combine("trailConditionReport")

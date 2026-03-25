@@ -246,6 +246,31 @@ class BookingFlowViewModel: ObservableObject {
         selectService(mapped)
     }
 
+    /// Pre-select a provider by ID, fetching their details from Firestore.
+    func preselectProvider(id providerId: String) {
+        let db = Firestore.firestore()
+        db.collection("businesses").document(providerId).getDocument { [weak self] snapshot, error in
+            DispatchQueue.main.async {
+                guard let self = self, let data = snapshot?.data() else { return }
+                let provider = SelectableProvider(
+                    id: providerId,
+                    name: data["displayName"] as? String ?? data["name"] as? String ?? "Provider",
+                    photoUrl: data["photoUrl"] as? String,
+                    rating: (data["rating"] as? NSNumber)?.doubleValue ?? 0,
+                    reviewCount: (data["reviewCount"] as? NSNumber)?.intValue ?? 0,
+                    distance: (data["distance"] as? NSNumber)?.doubleValue,
+                    basePrice: (data["basePrice"] as? NSNumber)?.doubleValue ?? 25.0,
+                    bio: data["bio"] as? String,
+                    isVerified: data["isVerified"] as? Bool ?? false
+                )
+                self.selectedProvider = provider
+                if !self.providers.contains(where: { $0.id == providerId }) {
+                    self.providers.insert(provider, at: 0)
+                }
+            }
+        }
+    }
+
     // MARK: - Dog Selection
 
     func toggleDog(_ dogId: String) {
@@ -408,6 +433,7 @@ struct BookingFlowScreen: View {
     @State private var showSuccessAlert = false
 
     var preselectedService: ServiceType?
+    var preselectedProviderId: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -441,6 +467,9 @@ struct BookingFlowScreen: View {
             if let service = preselectedService {
                 viewModel.selectServiceFromCard(service)
                 viewModel.currentStep = .selectDogs
+            }
+            if let providerId = preselectedProviderId {
+                viewModel.preselectProvider(id: providerId)
             }
         }
         .onChange(of: viewModel.bookingCreatedId) { newId in

@@ -144,6 +144,8 @@ struct RouteDestination: View {
             ClientMessagesScreen()
         case .providerSearch(let serviceType):
             ProviderSearchView(serviceType: serviceTypeFromString(serviceType))
+        case .booking(let providerId):
+            BookingFlowScreen(preselectedProviderId: providerId)
 
         // Map features
         case .hazardReport:

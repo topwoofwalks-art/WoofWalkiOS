@@ -4,6 +4,7 @@ struct ProviderDetailScreen: View {
     let providerId: String
     @StateObject private var viewModel: ProviderDetailViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var showBookingSheet = false
 
     init(providerId: String) {
         self.providerId = providerId
@@ -22,6 +23,11 @@ struct ProviderDetailScreen: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showBookingSheet) {
+            NavigationStack {
+                BookingFlowScreen(preselectedProviderId: providerId)
+            }
+        }
     }
 
     // MARK: - Provider Content
@@ -497,7 +503,7 @@ struct ProviderDetailScreen: View {
 
     private func bookNowButton(_ provider: ServiceProviderLite) -> some View {
         Button {
-            // Book action handled by navigation or sheet
+            showBookingSheet = true
         } label: {
             HStack {
                 Image(systemName: "calendar.badge.plus")

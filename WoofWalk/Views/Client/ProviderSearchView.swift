@@ -10,6 +10,8 @@ struct ProviderSearchView: View {
     @State private var sortOption: DiscoverySortOption = .distance
     @State private var selectedProvider: ServiceProviderLite?
     @State private var showProviderDetail = false
+    @State private var showBookingFlow = false
+    @State private var bookingProviderId: String?
     @Environment(\.dismiss) private var dismiss
 
     init(serviceType: ServiceType) {
@@ -75,10 +77,16 @@ struct ProviderSearchView: View {
                     reviews: viewModel.selectedProviderReviews,
                     isLoadingReviews: viewModel.isLoadingReviews,
                     onSelect: {
-                        // Navigate to booking with this provider
+                        bookingProviderId = provider.id
                         showProviderDetail = false
+                        showBookingFlow = true
                     }
                 )
+            }
+        }
+        .sheet(isPresented: $showBookingFlow) {
+            NavigationStack {
+                BookingFlowScreen(preselectedProviderId: bookingProviderId)
             }
         }
         .refreshable {
@@ -112,7 +120,7 @@ struct ProviderSearchView: View {
 
     private var sortRow: some View {
         HStack {
-            Text("\(filteredProviders.count) provider\(filteredProviders.count == 1 ? "" : "s") within 15km")
+            Text("\(filteredProviders.count) provider\(filteredProviders.count == 1 ? "" : "s") within 25km")
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -178,7 +186,7 @@ struct ProviderSearchView: View {
             Text("No providers found")
                 .font(.headline)
 
-            Text("No \(serviceType.name.lowercased()) providers were found within 15km of your location.")
+            Text("No \(serviceType.name.lowercased()) providers were found within 25km of your location.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -735,7 +743,7 @@ class ProviderSearchViewModel: ObservableObject {
                 providers = try await repository.searchProviders(
                     serviceType: serviceType.name,
                     location: userLocation,
-                    radiusKm: 15
+                    radiusKm: 25
                 )
             } catch {
                 providers = []

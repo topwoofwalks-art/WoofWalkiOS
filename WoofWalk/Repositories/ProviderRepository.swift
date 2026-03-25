@@ -10,7 +10,7 @@ class ProviderRepository {
     func searchProviders(
         serviceType: String,
         location: CLLocationCoordinate2D,
-        radiusKm: Double = 15
+        radiusKm: Double = 25
     ) async throws -> [ServiceProviderLite] {
         // Map ServiceType display name to Firestore service field value
         let firestoreServiceName = mapServiceTypeToFirestoreValue(serviceType)
