@@ -9,6 +9,7 @@ class UnifiedDogFormViewModel: ObservableObject {
     @Published var sex = ""
     @Published var neutered = false
     @Published var color = ""
+    @Published var photoUrl: String?
 
     // Physical
     @Published var size = ""
@@ -41,6 +42,7 @@ class UnifiedDogFormViewModel: ObservableObject {
             existingId = dog.id
             name = dog.name
             breed = dog.breed
+            photoUrl = dog.photoUrl
             sex = dog.sex ?? ""
             neutered = dog.neutered ?? false
             color = dog.color ?? ""
@@ -95,6 +97,7 @@ class UnifiedDogFormViewModel: ObservableObject {
             name: name,
             breed: breed,
             age: birthdate.map { Calendar.current.dateComponents([.year], from: $0, to: Date()).year ?? 0 } ?? 0,
+            photoUrl: photoUrl,
             temperament: temperament,
             nervousDog: nervousDog,
             warningNote: warningNote.isEmpty ? nil : warningNote,

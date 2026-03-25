@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import FirebaseAuth
 
 @MainActor
 class DogProfileViewModel: ObservableObject {
@@ -96,18 +97,20 @@ class DogProfileViewModel: ObservableObject {
     }
 
     func uploadPhoto(imageData: Data) async throws {
-        // TODO: Implement photo upload to Firebase Storage
+        guard let userId = Auth.auth().currentUser?.uid else {
+            throw NSError(domain: "DogProfile", code: -1, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+
         isLoading = true
-
         do {
-            // Simulate upload
-            try await Task.sleep(nanoseconds: 1_000_000_000)
-
-            self.photoUrl = "https://placeholder.url/\(UUID().uuidString).jpg"
+            let path = "dogProfiles/\(userId)/\(UUID().uuidString).jpg"
+            let firebaseService = FirebaseService()
+            let downloadURL = try await firebaseService.uploadImage(data: imageData, path: path)
+            self.photoUrl = downloadURL.absoluteString
             isLoading = false
         } catch {
             isLoading = false
-            errorMessage = "Failed to upload photo"
+            errorMessage = "Failed to upload photo: \(error.localizedDescription)"
             throw error
         }
     }

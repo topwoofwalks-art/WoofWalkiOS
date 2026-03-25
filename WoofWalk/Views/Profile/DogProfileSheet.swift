@@ -103,6 +103,14 @@ struct DogProfileSheet: View {
                 .buttonStyle(.bordered)
             }
         }
+        .onChange(of: selectedPhotoItem) { newItem in
+            guard let newItem else { return }
+            Task {
+                if let data = try? await newItem.loadTransferable(type: Data.self) {
+                    try? await viewModel.uploadPhoto(imageData: data)
+                }
+            }
+        }
     }
 
     private func dogDetailsSection() -> some View {
