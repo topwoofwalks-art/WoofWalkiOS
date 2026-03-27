@@ -1,6 +1,5 @@
 import Foundation
 import CoreLocation
-import CoreMotion
 import Combine
 import UIKit
 import UserNotifications
@@ -25,7 +24,6 @@ class LocationTrackingService: NSObject, ObservableObject {
     // MARK: - Private Properties
     private let locationManager: CLLocationManager
     private let filterPipeline = GPSFilterPipeline()
-    private let pedometer = CMPedometer()
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     private var lastLocationUpdate: Date?
     private var minimumDistance: CLLocationDistance = 10.0 // meters
@@ -123,16 +121,7 @@ class LocationTrackingService: NSObject, ObservableObject {
 
         locationManager.startUpdatingLocation()
 
-        // Start pedometer updates for step-based GPS validation
-        if CMPedometer.isStepCountingAvailable() {
-            pedometer.startUpdates(from: Date()) { [weak self] data, error in
-                if let steps = data?.numberOfSteps.intValue {
-                    self?.filterPipeline.updateStepCount(steps)
-                }
-            }
-        }
-
-        // Start heading updates for compass-based GPS validation
+        // Start heading updates for UI bearing display
         if CLLocationManager.headingAvailable() {
             locationManager.startUpdatingHeading()
         }
@@ -168,7 +157,6 @@ class LocationTrackingService: NSObject, ObservableObject {
 
         locationManager.stopUpdatingLocation()
         locationManager.stopUpdatingHeading()
-        pedometer.stopUpdates()
         endBackgroundTask()
 
         print("Location tracking stopped")
@@ -297,12 +285,6 @@ extension LocationTrackingService: CLLocationManagerDelegate {
             locationSubject.send(location)
 
             print("Location updated: (\(location.coordinate.latitude), \(location.coordinate.longitude)) - accuracy: \(location.horizontalAccuracy)m")
-        }
-    }
-
-    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
-        if newHeading.headingAccuracy >= 0 {
-            filterPipeline.updateCompassHeading(newHeading.trueHeading)
         }
     }
 

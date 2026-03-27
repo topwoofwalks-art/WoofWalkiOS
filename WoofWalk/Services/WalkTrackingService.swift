@@ -46,12 +46,6 @@ class WalkTrackingService: ObservableObject {
     /// Whether the current pause was triggered automatically by motion detection.
     private var isAutoPaused: Bool = false
 
-    /// Minimum GPS movement (meters) that triggers step-count validation.
-    /// If GPS says we moved >30m but pedometer says 0 steps, the GPS point is drift.
-    private let gpsStepValidationDistance: Double = 30.0
-
-    /// Time window (seconds) to look back for recent steps when validating GPS.
-    private let gpsStepValidationWindow: TimeInterval = 10.0
 
     private init(locationService: LocationService = .shared, motionService: MotionActivityService = .shared) {
         self.locationService = locationService
@@ -186,15 +180,37 @@ class WalkTrackingService: ObservableObject {
 
         let walkHistory: LocalWalkRecord?
         if !trackPoints.isEmpty {
+            // Post-process the raw track through the full cleaning pipeline
+            let rawPoints = trackPoints.map { point in
+                GpsPostProcessor.RawPoint(
+                    coordinate: point.coordinate,
+                    timestamp: point.timestamp,
+                    accuracy: point.accuracy
+                )
+            }
+            let processed = GpsPostProcessor.process(rawPoints)
+
+            print("[PostProcess] \(processed.originalCount) raw -> \(processed.points.count) cleaned (\(processed.pointsRemoved) removed), distance=\(String(format: "%.0f", processed.distanceMeters))m")
+
+            // Build cleaned track points from post-processed coordinates
+            let cleanedTrack = processed.points.enumerated().map { idx, coord in
+                LocationTrackPoint(
+                    timestamp: idx < trackPoints.count ? trackPoints[idx].timestamp : trackPoints.last!.timestamp,
+                    latitude: coord.latitude,
+                    longitude: coord.longitude,
+                    accuracy: idx < trackPoints.count ? trackPoints[idx].accuracy : trackPoints.last!.accuracy
+                )
+            }
+
             walkHistory = LocalWalkRecord(
-                distanceMeters: Int(totalDistanceMeters.rounded()),
+                distanceMeters: Int(processed.distanceMeters.rounded()),
                 durationSec: durationSec,
-                track: trackPoints,
-                polyline: PolylineEncoder.encode(coordinates: trackPoints.map { $0.coordinate }),
+                track: cleanedTrack,
+                polyline: PolylineEncoder.encode(coordinates: processed.points),
                 caloriesBurned: totalCalories,
                 elevationGainMeters: totalElevationGain,
                 avgSpeedKmh: SpeedETACalculator.calculatePaceKmh(
-                    distanceMeters: totalDistanceMeters,
+                    distanceMeters: processed.distanceMeters,
                     durationSeconds: TimeInterval(durationSec)
                 )
             )
@@ -229,27 +245,10 @@ class WalkTrackingService: ObservableObject {
             timestamp: update.timestamp
         )
 
-        // Run through the full GPS filter pipeline (accuracy, bearing, Kalman, jitter, speed gates)
+        // Run through permissive GPS filter pipeline (Kalman smoothing only, post-process after walk)
         guard let filtered = filterPipeline.process(rawLocation) else { return }
 
-        // Step-count GPS drift validation: if GPS says >30m movement but pedometer shows 0 steps,
-        // the GPS point is likely drift (e.g. urban canyon multipath) - reject it.
         let distanceFromLast = filterPipeline.lastAcceptedDistance
-        if distanceFromLast > gpsStepValidationDistance {
-            Task { [weak self] in
-                guard let self else { return }
-                let recentSteps = await self.motionService.recentSteps(inLast: self.gpsStepValidationWindow)
-                if recentSteps == 0 {
-                    print("[GPSDrift] Rejected GPS point: \(String(format: "%.1f", distanceFromLast))m movement but 0 steps in last \(self.gpsStepValidationWindow)s")
-                    // Don't accumulate this distance - it's phantom movement
-                    return
-                }
-                await self.acceptFilteredLocation(filtered: filtered, update: update, distanceFromLast: distanceFromLast)
-            }
-            return
-        }
-
-        // Normal path (distance <= threshold or step validation not needed)
         acceptFilteredLocation(filtered: filtered, update: update, distanceFromLast: distanceFromLast)
     }
 
