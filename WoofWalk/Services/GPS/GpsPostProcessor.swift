@@ -26,17 +26,17 @@ struct GpsPostProcessor {
 
         let originalCount = rawPoints.count
 
-        // Pass 1: Speed filter (>12 km/h = 3.33 m/s)
-        let speedFiltered = filterBySpeed(rawPoints, maxSpeedMps: 3.33)
+        // Pass 1: Speed filter (>18 km/h = 5 m/s)
+        let speedFiltered = filterBySpeed(rawPoints, maxSpeedMps: 5.0)
 
-        // Pass 2: Savitzky-Golay smoothing (window=7, degree=2)
-        let smoothed = savitzkyGolaySmooth(speedFiltered, windowSize: 7)
+        // Pass 2: Savitzky-Golay smoothing (window=5, degree=2) - tighter preserves corners
+        let smoothed = savitzkyGolaySmooth(speedFiltered, windowSize: 5)
 
         // Pass 3: MAD-based outlier removal
         let outlierFree = removeOutliersByMAD(smoothed, threshold: 3.0)
 
-        // Pass 4: Douglas-Peucker simplification (epsilon=2m)
-        let simplified = douglasPeucker(outlierFree, epsilonMeters: 2.0)
+        // Pass 4: Douglas-Peucker simplification (epsilon=1m) - keep more detail
+        let simplified = douglasPeucker(outlierFree, epsilonMeters: 1.0)
 
         let distance = totalDistance(simplified)
         return ProcessedTrace(points: simplified, distanceMeters: distance, pointsRemoved: originalCount - simplified.count, originalCount: originalCount)
