@@ -59,10 +59,10 @@ class DogProfileViewModel: ObservableObject {
                 id: editingDog?.id ?? UUID().uuidString,
                 name: name,
                 breed: breed.isEmpty ? "Mixed" : breed,
+                photoUrl: photoUrl,
                 temperament: temperament,
                 nervousDog: nervousDog,
-                warningNote: warningNote.isEmpty ? nil : warningNote,
-                photoUrl: photoUrl
+                warningNote: warningNote.isEmpty ? nil : warningNote
             )
 
             if editingDog != nil {

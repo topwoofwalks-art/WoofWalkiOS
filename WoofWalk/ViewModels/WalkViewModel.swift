@@ -70,13 +70,13 @@ class WalkViewModel: ObservableObject {
 
     // Dependencies (to be injected)
     private let walkRepository: WalkRepository
-    private let dogRepository: DogRepository
+    private let dogRepository: WalkDogRepository
     private let locationManager: WalkLocationManager
 
     // MARK: - Initialization
     init(
         walkRepository: WalkRepository,
-        dogRepository: DogRepository,
+        dogRepository: WalkDogRepository,
         locationManager: WalkLocationManager
     ) {
         self.walkRepository = walkRepository
@@ -411,8 +411,20 @@ class WalkViewModel: ObservableObject {
             throw WalkError.noActiveWalk
         }
 
-        // TODO: Implement waste disposal marker
-        print("Marking waste disposal at (\(lat), \(lng))")
+        let geohash = Geohash.encode(latitude: lat, longitude: lng, precision: 9)
+
+        let poi = POI(
+            type: PoiType.bin.rawValue,
+            title: "Waste Bin",
+            desc: "Waste disposal bin added during walk \(sessionId)",
+            lat: lat,
+            lng: lng,
+            geohash: geohash,
+            status: PoiStatus.active.rawValue
+        )
+
+        let docId = try await PoiRepository.shared.createPoi(poi)
+        print("Waste disposal POI created: \(docId) at (\(lat), \(lng))")
     }
 
     func markPOI(name: String, lat: Double, lng: Double) async throws {
@@ -420,8 +432,20 @@ class WalkViewModel: ObservableObject {
             throw WalkError.noActiveWalk
         }
 
-        // TODO: Implement POI marker
-        print("Marking POI '\(name)' at (\(lat), \(lng))")
+        let geohash = Geohash.encode(latitude: lat, longitude: lng, precision: 9)
+
+        let poi = POI(
+            type: PoiType.other.rawValue,
+            title: name,
+            desc: "POI added during walk \(sessionId)",
+            lat: lat,
+            lng: lng,
+            geohash: geohash,
+            status: PoiStatus.active.rawValue
+        )
+
+        let docId = try await PoiRepository.shared.createPoi(poi)
+        print("POI '\(name)' created: \(docId) at (\(lat), \(lng))")
     }
 
     // MARK: - Auto Features
@@ -498,7 +522,7 @@ protocol WalkRepository {
     func appendTrackPoint(sessionId: String, lat: Double, lng: Double, accMeters: Float?) async throws -> WalkTrackPoint
 }
 
-protocol DogRepository {
+protocol WalkDogRepository {
     func getDogs(ids: [String]) async throws -> [Dog]
 }
 
