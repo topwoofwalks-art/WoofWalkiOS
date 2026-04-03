@@ -13,7 +13,10 @@ struct DogProfileSheet: View {
         self.dog = dog
         self.onDismiss = onDismiss
         self.onSave = onSave
-        self._viewModel = StateObject(wrappedValue: DogProfileViewModel(dog: dog))
+        let unifiedDog: UnifiedDog? = dog.map { dp in
+            UnifiedDog(id: dp.id, name: dp.name, breed: dp.breed, photoUrl: dp.photoUrl, temperament: dp.temperament, nervousDog: dp.nervousDog, warningNote: dp.warningNote)
+        }
+        self._viewModel = StateObject(wrappedValue: DogProfileViewModel(dog: unifiedDog))
     }
 
     var body: some View {
