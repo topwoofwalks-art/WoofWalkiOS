@@ -37,9 +37,6 @@
 		A1000001000000000000135 /* WalkEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000134 /* WalkEntity.swift */; };
 		A1000001000000000000137 /* WalkSessionEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000136 /* WalkSessionEntity.swift */; };
 		A1000001000000000000139 /* WeightLogEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000138 /* WeightLogEntity.swift */; };
-		A1000001000000000000141 /* CachedPoiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000140 /* CachedPoiRepository.swift */; };
-		A1000001000000000000143 /* DogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000142 /* DogRepository.swift */; };
-		A1000001000000000000145 /* PoiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000144 /* PoiRepository.swift */; };
 		A1000001000000000000147 /* PooBagDropRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000146 /* PooBagDropRepository.swift */; };
 		A1000001000000000000149 /* StatsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000148 /* StatsRepository.swift */; };
 		A1000001000000000000151 /* SyncQueueRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000150 /* SyncQueueRepository.swift */; };
@@ -48,13 +45,12 @@
 		A1000001000000000000157 /* WalkSessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000156 /* WalkSessionRepository.swift */; };
 		A1000001000000000000159 /* WeightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000158 /* WeightRepository.swift */; };
 		A1000001000000000000161 /* DynamicWorldExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000160 /* DynamicWorldExample.swift */; };
-		A1000001000000000000163 /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000162 /* Alert.swift */; };
 		A1000001000000000000165 /* AutoReply.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000164 /* AutoReply.swift */; };
 		A1000001000000000000167 /* Badge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000166 /* Badge.swift */; };
 		A1000001000000000000169 /* ServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000168 /* ServiceProvider.swift */; };
 		A1000001000000000000171 /* MedicationScheduleEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000170 /* MedicationScheduleEntry.swift */; };
 		A1000001000000000000173 /* UnifiedDog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000172 /* UnifiedDog.swift */; };
-		A1000001000000000000175 /* VetDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000174 /* VetDetails.swift */; };
+
 		A1000001000000000000177 /* DynamicWorldModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000176 /* DynamicWorldModels.swift */; };
 		A1000001000000000000179 /* FeedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000178 /* FeedModels.swift */; };
 		A1000001000000000000181 /* Challenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000180 /* Challenge.swift */; };
@@ -71,20 +67,12 @@
 		A1000001000000000000203 /* LivestockField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000202 /* LivestockField.swift */; };
 		A1000001000000000000205 /* LivestockSpecies.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000204 /* LivestockSpecies.swift */; };
 		A1000001000000000000207 /* TileCoord.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000206 /* TileCoord.swift */; };
-		A1000001000000000000209 /* Tour.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000208 /* Tour.swift */; };
 		A1000001000000000000211 /* LivestockWalkingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000210 /* LivestockWalkingPath.swift */; };
-		A1000001000000000000213 /* LocalEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000212 /* LocalEntities.swift */; };
 		A1000001000000000000215 /* GuidanceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000214 /* GuidanceState.swift */; };
-		A1000001000000000000217 /* NavigationLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000216 /* NavigationLogic.swift */; };
-		A1000001000000000000219 /* NavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000218 /* NavigationManager.swift */; };
-		A1000001000000000000221 /* NavigationProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000220 /* NavigationProgress.swift */; };
-		A1000001000000000000223 /* NavRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000222 /* NavRoute.swift */; };
-		A1000001000000000000225 /* RouteStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000224 /* RouteStep.swift */; };
 		A1000001000000000000227 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000226 /* Notification.swift */; };
 		A1000001000000000000229 /* POI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000228 /* POI.swift */; };
 		A1000001000000000000231 /* PlannedWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000230 /* PlannedWalk.swift */; };
 		A1000001000000000000233 /* Poi.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000232 /* Poi.swift */; };
-		A1000001000000000000235 /* PooBagDrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000234 /* PooBagDrop.swift */; };
 		A1000001000000000000237 /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000236 /* Post.swift */; };
 		A1000001000000000000239 /* Social.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000238 /* Social.swift */; };
 		A1000001000000000000241 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000240 /* User.swift */; };
@@ -127,7 +115,7 @@
 		A1000001000000000000315 /* PoiOverpassService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000314 /* PoiOverpassService.swift */; };
 		A1000001000000000000317 /* PoiDatabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000316 /* PoiDatabaseManager.swift */; };
 		A1000001000000000000319 /* PoiManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000318 /* PoiManager.swift */; };
-		A1000001000000000000321 /* PoiServiceRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000320 /* PoiServiceRepository.swift */; };
+		A1000001000000000000321 /* PoiRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000320 /* PoiRepository.swift */; };
 		A1000001000000000000323 /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000322 /* ShareService.swift */; };
 		A1000001000000000000325 /* WalkTrackingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000324 /* WalkTrackingService.swift */; };
 		A1000001000000000000327 /* WalkingPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000326 /* WalkingPath.swift */; };
@@ -209,6 +197,7 @@
 		A1000001000000000000987 /* BookingStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000986 /* BookingStatus.swift */; };
 		A1000001000000000000989 /* BookingServiceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000988 /* BookingServiceType.swift */; };
 		A1000001000000000000991 /* BookingRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000990 /* BookingRepository.swift */; };
+		A1000001000000000009991 /* DogRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000009990 /* DogRepository.swift */; };
 		A1000001000000000000457 /* BirthdayCountdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000456 /* BirthdayCountdown.swift */; };
 		A1000001000000000000459 /* DogStatsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000458 /* DogStatsScreen.swift */; };
 		A1000001000000000000461 /* MedicationFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000460 /* MedicationFormView.swift */; };
@@ -245,7 +234,6 @@
 		A1000001000000000000517 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000516 /* MapView.swift */; };
 		A1000001000000000000519 /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000518 /* MapViewModel.swift */; };
 		A1000001000000000000521 /* RouteOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000520 /* RouteOverlay.swift */; };
-		A1000001000000000000641 /* MapScreenLegacy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000640 /* MapScreenLegacy.swift */; };
 		A1000001000000000000701 /* MapScreen+Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000700 /* MapScreen+Controls.swift */; };
 		A1000001000000000000703 /* MapScreen+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000702 /* MapScreen+Actions.swift */; };
 		A1000001000000000000705 /* MapScreen+Sheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000704 /* MapScreen+Sheets.swift */; };
@@ -267,6 +255,16 @@
 		A1000001000000000000553 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000552 /* LeaderboardView.swift */; };
 		A1000001000000000000555 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000554 /* ProfileView.swift */; };
 		A1000001000000000000557 /* ProfileStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000556 /* ProfileStatsView.swift */; };
+		A1000001000000000001185 /* ProfileHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001186 /* ProfileHeaderView.swift */; };
+		A1000001000000000001187 /* ProfileWalkStreakCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001188 /* ProfileWalkStreakCard.swift */; };
+		A1000001000000000001189 /* ProfileStatsGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001190 /* ProfileStatsGrid.swift */; };
+		A1000001000000000001191 /* ProfileWalkHistorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001192 /* ProfileWalkHistorySection.swift */; };
+		A1000001000000000001193 /* ProfileWeeklyActivityChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001194 /* ProfileWeeklyActivityChart.swift */; };
+		A1000001000000000001195 /* ProfileDogsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001196 /* ProfileDogsSection.swift */; };
+		A1000001000000000001197 /* ProfileBadgesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001198 /* ProfileBadgesSection.swift */; };
+		A1000001000000000001199 /* ProfileGamificationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001200 /* ProfileGamificationSection.swift */; };
+		A1000001000000000001201 /* ProfilePortalLinkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001202 /* ProfilePortalLinkCard.swift */; };
+		A1000001000000000001203 /* ProfilePlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001204 /* ProfilePlaceholderView.swift */; };
 		A1000001000000000000559 /* AlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000558 /* AlertSettingsView.swift */; };
 		A1000001000000000000561 /* DataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000560 /* DataManagementView.swift */; };
 		A1000001000000000000563 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000562 /* PermissionsView.swift */; };
@@ -379,7 +377,6 @@
 		A1000001000000000001163 /* ClientKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001162 /* ClientKey.swift */; };
 		A1000001000000000001165 /* BusinessTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001164 /* BusinessTabView.swift */; };
 		A1000001000000000001167 /* ClientTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001166 /* ClientTabView.swift */; };
-		A1000001000000000001169 /* ModeAwareRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001168 /* ModeAwareRootView.swift */; };
 		A1000001000000000001171 /* BusinessViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001170 /* BusinessViewModel.swift */; };
 		A1000001000000000001173 /* ClientHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001172 /* ClientHomeViewModel.swift */; };
 		A1000001000000000001175 /* StoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001174 /* StoryViewModel.swift */; };
@@ -397,6 +394,13 @@
 		B2000001000000000000008 /* CompassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000001000000000000108 /* CompassView.swift */; };
 		B2000001000000000000009 /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000001000000000000109 /* MessagesView.swift */; };
 		B2000001000000000000010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B2000001000000000000110 /* Assets.xcassets */; };
+		A1000001000000000001301 /* MapScreen+TestCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001300 /* MapScreen+TestCommands.swift */; };
+		A1000001000000000001303 /* MapScreen+MapLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001302 /* MapScreen+MapLayer.swift */; };
+		A1000001000000000001305 /* MapMarkerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001304 /* MapMarkerItem.swift */; };
+		A1000001000000000001307 /* WalkTrackingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001306 /* WalkTrackingViewModel.swift */; };
+		A1000001000000000001309 /* PooBagDropViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001308 /* PooBagDropViewModel.swift */; };
+		A1000001000000000001311 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001310 /* LocationManager.swift */; };
+		A1000001000000000001313 /* TorchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000001312 /* TorchManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -426,9 +430,6 @@
 		A1000001000000000000134 /* WalkEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEntity.swift; sourceTree = "<group>"; };
 		A1000001000000000000136 /* WalkSessionEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSessionEntity.swift; sourceTree = "<group>"; };
 		A1000001000000000000138 /* WeightLogEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightLogEntity.swift; sourceTree = "<group>"; };
-		A1000001000000000000140 /* CachedPoiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedPoiRepository.swift; sourceTree = "<group>"; };
-		A1000001000000000000142 /* DogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogRepository.swift; sourceTree = "<group>"; };
-		A1000001000000000000144 /* PoiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000146 /* PooBagDropRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooBagDropRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000148 /* StatsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000150 /* SyncQueueRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncQueueRepository.swift; sourceTree = "<group>"; };
@@ -437,13 +438,12 @@
 		A1000001000000000000156 /* WalkSessionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSessionRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000158 /* WeightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000160 /* DynamicWorldExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldExample.swift; sourceTree = "<group>"; };
-		A1000001000000000000162 /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
 		A1000001000000000000164 /* AutoReply.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoReply.swift; sourceTree = "<group>"; };
 		A1000001000000000000166 /* Badge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badge.swift; sourceTree = "<group>"; };
 		A1000001000000000000168 /* ServiceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProvider.swift; sourceTree = "<group>"; };
 		A1000001000000000000170 /* MedicationScheduleEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationScheduleEntry.swift; sourceTree = "<group>"; };
 		A1000001000000000000172 /* UnifiedDog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedDog.swift; sourceTree = "<group>"; };
-		A1000001000000000000174 /* VetDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VetDetails.swift; sourceTree = "<group>"; };
+
 		A1000001000000000000176 /* DynamicWorldModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldModels.swift; sourceTree = "<group>"; };
 		A1000001000000000000178 /* FeedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedModels.swift; sourceTree = "<group>"; };
 		A1000001000000000000180 /* Challenge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Challenge.swift; sourceTree = "<group>"; };
@@ -460,20 +460,12 @@
 		A1000001000000000000202 /* LivestockField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockField.swift; sourceTree = "<group>"; };
 		A1000001000000000000204 /* LivestockSpecies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockSpecies.swift; sourceTree = "<group>"; };
 		A1000001000000000000206 /* TileCoord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileCoord.swift; sourceTree = "<group>"; };
-		A1000001000000000000208 /* Tour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tour.swift; sourceTree = "<group>"; };
 		A1000001000000000000210 /* LivestockWalkingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivestockWalkingPath.swift; sourceTree = "<group>"; };
-		A1000001000000000000212 /* LocalEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalEntities.swift; sourceTree = "<group>"; };
 		A1000001000000000000214 /* GuidanceState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidanceState.swift; sourceTree = "<group>"; };
-		A1000001000000000000216 /* NavigationLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationLogic.swift; sourceTree = "<group>"; };
-		A1000001000000000000218 /* NavigationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
-		A1000001000000000000220 /* NavigationProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationProgress.swift; sourceTree = "<group>"; };
-		A1000001000000000000222 /* NavRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavRoute.swift; sourceTree = "<group>"; };
-		A1000001000000000000224 /* RouteStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteStep.swift; sourceTree = "<group>"; };
 		A1000001000000000000226 /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
 		A1000001000000000000228 /* POI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = POI.swift; sourceTree = "<group>"; };
 		A1000001000000000000230 /* PlannedWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedWalk.swift; sourceTree = "<group>"; };
 		A1000001000000000000232 /* Poi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Poi.swift; sourceTree = "<group>"; };
-		A1000001000000000000234 /* PooBagDrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooBagDrop.swift; sourceTree = "<group>"; };
 		A1000001000000000000236 /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
 		A1000001000000000000238 /* Social.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Social.swift; sourceTree = "<group>"; };
 		A1000001000000000000240 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
@@ -522,7 +514,7 @@
 		A1000001000000000000314 /* PoiOverpassService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiOverpassService.swift; sourceTree = "<group>"; };
 		A1000001000000000000316 /* PoiDatabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiDatabaseManager.swift; sourceTree = "<group>"; };
 		A1000001000000000000318 /* PoiManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiManager.swift; sourceTree = "<group>"; };
-		A1000001000000000000320 /* PoiServiceRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiServiceRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000000320 /* PoiRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiRepository.swift; sourceTree = "<group>"; };
 		A1000001000000000000322 /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
 		A1000001000000000000324 /* WalkTrackingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTrackingService.swift; sourceTree = "<group>"; };
 		A1000001000000000000326 /* WalkingPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingPath.swift; sourceTree = "<group>"; };
@@ -636,7 +628,6 @@
 		A1000001000000000000516 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		A1000001000000000000518 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
 		A1000001000000000000520 /* RouteOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOverlay.swift; sourceTree = "<group>"; };
-		A1000001000000000000640 /* MapScreenLegacy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScreenLegacy.swift; sourceTree = "<group>"; };
 		A1000001000000000000700 /* MapScreen+Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MapScreen+Controls.swift"; sourceTree = "<group>"; };
 		A1000001000000000000702 /* MapScreen+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MapScreen+Actions.swift"; sourceTree = "<group>"; };
 		A1000001000000000000704 /* MapScreen+Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MapScreen+Sheets.swift"; sourceTree = "<group>"; };
@@ -658,6 +649,16 @@
 		A1000001000000000000552 /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
 		A1000001000000000000554 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		A1000001000000000000556 /* ProfileStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStatsView.swift; sourceTree = "<group>"; };
+		A1000001000000000001186 /* ProfileHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileHeaderView.swift; sourceTree = "<group>"; };
+		A1000001000000000001188 /* ProfileWalkStreakCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileWalkStreakCard.swift; sourceTree = "<group>"; };
+		A1000001000000000001190 /* ProfileStatsGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStatsGrid.swift; sourceTree = "<group>"; };
+		A1000001000000000001192 /* ProfileWalkHistorySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileWalkHistorySection.swift; sourceTree = "<group>"; };
+		A1000001000000000001194 /* ProfileWeeklyActivityChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileWeeklyActivityChart.swift; sourceTree = "<group>"; };
+		A1000001000000000001196 /* ProfileDogsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDogsSection.swift; sourceTree = "<group>"; };
+		A1000001000000000001198 /* ProfileBadgesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadgesSection.swift; sourceTree = "<group>"; };
+		A1000001000000000001200 /* ProfileGamificationSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileGamificationSection.swift; sourceTree = "<group>"; };
+		A1000001000000000001202 /* ProfilePortalLinkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePortalLinkCard.swift; sourceTree = "<group>"; };
+		A1000001000000000001204 /* ProfilePlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePlaceholderView.swift; sourceTree = "<group>"; };
 		A1000001000000000000558 /* AlertSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSettingsView.swift; sourceTree = "<group>"; };
 		A1000001000000000000560 /* DataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManagementView.swift; sourceTree = "<group>"; };
 		A1000001000000000000562 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
@@ -740,6 +741,7 @@
 		A1000001000000000000986 /* BookingStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingStatus.swift; sourceTree = "<group>"; };
 		A1000001000000000000988 /* BookingServiceType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingServiceType.swift; sourceTree = "<group>"; };
 		A1000001000000000000990 /* BookingRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000009990 /* DogRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogRepository.swift; sourceTree = "<group>"; };
 
 		A1000001000000000001100 /* BusinessHomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessHomeScreen.swift; sourceTree = "<group>"; };
 		A1000001000000000001102 /* BusinessInboxScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessInboxScreen.swift; sourceTree = "<group>"; };
@@ -775,7 +777,6 @@
 		A1000001000000000001162 /* ClientKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientKey.swift; sourceTree = "<group>"; };
 		A1000001000000000001164 /* BusinessTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessTabView.swift; sourceTree = "<group>"; };
 		A1000001000000000001166 /* ClientTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientTabView.swift; sourceTree = "<group>"; };
-		A1000001000000000001168 /* ModeAwareRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeAwareRootView.swift; sourceTree = "<group>"; };
 		A1000001000000000001170 /* BusinessViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessViewModel.swift; sourceTree = "<group>"; };
 		A1000001000000000001172 /* ClientHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientHomeViewModel.swift; sourceTree = "<group>"; };
 		A1000001000000000001174 /* StoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewModel.swift; sourceTree = "<group>"; };
@@ -795,6 +796,13 @@
 		B2000001000000000000108 /* CompassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompassView.swift; sourceTree = "<group>"; };
 		B2000001000000000000109 /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
 		B2000001000000000000110 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1000001000000000001300 /* MapScreen+TestCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MapScreen+TestCommands.swift"; sourceTree = "<group>"; };
+		A1000001000000000001302 /* MapScreen+MapLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MapScreen+MapLayer.swift"; sourceTree = "<group>"; };
+		A1000001000000000001304 /* MapMarkerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapMarkerItem.swift; sourceTree = "<group>"; };
+		A1000001000000000001306 /* WalkTrackingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTrackingViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000001308 /* PooBagDropViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooBagDropViewModel.swift; sourceTree = "<group>"; };
+		A1000001000000000001310 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		A1000001000000000001312 /* TorchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TorchManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -884,15 +892,12 @@
 				A1000001000000000000800 /* Hazard */,
 				A1000001000000000000801 /* OffLead */,
 				A1000001000000000000802 /* Trail */,
-				A1000001000000000000162 /* Alert.swift */,
 				A1000001000000000000164 /* AutoReply.swift */,
 				A1000001000000000000166 /* Badge.swift */,
 				A1000001000000000000178 /* FeedModels.swift */,
-				A1000001000000000000212 /* LocalEntities.swift */,
 				A1000001000000000000226 /* Notification.swift */,
 				A1000001000000000000230 /* PlannedWalk.swift */,
 				A1000001000000000000232 /* Poi.swift */,
-				A1000001000000000000234 /* PooBagDrop.swift */,
 				A1000001000000000000236 /* Post.swift */,
 				A1000001000000000000238 /* Social.swift */,
 				A1000001000000000000240 /* User.swift */,
@@ -990,6 +995,8 @@
 				A1000001000000000001170 /* BusinessViewModel.swift */,
 				A1000001000000000001172 /* ClientHomeViewModel.swift */,
 				A1000001000000000001174 /* StoryViewModel.swift */,
+				A1000001000000000001306 /* WalkTrackingViewModel.swift */,
+				A1000001000000000001308 /* PooBagDropViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -1027,6 +1034,7 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000990 /* BookingRepository.swift */,
+				A1000001000000000009990 /* DogRepository.swift */,
 				A1000001000000000000260 /* ChallengeRepository.swift */,
 				A1000001000000000000262 /* CharityRepository.swift */,
 				A1000001000000000000264 /* DiscoveryRepository.swift */,
@@ -1071,6 +1079,8 @@
 				A1000001000000000000644 /* ScreenshotAutomation.swift */,
 				A1000001000000000000646 /* ButtonTestCoordinator.swift */,
 				A1000001000000000000844 /* HapticFeedback.swift */,
+				A1000001000000000001310 /* LocationManager.swift */,
+				A1000001000000000001312 /* TorchManager.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -1128,9 +1138,6 @@
 		A1000001000000000000604 /* Repositories */ = {
 			isa = PBXGroup;
 			children = (
-				A1000001000000000000140 /* CachedPoiRepository.swift */,
-				A1000001000000000000142 /* DogRepository.swift */,
-				A1000001000000000000144 /* PoiRepository.swift */,
 				A1000001000000000000146 /* PooBagDropRepository.swift */,
 				A1000001000000000000148 /* StatsRepository.swift */,
 				A1000001000000000000150 /* SyncQueueRepository.swift */,
@@ -1163,7 +1170,6 @@
 			children = (
 				A1000001000000000000170 /* MedicationScheduleEntry.swift */,
 				A1000001000000000000172 /* UnifiedDog.swift */,
-				A1000001000000000000174 /* VetDetails.swift */,
 			);
 			path = Dog;
 			sourceTree = "<group>";
@@ -1200,7 +1206,6 @@
 				A1000001000000000000202 /* LivestockField.swift */,
 				A1000001000000000000204 /* LivestockSpecies.swift */,
 				A1000001000000000000206 /* TileCoord.swift */,
-				A1000001000000000000208 /* Tour.swift */,
 				A1000001000000000000210 /* LivestockWalkingPath.swift */,
 			);
 			path = LivestockField;
@@ -1210,11 +1215,6 @@
 			isa = PBXGroup;
 			children = (
 				A1000001000000000000214 /* GuidanceState.swift */,
-				A1000001000000000000216 /* NavigationLogic.swift */,
-				A1000001000000000000218 /* NavigationManager.swift */,
-				A1000001000000000000220 /* NavigationProgress.swift */,
-				A1000001000000000000222 /* NavRoute.swift */,
-				A1000001000000000000224 /* RouteStep.swift */,
 			);
 			path = Navigation;
 			sourceTree = "<group>";
@@ -1234,7 +1234,6 @@
 				A1000001000000000001164 /* BusinessTabView.swift */,
 				A1000001000000000001166 /* ClientTabView.swift */,
 				A1000001000000000000250 /* MainTabView.swift */,
-				A1000001000000000001168 /* ModeAwareRootView.swift */,
 				A1000001000000000000252 /* NavigationViewModel.swift */,
 				A1000001000000000000254 /* Route.swift */,
 				A1000001000000000000256 /* RouteDestination.swift */,
@@ -1275,7 +1274,7 @@
 				A1000001000000000000314 /* PoiOverpassService.swift */,
 				A1000001000000000000316 /* PoiDatabaseManager.swift */,
 				A1000001000000000000318 /* PoiManager.swift */,
-				A1000001000000000000320 /* PoiServiceRepository.swift */,
+				A1000001000000000000320 /* PoiRepository.swift */,
 			);
 			path = POI;
 			sourceTree = "<group>";
@@ -1470,7 +1469,6 @@
 				A1000001000000000000510 /* MapAnnotation.swift */,
 				A1000001000000000000512 /* MapControls.swift */,
 				A1000001000000000000514 /* MapStyleToggle.swift */,
-				A1000001000000000000640 /* MapScreenLegacy.swift */,
 				A1000001000000000000516 /* MapView.swift */,
 				A1000001000000000000518 /* MapViewModel.swift */,
 				A1000001000000000000520 /* RouteOverlay.swift */,
@@ -1479,6 +1477,9 @@
 				A1000001000000000000704 /* MapScreen+Sheets.swift */,
 				A1000001000000000000848 /* HazardAlertBanner.swift */,
 				A1000001000000000000850 /* MapScreen+Overlays.swift */,
+				A1000001000000000001300 /* MapScreen+TestCommands.swift */,
+				A1000001000000000001302 /* MapScreen+MapLayer.swift */,
+				A1000001000000000001304 /* MapMarkerItem.swift */,
 				A1000001000000000000852 /* TrailConditionSheet.swift */,
 				A1000001000000000000854 /* WalkPolylineView.swift */,
 				A1000001000000000000866 /* ClusterPoiSelectionSheet.swift */,
@@ -1535,8 +1536,18 @@
 				A1000001000000000000550 /* EditProfileView.swift */,
 				A1000001000000000000552 /* LeaderboardView.swift */,
 				A1000001000000000001152 /* ProfileCardView.swift */,
+				A1000001000000000001198 /* ProfileBadgesSection.swift */,
+				A1000001000000000001196 /* ProfileDogsSection.swift */,
+				A1000001000000000001200 /* ProfileGamificationSection.swift */,
+				A1000001000000000001186 /* ProfileHeaderView.swift */,
+				A1000001000000000001204 /* ProfilePlaceholderView.swift */,
+				A1000001000000000001202 /* ProfilePortalLinkCard.swift */,
+				A1000001000000000001190 /* ProfileStatsGrid.swift */,
 				A1000001000000000000556 /* ProfileStatsView.swift */,
 				A1000001000000000000554 /* ProfileView.swift */,
+				A1000001000000000001192 /* ProfileWalkHistorySection.swift */,
+				A1000001000000000001188 /* ProfileWalkStreakCard.swift */,
+				A1000001000000000001194 /* ProfileWeeklyActivityChart.swift */,
 				A1000001000000000000950 /* PublicProfileScreen.swift */,
 				A1000001000000000001154 /* StatsCards.swift */,
 			);
@@ -1804,9 +1815,6 @@
 				A1000001000000000000135 /* WalkEntity.swift in Sources */,
 				A1000001000000000000137 /* WalkSessionEntity.swift in Sources */,
 				A1000001000000000000139 /* WeightLogEntity.swift in Sources */,
-				A1000001000000000000141 /* CachedPoiRepository.swift in Sources */,
-				A1000001000000000000143 /* DogRepository.swift in Sources */,
-				A1000001000000000000145 /* PoiRepository.swift in Sources */,
 				A1000001000000000000147 /* PooBagDropRepository.swift in Sources */,
 				A1000001000000000000149 /* StatsRepository.swift in Sources */,
 				A1000001000000000000151 /* SyncQueueRepository.swift in Sources */,
@@ -1815,13 +1823,11 @@
 				A1000001000000000000157 /* WalkSessionRepository.swift in Sources */,
 				A1000001000000000000159 /* WeightRepository.swift in Sources */,
 				A1000001000000000000161 /* DynamicWorldExample.swift in Sources */,
-				A1000001000000000000163 /* Alert.swift in Sources */,
 				A1000001000000000000165 /* AutoReply.swift in Sources */,
 				A1000001000000000000167 /* Badge.swift in Sources */,
 				A1000001000000000000169 /* ServiceProvider.swift in Sources */,
 				A1000001000000000000171 /* MedicationScheduleEntry.swift in Sources */,
 				A1000001000000000000173 /* UnifiedDog.swift in Sources */,
-				A1000001000000000000175 /* VetDetails.swift in Sources */,
 				A1000001000000000000177 /* DynamicWorldModels.swift in Sources */,
 				A1000001000000000000179 /* FeedModels.swift in Sources */,
 				A1000001000000000000181 /* Challenge.swift in Sources */,
@@ -1838,20 +1844,12 @@
 				A1000001000000000000203 /* LivestockField.swift in Sources */,
 				A1000001000000000000205 /* LivestockSpecies.swift in Sources */,
 				A1000001000000000000207 /* TileCoord.swift in Sources */,
-				A1000001000000000000209 /* Tour.swift in Sources */,
 				A1000001000000000000211 /* WalkingPath.swift in Sources */,
-				A1000001000000000000213 /* LocalEntities.swift in Sources */,
 				A1000001000000000000215 /* GuidanceState.swift in Sources */,
-				A1000001000000000000217 /* NavigationLogic.swift in Sources */,
-				A1000001000000000000219 /* NavigationManager.swift in Sources */,
-				A1000001000000000000221 /* NavigationProgress.swift in Sources */,
-				A1000001000000000000223 /* Route.swift in Sources */,
-				A1000001000000000000225 /* RouteStep.swift in Sources */,
 				A1000001000000000000227 /* Notification.swift in Sources */,
 				A1000001000000000000229 /* POI.swift in Sources */,
 				A1000001000000000000231 /* PlannedWalk.swift in Sources */,
 				A1000001000000000000233 /* Poi.swift in Sources */,
-				A1000001000000000000235 /* PooBagDrop.swift in Sources */,
 				A1000001000000000000237 /* Post.swift in Sources */,
 				A1000001000000000000239 /* Social.swift in Sources */,
 				A1000001000000000000241 /* User.swift in Sources */,
@@ -2005,7 +2003,6 @@
 				A1000001000000000000511 /* MapAnnotation.swift in Sources */,
 				A1000001000000000000513 /* MapControls.swift in Sources */,
 				A1000001000000000000515 /* MapStyleToggle.swift in Sources */,
-				A1000001000000000000641 /* MapScreenLegacy.swift in Sources */,
 				A1000001000000000000517 /* MapView.swift in Sources */,
 				A1000001000000000000519 /* MapViewModel.swift in Sources */,
 				A1000001000000000000521 /* RouteOverlay.swift in Sources */,
@@ -2029,6 +2026,16 @@
 				A1000001000000000000551 /* EditProfileView.swift in Sources */,
 				A1000001000000000000553 /* LeaderboardView.swift in Sources */,
 				A1000001000000000000555 /* ProfileView.swift in Sources */,
+				A1000001000000000001185 /* ProfileHeaderView.swift in Sources */,
+				A1000001000000000001187 /* ProfileWalkStreakCard.swift in Sources */,
+				A1000001000000000001189 /* ProfileStatsGrid.swift in Sources */,
+				A1000001000000000001191 /* ProfileWalkHistorySection.swift in Sources */,
+				A1000001000000000001193 /* ProfileWeeklyActivityChart.swift in Sources */,
+				A1000001000000000001195 /* ProfileDogsSection.swift in Sources */,
+				A1000001000000000001197 /* ProfileBadgesSection.swift in Sources */,
+				A1000001000000000001199 /* ProfileGamificationSection.swift in Sources */,
+				A1000001000000000001201 /* ProfilePortalLinkCard.swift in Sources */,
+				A1000001000000000001203 /* ProfilePlaceholderView.swift in Sources */,
 				A1000001000000000000557 /* StatsView.swift in Sources */,
 				A1000001000000000000559 /* AlertSettingsView.swift in Sources */,
 				A1000001000000000000561 /* DataManagementView.swift in Sources */,
@@ -2078,6 +2085,13 @@
 				A1000001000000000000847 /* AnimationModifiers.swift in Sources */,
 				A1000001000000000000849 /* HazardAlertBanner.swift in Sources */,
 				A1000001000000000000851 /* MapScreen+Overlays.swift in Sources */,
+				A1000001000000000001301 /* MapScreen+TestCommands.swift in Sources */,
+				A1000001000000000001303 /* MapScreen+MapLayer.swift in Sources */,
+				A1000001000000000001305 /* MapMarkerItem.swift in Sources */,
+				A1000001000000000001307 /* WalkTrackingViewModel.swift in Sources */,
+				A1000001000000000001309 /* PooBagDropViewModel.swift in Sources */,
+				A1000001000000000001311 /* LocationManager.swift in Sources */,
+				A1000001000000000001313 /* TorchManager.swift in Sources */,
 				A1000001000000000000853 /* TrailConditionSheet.swift in Sources */,
 				A1000001000000000000855 /* WalkPolylineView.swift in Sources */,
 				A1000001000000000000857 /* InWalkMilestonePopup.swift in Sources */,
@@ -2116,6 +2130,7 @@
 				A1000001000000000000987 /* BookingStatus.swift in Sources */,
 				A1000001000000000000989 /* BookingServiceType.swift in Sources */,
 				A1000001000000000000991 /* BookingRepository.swift in Sources */,
+				A1000001000000000009991 /* DogRepository.swift in Sources */,
 				A1000001000000000001101 /* BusinessHomeScreen.swift in Sources */,
 				A1000001000000000001103 /* BusinessInboxScreen.swift in Sources */,
 				A1000001000000000001105 /* BusinessWalkConsoleScreen.swift in Sources */,
@@ -2150,7 +2165,6 @@
 				A1000001000000000001163 /* ClientKey.swift in Sources */,
 				A1000001000000000001165 /* BusinessTabView.swift in Sources */,
 				A1000001000000000001167 /* ClientTabView.swift in Sources */,
-				A1000001000000000001169 /* ModeAwareRootView.swift in Sources */,
 				A1000001000000000001171 /* BusinessViewModel.swift in Sources */,
 				A1000001000000000001173 /* ClientHomeViewModel.swift in Sources */,
 				A1000001000000000001175 /* StoryViewModel.swift in Sources */,
