@@ -309,6 +309,7 @@
 		A1000001000000000000839 /* ElevationFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000838 /* ElevationFilter.swift */; };
 		A1000001000000000000841 /* GPSFilterPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000840 /* GPSFilterPipeline.swift */; };
 		A1000001000000000000843 /* KalmanFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000842 /* KalmanFilter.swift */; };
+		A1000001000000000008145 /* GpsPostProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000008144 /* GpsPostProcessor.swift */; };
 		A1000001000000000000845 /* HapticFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000844 /* HapticFeedback.swift */; };
 		A1000001000000000000847 /* AnimationModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000846 /* AnimationModifiers.swift */; };
 		A1000001000000000000849 /* HazardAlertBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001000000000000848 /* HazardAlertBanner.swift */; };
@@ -700,6 +701,7 @@
 		A1000001000000000000838 /* ElevationFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevationFilter.swift; sourceTree = "<group>"; };
 		A1000001000000000000840 /* GPSFilterPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSFilterPipeline.swift; sourceTree = "<group>"; };
 		A1000001000000000000842 /* KalmanFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KalmanFilter.swift; sourceTree = "<group>"; };
+		A1000001000000000008144 /* GpsPostProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GpsPostProcessor.swift; sourceTree = "<group>"; };
 		A1000001000000000000844 /* HapticFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedback.swift; sourceTree = "<group>"; };
 		A1000001000000000000846 /* AnimationModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationModifiers.swift; sourceTree = "<group>"; };
 		A1000001000000000000848 /* HazardAlertBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardAlertBanner.swift; sourceTree = "<group>"; };
@@ -1649,6 +1651,7 @@
 			children = (
 				A1000001000000000000838 /* ElevationFilter.swift */,
 				A1000001000000000000840 /* GPSFilterPipeline.swift */,
+				A1000001000000000008144 /* GpsPostProcessor.swift */,
 				A1000001000000000000842 /* KalmanFilter.swift */,
 			);
 			path = GPS;
@@ -2075,6 +2078,7 @@
 				A1000001000000000000837 /* TrailCondition.swift in Sources */,
 				A1000001000000000000839 /* ElevationFilter.swift in Sources */,
 				A1000001000000000000841 /* GPSFilterPipeline.swift in Sources */,
+				A1000001000000000008145 /* GpsPostProcessor.swift in Sources */,
 				A1000001000000000000843 /* KalmanFilter.swift in Sources */,
 				A1000001000000000000845 /* HapticFeedback.swift in Sources */,
 				A1000001000000000000847 /* AnimationModifiers.swift in Sources */,
