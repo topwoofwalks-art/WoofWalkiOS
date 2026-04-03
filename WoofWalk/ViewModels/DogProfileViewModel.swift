@@ -17,20 +17,20 @@ class DogProfileViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    private let userRepository: UserRepository
-    private var editingDog: DogProfile?
+    private let dogRepository: DogRepository
+    private var editingDog: UnifiedDog?
 
     let temperaments = ["Friendly", "Shy", "Energetic", "Calm", "Playful", "Protective"]
 
-    init(dog: DogProfile? = nil, userRepository: UserRepository = UserRepository()) {
-        self.userRepository = userRepository
+    init(dog: UnifiedDog? = nil, dogRepository: DogRepository = DogRepository()) {
+        self.dogRepository = dogRepository
         self.editingDog = dog
 
         if let dog = dog {
             self.name = dog.name
-            self.breed = dog.breed
-            self.age = "\(dog.age)"
-            self.temperament = dog.temperament
+            self.breed = dog.breed ?? ""
+            self.age = "\(dog.ageYears)"
+            self.temperament = dog.temperament ?? "Friendly"
             self.nervousDog = dog.nervousDog
             self.warningNote = dog.warningNote ?? ""
             self.photoUrl = dog.photoUrl
@@ -55,21 +55,20 @@ class DogProfileViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let dogProfile = DogProfile(
+            let dog = UnifiedDog(
                 id: editingDog?.id ?? UUID().uuidString,
                 name: name,
                 breed: breed.isEmpty ? "Mixed" : breed,
-                age: Int(age) ?? 0,
-                photoUrl: photoUrl,
                 temperament: temperament,
                 nervousDog: nervousDog,
-                warningNote: warningNote.isEmpty ? nil : warningNote
+                warningNote: warningNote.isEmpty ? nil : warningNote,
+                photoUrl: photoUrl
             )
 
             if editingDog != nil {
-                try await userRepository.updateDogProfile(dogId: dogProfile.id, dog: dogProfile)
+                try await dogRepository.updateDog(dogId: dog.id!, dog: dog)
             } else {
-                try await userRepository.addDogProfile(dog: dogProfile)
+                try await dogRepository.addDog(dog)
             }
 
             isLoading = false
@@ -87,7 +86,7 @@ class DogProfileViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            try await userRepository.removeDogProfile(dogId: dogId)
+            try await dogRepository.removeDog(dogId: dogId)
             isLoading = false
         } catch {
             isLoading = false
@@ -104,7 +103,7 @@ class DogProfileViewModel: ObservableObject {
         isLoading = true
         do {
             let path = "dogProfiles/\(userId)/\(UUID().uuidString).jpg"
-            let firebaseService = FirebaseService()
+            let firebaseService = FirebaseService.shared
             let downloadURL = try await firebaseService.uploadImage(data: imageData, path: path)
             self.photoUrl = downloadURL.absoluteString
             isLoading = false
