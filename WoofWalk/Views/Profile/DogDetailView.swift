@@ -6,6 +6,7 @@ struct DogDetailView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @State private var showEditSheet = false
     @State private var showDeleteAlert = false
+    @State private var galleryUrls: [String] = []
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -14,6 +15,23 @@ struct DogDetailView: View {
                 dogPhotoHeader
 
                 dogInfoCard
+
+                if isOwner {
+                    // Gallery + medical are owner-only. Firestore rules
+                    // back this up (subcollection reads denied to non-owners)
+                    // but the UI also hides the sections so a shared-to
+                    // viewer just sees the public header.
+                    DogGallerySection(
+                        dogId: dog.id,
+                        photoUrls: $galleryUrls,
+                        isOwner: isOwner
+                    )
+
+                    DogMedicalSection(
+                        dogId: dog.id,
+                        isOwner: isOwner
+                    )
+                }
 
                 walkHistorySection
 
