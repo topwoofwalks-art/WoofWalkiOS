@@ -54,6 +54,8 @@ class LocationService: NSObject, ObservableObject {
     @Published var isUpdatingLocation = false
     @Published var heading: CLHeading?
     @Published var gpsQuality: GPSQuality = .unknown
+    @Published var isLowPowerMode: Bool = ProcessInfo.processInfo.isLowPowerModeEnabled
+    @Published var hasReducedAccuracy: Bool = false
 
     let locationUpdatePublisher = PassthroughSubject<LocationUpdate, Never>()
     let authorizationPublisher = PassthroughSubject<LocationAuthorizationStatus, Never>()
@@ -64,6 +66,7 @@ class LocationService: NSObject, ObservableObject {
     private override init() {
         super.init()
         setupLocationManager()
+        setupPowerStateObserver()
     }
 
     private func setupLocationManager() {
@@ -78,6 +81,30 @@ class LocationService: NSObject, ObservableObject {
         }
 
         updateAuthorizationStatus()
+        updateReducedAccuracy()
+    }
+
+    private func setupPowerStateObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(powerStateChanged),
+            name: Notification.Name.NSProcessInfoPowerStateDidChange,
+            object: nil
+        )
+    }
+
+    @objc private func powerStateChanged() {
+        Task { @MainActor in
+            self.isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+        }
+    }
+
+    private func updateReducedAccuracy() {
+        if #available(iOS 14.0, *) {
+            hasReducedAccuracy = locationManager.accuracyAuthorization == .reducedAccuracy
+        } else {
+            hasReducedAccuracy = false
+        }
     }
 
     // MARK: - Authorization
@@ -127,6 +154,7 @@ class LocationService: NSObject, ObservableObject {
 
         authorizationStatus = status
         authorizationPublisher.send(status)
+        updateReducedAccuracy()
     }
 
     var isAuthorized: Bool {

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DogDetailView: View {
     let dog: DogProfile
+    var isOwner: Bool = true
     @StateObject private var viewModel = ProfileViewModel()
     @State private var showEditSheet = false
     @State private var showDeleteAlert = false
@@ -16,16 +17,20 @@ struct DogDetailView: View {
 
                 walkHistorySection
 
-                actionsSection
+                if isOwner {
+                    actionsSection
+                }
             }
             .padding()
         }
         .navigationTitle(dog.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { showEditSheet = true }) {
-                    Text("Edit")
+            if isOwner {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showEditSheet = true }) {
+                        Text("Edit")
+                    }
                 }
             }
         }

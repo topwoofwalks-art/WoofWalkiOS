@@ -161,12 +161,26 @@ class ShareService {
             return
         }
 
-        // Place image on pasteboard so it's available when WhatsApp opens
-        UIPasteboard.general.image = image
+        // Put image on pasteboard as JPEG — WhatsApp reads public.jpeg from the
+        // clipboard rather than the raw UIImage object.
+        if let jpegData = image.jpegData(compressionQuality: 0.9) {
+            UIPasteboard.general.setData(jpegData, forPasteboardType: "public.jpeg")
+        } else {
+            UIPasteboard.general.image = image
+        }
 
-        let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        if let url = URL(string: "whatsapp://send?text=\(encoded)") {
-            UIApplication.shared.open(url)
+        // URLComponents handles query encoding per RFC 3986 (newlines, emoji, &, +).
+        var components = URLComponents(string: "whatsapp://send")
+        components?.queryItems = [URLQueryItem(name: "text", value: text)]
+        guard let url = components?.url else {
+            shareImage(image, text: text)
+            return
+        }
+        UIApplication.shared.open(url, options: [:]) { [weak self] success in
+            if !success {
+                print("[ShareService] WhatsApp open failed, falling back to system share")
+                self?.shareImage(image, text: text)
+            }
         }
     }
 
@@ -194,9 +208,14 @@ class ShareService {
         // Try X (Twitter) app scheme
         if canOpenApp("twitter") {
             UIPasteboard.general.image = image
-            let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-            if let url = URL(string: "twitter://post?message=\(encoded)") {
-                UIApplication.shared.open(url)
+            var components = URLComponents(string: "twitter://post")
+            components?.queryItems = [URLQueryItem(name: "message", value: text)]
+            if let url = components?.url {
+                UIApplication.shared.open(url, options: [:]) { [weak self] success in
+                    if !success {
+                        self?.shareImage(image, text: text)
+                    }
+                }
                 return
             }
         }

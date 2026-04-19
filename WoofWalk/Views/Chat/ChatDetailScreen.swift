@@ -516,17 +516,29 @@ class ChatDetailViewModel: ObservableObject {
     // MARK: - Delete Conversation
 
     func deleteConversation(completion: @escaping () -> Void) {
+        guard !currentUserId.isEmpty else {
+            print("Delete conversation refused: no authenticated user")
+            return
+        }
         Task {
             do {
+                let threadRef = db.collection("messageThreads").document(chatId)
+                let threadDoc = try await threadRef.getDocument()
+                let participants = (threadDoc.data()?["participants"] as? [String]) ?? []
+                guard participants.contains(currentUserId) else {
+                    print("Delete conversation refused: user \(currentUserId) not a participant of \(chatId)")
+                    return
+                }
+
                 // Delete all messages in the subcollection (batch max 500)
-                let messagesSnapshot = try await db.collection("messageThreads").document(chatId)
+                let messagesSnapshot = try await threadRef
                     .collection("messages").limit(to: 500).getDocuments()
                 let batch = db.batch()
                 for doc in messagesSnapshot.documents {
                     batch.deleteDocument(doc.reference)
                 }
                 // Delete the thread document itself
-                batch.deleteDocument(db.collection("messageThreads").document(chatId))
+                batch.deleteDocument(threadRef)
                 try await batch.commit()
                 print("Conversation deleted: \(chatId)")
                 completion()

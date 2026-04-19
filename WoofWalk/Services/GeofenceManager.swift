@@ -115,7 +115,11 @@ class GeofenceManager: ObservableObject {
             return .failure(.monitoringNotAvailable)
         }
 
-        guard locationService.isAuthorized else {
+        // Region monitoring requires .authorizedAlways — WhenInUse is not enough for
+        // background region events. Skip silently rather than registering regions that
+        // will never fire when backgrounded.
+        guard locationService.authorizationStatus == .authorizedAlways else {
+            print("[GeofenceManager] Skipping registration: requires Always authorization")
             return .failure(.notAuthorized)
         }
 

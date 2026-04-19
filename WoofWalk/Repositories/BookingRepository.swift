@@ -177,8 +177,28 @@ class BookingRepository: ObservableObject {
         return docRef.documentID
     }
 
+    /// Check the caller is a participant in the booking (client, business, or assigned provider).
+    private func assertCallerIsParticipant(bookingId: String) async throws {
+        guard let uid = currentUserId else {
+            throw NSError(domain: "BookingRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+        let snap = try await db.collection(Self.collectionBookings).document(bookingId).getDocument()
+        guard let data = snap.data() else {
+            throw NSError(domain: "BookingRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Booking not found"])
+        }
+        let clientId = data["clientId"] as? String
+        let businessId = data["businessId"] as? String
+        let assignedTo = data["assignedTo"] as? String
+        let participants: [String] = [clientId, businessId, assignedTo].compactMap { $0 }
+        guard participants.contains(uid) else {
+            throw NSError(domain: "BookingRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to modify this booking"])
+        }
+    }
+
     /// Update the status of a booking.
     func updateBookingStatus(bookingId: String, status: BookingStatus) async throws {
+        try await assertCallerIsParticipant(bookingId: bookingId)
+
         let updates: [String: Any] = [
             "status": status.rawValue,
             "updatedAt": Int64(Date().timeIntervalSince1970 * 1000)
@@ -193,6 +213,8 @@ class BookingRepository: ObservableObject {
 
     /// Cancel a booking with an optional reason.
     func cancelBooking(bookingId: String, reason: String? = nil) async throws {
+        try await assertCallerIsParticipant(bookingId: bookingId)
+
         var updates: [String: Any] = [
             "status": BookingStatus.cancelled.rawValue,
             "updatedAt": Int64(Date().timeIntervalSince1970 * 1000)

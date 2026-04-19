@@ -138,7 +138,11 @@ struct MapSheetModifiersGroup2: ViewModifier {
                 BackgroundLocationPrompt(
                     isPresented: $showBackgroundLocationPrompt,
                     onEnable: {
-                        locationManager.requestAlwaysAuthorization()
+                        // WhenInUse + UIBackgroundModes "location" + allowsBackgroundLocationUpdates=true
+                        // is sufficient for active-walk tracking. Always is only required for
+                        // geofence monitoring while the app is backgrounded, which is opt-in
+                        // via a separate prompt (see GeofenceManager).
+                        locationManager.requestWhenInUseAuthorization()
                         walkTrackingViewModel.startWalk()
                         mapViewModel.startWalkTracking()
                     },

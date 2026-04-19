@@ -98,12 +98,14 @@ class UserRepository: ObservableObject {
         let userDoc = try await db.collection("users").document(userId).getDocument()
         var user = try userDoc.data(as: UserProfile.self)
 
-        if let index = user.dogs.firstIndex(where: { $0.id == dogId }) {
-            user.dogs[index] = dog
-            try await db.collection("users").document(userId).updateData([
-                "dogs": user.dogs.map { try! Firestore.Encoder().encode($0) }
-            ])
+        guard let index = user.dogs.firstIndex(where: { $0.id == dogId }) else {
+            throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to edit this dog"])
         }
+
+        user.dogs[index] = dog
+        try await db.collection("users").document(userId).updateData([
+            "dogs": user.dogs.map { try! Firestore.Encoder().encode($0) }
+        ])
     }
 
     func removeDogProfile(dogId: String) async throws {
