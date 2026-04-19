@@ -72,57 +72,28 @@ class UserRepository: ObservableObject {
         return publisher.eraseToAnyPublisher()
     }
 
+    // MARK: - Dog profile delegates to DogRepository (Stage 2)
+    //
+    // The legacy addDogProfile/updateDogProfile/removeDogProfile wrote
+    // directly to users/{uid}.dogs[] as an embedded-array mutation. That
+    // path now only receives a public projection written by the
+    // onDogWrite Cloud Function — clients write dogs to /dogs/{dogId}
+    // via DogRepository instead.
+    //
+    // These three methods remain as thin shims so existing UI call sites
+    // don't change during Stage 2; Stage 3 will delete them entirely
+    // once the DogProfilePublic projection replaces DogProfile in UI.
+
     func addDogProfile(dog: DogProfile) async throws {
-        guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
-        }
-
-        let userDoc = try await db.collection("users").document(userId).getDocument()
-        let user = try userDoc.data(as: UserProfile.self)
-
-        if user.dogs.contains(where: { $0.id == dog.id }) {
-            print("Dog profile already exists: \(dog.name), skipping")
-            return
-        }
-
-        try await db.collection("users").document(userId).updateData([
-            "dogs": FieldValue.arrayUnion([try Firestore.Encoder().encode(dog)])
-        ])
+        try await DogRepository().addDog(dog.toUnifiedDog())
     }
 
     func updateDogProfile(dogId: String, dog: DogProfile) async throws {
-        guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
-        }
-
-        let userDoc = try await db.collection("users").document(userId).getDocument()
-        var user = try userDoc.data(as: UserProfile.self)
-
-        guard let index = user.dogs.firstIndex(where: { $0.id == dogId }) else {
-            throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to edit this dog"])
-        }
-
-        user.dogs[index] = dog
-        try await db.collection("users").document(userId).updateData([
-            "dogs": user.dogs.map { try! Firestore.Encoder().encode($0) }
-        ])
+        try await DogRepository().updateDog(dogId: dogId, dog: dog.toUnifiedDog())
     }
 
     func removeDogProfile(dogId: String) async throws {
-        guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
-        }
-
-        let userDoc = try await db.collection("users").document(userId).getDocument()
-        let user = try userDoc.data(as: UserProfile.self)
-
-        guard let dog = user.dogs.first(where: { $0.id == dogId }) else {
-            throw NSError(domain: "UserRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Dog not found"])
-        }
-
-        try await db.collection("users").document(userId).updateData([
-            "dogs": FieldValue.arrayRemove([try Firestore.Encoder().encode(dog)])
-        ])
+        try await DogRepository().removeDog(dogId: dogId)
     }
 
     func awardPawPoints(points: Int, reason: String) async throws {
