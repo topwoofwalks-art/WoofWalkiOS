@@ -72,29 +72,9 @@ class UserRepository: ObservableObject {
         return publisher.eraseToAnyPublisher()
     }
 
-    // MARK: - Dog profile delegates to DogRepository (Stage 2)
-    //
-    // The legacy addDogProfile/updateDogProfile/removeDogProfile wrote
-    // directly to users/{uid}.dogs[] as an embedded-array mutation. That
-    // path now only receives a public projection written by the
-    // onDogWrite Cloud Function — clients write dogs to /dogs/{dogId}
-    // via DogRepository instead.
-    //
-    // These three methods remain as thin shims so existing UI call sites
-    // don't change during Stage 2; Stage 3 will delete them entirely
-    // once the DogProfilePublic projection replaces DogProfile in UI.
-
-    func addDogProfile(dog: DogProfile) async throws {
-        try await DogRepository().addDog(dog.toUnifiedDog())
-    }
-
-    func updateDogProfile(dogId: String, dog: DogProfile) async throws {
-        try await DogRepository().updateDog(dogId: dogId, dog: dog.toUnifiedDog())
-    }
-
-    func removeDogProfile(dogId: String) async throws {
-        try await DogRepository().removeDog(dogId: dogId)
-    }
+    // Dog CRUD is now exclusively through DogRepository — callers have
+    // been migrated to call it directly. The legacy addDogProfile/
+    // updateDogProfile/removeDogProfile shims were deleted in Stage 3.
 
     func awardPawPoints(points: Int, reason: String) async throws {
         guard let userId = auth.currentUser?.uid else {

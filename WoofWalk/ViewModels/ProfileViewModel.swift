@@ -184,10 +184,16 @@ class ProfileViewModel: ObservableObject {
         }
     }
 
+    /// Dog CRUD routes through `DogRepository` (writes to `/dogs/{dogId}`).
+    /// The legacy `UserRepository.addDogProfile` / `updateDogProfile` /
+    /// `removeDogProfile` shims that wrote to `users/{uid}.dogs[]` are
+    /// gone — the embedded array is now a `DogProfilePublic` projection
+    /// maintained by the `onDogWrite` Cloud Function.
+
     func addDogProfile(dog: DogProfile) {
         Task {
             do {
-                try await userRepository.addDogProfile(dog: dog)
+                try await DogRepository().addDog(dog.toUnifiedDog())
                 print("Dog profile added: \(dog.name)")
             } catch {
                 print("Error adding dog profile: \(error)")
@@ -198,7 +204,7 @@ class ProfileViewModel: ObservableObject {
     func updateDogProfile(dogId: String, dog: DogProfile) {
         Task {
             do {
-                try await userRepository.updateDogProfile(dogId: dogId, dog: dog)
+                try await DogRepository().updateDog(dogId: dogId, dog: dog.toUnifiedDog())
                 print("Dog profile updated: \(dog.name)")
             } catch {
                 print("Error updating dog profile: \(error)")
@@ -209,7 +215,7 @@ class ProfileViewModel: ObservableObject {
     func removeDogProfile(dogId: String) {
         Task {
             do {
-                try await userRepository.removeDogProfile(dogId: dogId)
+                try await DogRepository().removeDog(dogId: dogId)
                 print("Dog profile removed: \(dogId)")
             } catch {
                 print("Error removing dog profile: \(error)")

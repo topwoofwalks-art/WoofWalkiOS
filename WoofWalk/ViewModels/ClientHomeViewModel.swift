@@ -8,7 +8,11 @@ import FirebaseFirestore
 /// Loads real dogs from the user document and upcoming bookings from Firestore.
 @MainActor
 class ClientHomeViewModel: ObservableObject {
-    @Published var dogs: [DogProfile] = []
+    /// Dogs rendered on the client home screen — uses the denormalised
+    /// public projection from `users/{uid}.dogs[]`. For screens that need
+    /// medical/medication data, fetch the full `UnifiedDog` via
+    /// `DogRepository.fetchDogs(forUserId:)`.
+    @Published var dogs: [DogProfilePublic] = []
     @Published var upcomingBookings: [Booking] = []
     @Published var isLoading = true
     @Published var errorMessage: String?

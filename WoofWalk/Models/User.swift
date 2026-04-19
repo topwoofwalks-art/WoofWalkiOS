@@ -9,7 +9,10 @@ struct UserProfile: Identifiable, Codable {
     var pawPoints: Int
     var level: Int
     var badges: [String]
-    var dogs: [DogProfile]
+    /// Denormalised public projection of the user's dogs — maintained
+    /// by the onDogWrite Cloud Function from /dogs/{dogId}. Structurally
+    /// cannot carry medications, vet, microchip, weight, etc.
+    var dogs: [DogProfilePublic]
     @ServerTimestamp var createdAt: Timestamp?
     var regionCode: String
     var totalWalks: Int
@@ -35,7 +38,7 @@ struct UserProfile: Identifiable, Codable {
          pawPoints: Int = 0,
          level: Int = 1,
          badges: [String] = [],
-         dogs: [DogProfile] = [],
+         dogs: [DogProfilePublic] = [],
          createdAt: Timestamp? = nil,
          regionCode: String = "",
          totalWalks: Int = 0,

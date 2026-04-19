@@ -362,7 +362,7 @@ class AuthViewModel: NSObject, ObservableObject {
                         nervousDog: false,
                         medicationSchedules: []
                     )
-                    try await userRepository.addDogProfile(dog: dogProfile)
+                    try await DogRepository().addDog(dogProfile.toUnifiedDog())
                 }
 
                 profileSetupUiState.isLoading = false

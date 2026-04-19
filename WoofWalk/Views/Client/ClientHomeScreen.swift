@@ -311,7 +311,7 @@ struct ClientHomeScreen: View {
         )
     }
 
-    private func dogCard(_ dog: DogProfile) -> some View {
+    private func dogCard(_ dog: DogProfilePublic) -> some View {
         Button {
             // Dog tap action
         } label: {
@@ -335,7 +335,7 @@ struct ClientHomeScreen: View {
                     Text(dog.name)
                         .font(.subheadline.bold())
                         .foregroundColor(.white)
-                    Text(dog.breed)
+                    Text(dog.breed ?? "Mixed")
                         .font(.caption)
                         .foregroundColor(.neutral60)
                 }
