@@ -118,7 +118,7 @@ class ClientHomeViewModel: ObservableObject {
     }
 
     func formatPrice(_ price: Double) -> String {
-        String(format: "%.2f", price)
+        CurrencyFormatter.shared.formatPrice(price)
     }
 
     deinit {

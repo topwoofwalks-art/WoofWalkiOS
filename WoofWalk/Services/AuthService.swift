@@ -260,6 +260,22 @@ class AuthService: NSObject, ObservableObject {
 
             KeychainManager.shared.deleteToken(forKey: "authToken")
             KeychainManager.shared.deleteToken(forKey: "refreshToken")
+
+            // Flush all caches that could carry the previous user's data —
+            // AsyncImage / SwiftUI view layer reads through URLSession's
+            // shared URLCache, which otherwise retains dog photos and
+            // profile images across sign-outs on shared devices.
+            URLCache.shared.removeAllCachedResponses()
+            Task { @MainActor in
+                do {
+                    try await Firestore.firestore().clearPersistence()
+                } catch {
+                    // Non-fatal: persistence clear is best-effort. Most
+                    // likely the Firestore client has active listeners;
+                    // they'll clear on the next cold start.
+                    print("signOut: Firestore persistence clear deferred — \(error.localizedDescription)")
+                }
+            }
         } catch {
             throw AuthError.unknownError("Sign out failed")
         }

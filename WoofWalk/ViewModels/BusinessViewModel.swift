@@ -55,7 +55,7 @@ struct BusinessBooking: Identifiable {
 
     /// Formatted price string
     var priceString: String {
-        String(format: "£%.2f", price)
+        CurrencyFormatter.shared.formatPrice(price)
     }
 }
 

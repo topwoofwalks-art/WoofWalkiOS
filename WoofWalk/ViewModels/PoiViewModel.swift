@@ -3,6 +3,7 @@ import SwiftUI
 import Combine
 import CoreLocation
 import PhotosUI
+import FirebaseAuth
 import FirebaseStorage
 
 @MainActor
@@ -65,8 +66,14 @@ class PoiViewModel: ObservableObject {
     }
 
     private func uploadPhoto(_ image: UIImage) async throws -> String {
-        guard let imageData = image.jpegData(compressionQuality: 0.7) else {
-            throw NSError(domain: "PoiViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to compress image"])
+        guard let uid = Auth.auth().currentUser?.uid else {
+            throw NSError(domain: "PoiViewModel", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+        let imageData: Data
+        do {
+            imageData = try ImageSanitizer.prepareForUpload(image: image, target: .poi)
+        } catch {
+            throw NSError(domain: "PoiViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to prepare image: \(error.localizedDescription)"])
         }
 
         let storage = Storage.storage()
@@ -75,6 +82,7 @@ class PoiViewModel: ObservableObject {
 
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
+        metadata.customMetadata = ["uploadedBy": uid]
 
         return try await withCheckedThrowingContinuation { continuation in
             let uploadTask = photoRef.putData(imageData, metadata: metadata)

@@ -57,6 +57,9 @@ class AuthViewModel: NSObject, ObservableObject {
 
     private let authService = AuthService.shared
     private let biometricAuth = BiometricAuthManager.shared
+    private let userRepository = UserRepository()
+    @Published var needsProfileSetup = false
+    @Published var marketingOptIn = false
 
     override init() {
         super.init()
@@ -66,6 +69,7 @@ class AuthViewModel: NSObject, ObservableObject {
     private func checkAuthState() {
         if authService.currentUser != nil {
             authState = .authenticated
+            checkProfileExists()
         } else {
             authState = .unauthenticated
         }
@@ -298,6 +302,77 @@ class AuthViewModel: NSObject, ObservableObject {
     func removeDog(dogId: String) {
         if profileSetupUiState.dogs.count > 1 {
             profileSetupUiState.dogs.removeAll { $0.id == dogId }
+        }
+    }
+
+    /// Check if the current user already has a Firestore profile.
+    /// Sets `needsProfileSetup` accordingly.
+    func checkProfileExists() {
+        Task {
+            do {
+                let exists = try await userRepository.hasUserProfile()
+                needsProfileSetup = !exists
+            } catch {
+                // If check fails, assume profile exists to avoid blocking the user
+                needsProfileSetup = false
+            }
+        }
+    }
+
+    /// Create the Firestore user profile and add dogs, then call onSuccess.
+    func completeProfileSetup(onSuccess: @escaping () -> Void, onError: @escaping (String) -> Void) {
+        let displayName = profileSetupUiState.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let bio = profileSetupUiState.bio.trimmingCharacters(in: .whitespacesAndNewlines)
+        let dogs = profileSetupUiState.dogs
+
+        Task {
+            do {
+                profileSetupUiState.isLoading = true
+                profileSetupUiState.errorMessage = nil
+
+                guard let user = authService.currentUser else {
+                    profileSetupUiState.isLoading = false
+                    onError("Not authenticated")
+                    return
+                }
+
+                // Create user profile in Firestore
+                _ = try await userRepository.createUserProfile(
+                    username: user.displayName ?? displayName,
+                    email: user.email ?? ""
+                )
+
+                // Update display name and bio
+                var updates: [String: Any] = [
+                    "displayName": displayName,
+                    "searchableDisplayName": displayName.lowercased(),
+                    "bio": bio,
+                    "marketingOptIn": marketingOptIn
+                ]
+                try await userRepository.updateUserProfile(updates: updates)
+
+                // Add dogs
+                for dog in dogs where !dog.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    let dogProfile = DogProfile(
+                        id: UUID().uuidString,
+                        name: dog.name.trimmingCharacters(in: .whitespacesAndNewlines),
+                        breed: dog.breed.trimmingCharacters(in: .whitespacesAndNewlines),
+                        age: Int(dog.age) ?? 0,
+                        temperament: "",
+                        nervousDog: false,
+                        medicationSchedules: []
+                    )
+                    try await userRepository.addDogProfile(dog: dogProfile)
+                }
+
+                profileSetupUiState.isLoading = false
+                needsProfileSetup = false
+                onSuccess()
+            } catch {
+                profileSetupUiState.isLoading = false
+                profileSetupUiState.errorMessage = error.localizedDescription
+                onError(error.localizedDescription)
+            }
         }
     }
 

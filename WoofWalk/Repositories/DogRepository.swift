@@ -100,7 +100,7 @@ class DogRepository: ObservableObject {
     // MARK: - Remove (archive) a dog
 
     func removeDog(dogId: String) async throws {
-        guard auth.currentUser?.uid != nil else {
+        guard let userId = auth.currentUser?.uid else {
             throw NSError(domain: "DogRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
         }
 
@@ -108,5 +108,35 @@ class DogRepository: ObservableObject {
             "isArchived": true,
             "updatedAt": Int64(Date().timeIntervalSince1970 * 1000)
         ])
+
+        // Storage cascade — delete the primary photo and every gallery
+        // object. Best-effort; logged but non-fatal so archival completes
+        // even if a single Storage object fails to remove.
+        let primary = "dogProfiles/\(userId)/\(dogId).jpg"
+        let galleryRoot = "dogProfiles/\(userId)/\(dogId)"
+        do {
+            try await FirebaseService.shared.deleteFile(path: primary)
+        } catch {
+            print("removeDog: primary photo cleanup failed — \(error.localizedDescription)")
+        }
+        do {
+            try await FirebaseService.shared.deleteFolder(path: galleryRoot)
+        } catch {
+            print("removeDog: gallery cleanup failed — \(error.localizedDescription)")
+        }
+    }
+
+    /// Hard-delete a dog plus all its photos. Prefer `removeDog` (archive)
+    /// for user-facing flows; this is for administrative cleanup.
+    func hardDeleteDog(dogId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "DogRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+
+        try await db.collection("dogs").document(dogId).delete()
+
+        let galleryRoot = "dogProfiles/\(userId)/\(dogId)"
+        try? await FirebaseService.shared.deleteFile(path: "\(galleryRoot).jpg")
+        try? await FirebaseService.shared.deleteFolder(path: galleryRoot)
     }
 }

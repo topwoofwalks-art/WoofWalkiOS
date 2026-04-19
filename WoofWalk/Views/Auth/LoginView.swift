@@ -2,7 +2,7 @@ import SwiftUI
 import AuthenticationServices
 
 struct LoginView: View {
-    @StateObject private var viewModel = AuthViewModel()
+    @ObservedObject var viewModel: AuthViewModel
     @Environment(\.colorScheme) var colorScheme
 
     let onNavigateToSignup: () -> Void

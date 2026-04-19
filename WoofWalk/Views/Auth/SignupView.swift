@@ -2,7 +2,7 @@ import SwiftUI
 import AuthenticationServices
 
 struct SignupView: View {
-    @StateObject private var viewModel = AuthViewModel()
+    @ObservedObject var viewModel: AuthViewModel
     @Environment(\.presentationMode) var presentationMode
 
     let onNavigateToLogin: () -> Void
@@ -102,6 +102,13 @@ struct SignupView: View {
                 label: "Confirm Password",
                 error: viewModel.signupUiState.confirmPasswordError
             )
+
+            Toggle(isOn: $viewModel.marketingOptIn) {
+                Text("Send me tips, offers & dog walking news")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .tint(.blue)
 
             if let errorMessage = viewModel.signupUiState.errorMessage {
                 Text(errorMessage)

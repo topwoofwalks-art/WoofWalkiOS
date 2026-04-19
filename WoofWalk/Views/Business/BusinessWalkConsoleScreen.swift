@@ -605,7 +605,7 @@ struct BusinessWalkConsoleScreen: View {
                     summaryRow(icon: "arrow.up.right", label: "Elevation Gain",
                               value: String(format: "%.0f m", record.elevationGainMeters))
                     summaryRow(icon: "sterlingsign.circle", label: "Earnings",
-                              value: String(format: "\u{00A3}%.2f", booking.price))
+                              value: CurrencyFormatter.shared.formatPrice(booking.price))
                 }
                 .padding(16)
                 .background(

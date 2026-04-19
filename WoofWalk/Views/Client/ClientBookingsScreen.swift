@@ -360,7 +360,7 @@ struct ClientBookingsScreen: View {
 
             // Bottom row: price + chevron
             HStack {
-                Text(String(format: "$%.2f", booking.price))
+                Text(CurrencyFormatter.shared.formatPrice(booking.price))
                     .font(.subheadline.bold())
                     .foregroundColor(AppColors.Dark.primary)
 

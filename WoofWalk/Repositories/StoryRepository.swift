@@ -86,13 +86,20 @@ class StoryRepository: ObservableObject {
         let userName = auth.currentUser?.displayName ?? "Anonymous"
         let userAvatar = auth.currentUser?.photoURL?.absoluteString
 
+        // EXIF strip + resize for story upload.
+        let sanitized = try ImageSanitizer.prepareForUpload(
+            imageData: imageData,
+            target: .story
+        )
+
         // Upload image
         let fileName = "stories/\(userId)/\(UUID().uuidString).jpg"
         let storageRef = storage.reference().child(fileName)
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
+        metadata.customMetadata = ["uploadedBy": userId]
 
-        _ = try await storageRef.putDataAsync(imageData, metadata: metadata)
+        _ = try await storageRef.putDataAsync(sanitized, metadata: metadata)
         let downloadURL = try await storageRef.downloadURL()
 
         // Create Firestore doc

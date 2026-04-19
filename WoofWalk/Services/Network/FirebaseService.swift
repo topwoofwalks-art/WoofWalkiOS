@@ -47,10 +47,27 @@ class FirebaseService {
         try await auth.sendPasswordReset(withEmail: email)
     }
 
-    func uploadImage(data: Data, path: String) async throws -> URL {
+    /// Upload image bytes to Firebase Storage with required `uploadedBy`
+    /// custom metadata. Storage rules on /feedPosts, /chat_images,
+    /// /community_posts and /dogProfiles all require this field to equal the
+    /// authenticated user's uid, so every caller must pass it.
+    ///
+    /// Callers should pre-sanitize the image via `ImageSanitizer.prepareForUpload`
+    /// to strip EXIF (including GPS) and resize to a target dimension.
+    func uploadImage(
+        data: Data,
+        path: String,
+        uploadedBy: String,
+        extraMetadata: [String: String] = [:]
+    ) async throws -> URL {
         let storageRef = storage.reference().child(path)
+
+        var custom = extraMetadata
+        custom["uploadedBy"] = uploadedBy
+
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
+        metadata.customMetadata = custom
 
         _ = try await storageRef.putDataAsync(data, metadata: metadata)
         let downloadURL = try await storageRef.downloadURL()
@@ -64,9 +81,48 @@ class FirebaseService {
         return data
     }
 
+    /// Delete a single Storage object. Does NOT throw on "object not found"
+    /// — callers use this for best-effort compensating deletes and
+    /// idempotent cascades, so a missing object is not an error.
     func deleteFile(path: String) async throws {
         let storageRef = storage.reference().child(path)
-        try await storageRef.delete()
+        do {
+            try await storageRef.delete()
+        } catch {
+            let nsError = error as NSError
+            // StorageErrorCode.objectNotFound == -13010 on newer SDKs
+            if nsError.domain == StorageErrorDomain,
+               nsError.code == StorageErrorCode.objectNotFound.rawValue {
+                return
+            }
+            throw error
+        }
+    }
+
+    /// Delete every Storage object under the given folder prefix. Used for
+    /// cascade-deleting a dog's photos (primary + gallery) when the dog is
+    /// archived or deleted. Swallows `objectNotFound` per-item; other errors
+    /// are aggregated and thrown at the end.
+    func deleteFolder(path: String) async throws {
+        let ref = storage.reference().child(path)
+        let result: StorageListResult
+        do {
+            result = try await ref.listAll()
+        } catch {
+            let nsError = error as NSError
+            if nsError.domain == StorageErrorDomain,
+               nsError.code == StorageErrorCode.objectNotFound.rawValue {
+                return
+            }
+            throw error
+        }
+
+        for item in result.items {
+            try? await deleteFile(path: item.fullPath)
+        }
+        for prefix in result.prefixes {
+            try? await deleteFolder(path: prefix.fullPath)
+        }
     }
 }
 

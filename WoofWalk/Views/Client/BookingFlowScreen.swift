@@ -99,7 +99,7 @@ struct SelectableProvider: Identifiable {
     }
 
     var formattedPrice: String {
-        String(format: "$%.2f", basePrice)
+        CurrencyFormatter.shared.formatPrice(basePrice)
     }
 }
 
@@ -1302,7 +1302,7 @@ struct BookingFlowScreen: View {
                         .font(.body.bold())
                         .foregroundColor(.white)
                     Spacer()
-                    Text(String(format: "$%.2f", viewModel.priceBreakdown.total))
+                    Text(CurrencyFormatter.shared.formatPrice(viewModel.priceBreakdown.total))
                         .font(.title3.bold())
                         .foregroundColor(.success40)
                 }
@@ -1321,7 +1321,7 @@ struct BookingFlowScreen: View {
                 .font(.subheadline)
                 .foregroundColor(.neutral60)
             Spacer()
-            Text(String(format: "$%.2f", amount))
+            Text(CurrencyFormatter.shared.formatPrice(amount))
                 .font(.subheadline)
                 .foregroundColor(.white)
         }

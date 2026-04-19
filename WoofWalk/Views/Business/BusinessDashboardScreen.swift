@@ -15,7 +15,7 @@ struct BusinessDashboardScreen: View {
                         GridItem(.flexible())
                     ], spacing: 12) {
                         DashboardStat(title: "Walks", value: "0", icon: "figure.walk", color: .blue)
-                        DashboardStat(title: "Earnings", value: "\u{00A3}0", icon: "sterlingsign.circle", color: .green)
+                        DashboardStat(title: "Earnings", value: CurrencyFormatter.shared.formatPrice(0), icon: "sterlingsign.circle", color: .green)
                         DashboardStat(title: "Clients", value: "0", icon: "person.2", color: .purple)
                     }
                 }
@@ -109,7 +109,7 @@ struct BusinessDashboardScreen: View {
                     HStack {
                         Label("0 walks completed", systemImage: "checkmark.circle")
                         Spacer()
-                        Label("\u{00A3}0 earned", systemImage: "sterlingsign.circle")
+                        Label("\(CurrencyFormatter.shared.formatPrice(0)) earned", systemImage: "sterlingsign.circle")
                     }
                     .font(.caption)
                     .foregroundColor(.secondary)

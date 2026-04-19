@@ -93,7 +93,7 @@ struct AdvancedFilterSheet: View {
 
                 // Price range
                 Section {
-                    ForEach(["$", "$$", "$$$"], id: \.self) { price in
+                    ForEach(["Budget", "Mid-range", "Premium"], id: \.self) { price in
                         Button {
                             if localFilters.priceRanges.contains(price) {
                                 localFilters.priceRanges.remove(price)
@@ -176,9 +176,9 @@ struct AdvancedFilterSheet: View {
 
     private func priceLabel(_ price: String) -> String {
         switch price {
-        case "$": return "Budget-friendly"
-        case "$$": return "Mid-range"
-        case "$$$": return "Premium"
+        case "Budget": return "Budget-friendly"
+        case "Mid-range": return "Mid-range"
+        case "Premium": return "Premium"
         default: return price
         }
     }

@@ -99,18 +99,55 @@ class DogProfileViewModel: ObservableObject {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw NSError(domain: "DogProfile", code: -1, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
         }
+        let dogId = editingDog?.id ?? UUID().uuidString
 
         isLoading = true
+        defer { isLoading = false }
+
         do {
-            let path = "dogProfiles/\(userId)/\(UUID().uuidString).jpg"
-            let firebaseService = FirebaseService.shared
-            let downloadURL = try await firebaseService.uploadImage(data: imageData, path: path)
+            // EXIF strip + resize + JPEG re-encode — removes any GPS tags
+            // embedded by the camera before the bytes leave the device.
+            let sanitized = try ImageSanitizer.prepareForUpload(
+                imageData: imageData,
+                target: .dogPrimary
+            )
+
+            // Deterministic filename so updates overwrite the prior object
+            // rather than accumulating orphans.
+            let path = "dogProfiles/\(userId)/\(dogId).jpg"
+            let downloadURL = try await FirebaseService.shared.uploadImage(
+                data: sanitized,
+                path: path,
+                uploadedBy: userId,
+                extraMetadata: ["dogId": dogId]
+            )
             self.photoUrl = downloadURL.absoluteString
-            isLoading = false
         } catch {
-            isLoading = false
             errorMessage = "Failed to upload photo: \(error.localizedDescription)"
             throw error
         }
+    }
+
+    /// Upload a gallery photo (in addition to the primary). Returns the
+    /// gallery photoId + download URL — callers persist the URL in the
+    /// dog's `photoUrls` array.
+    func uploadGalleryPhoto(imageData: Data) async throws -> (photoId: String, url: String) {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            throw NSError(domain: "DogProfile", code: -1, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+        }
+        guard let dogId = editingDog?.id else {
+            throw NSError(domain: "DogProfile", code: -2, userInfo: [NSLocalizedDescriptionKey: "Gallery requires an existing dog"])
+        }
+        let photoId = UUID().uuidString
+        let sanitized = try ImageSanitizer.prepareForUpload(imageData: imageData, target: .dogGallery)
+
+        let path = "dogProfiles/\(userId)/\(dogId)/gallery/\(photoId).jpg"
+        let downloadURL = try await FirebaseService.shared.uploadImage(
+            data: sanitized,
+            path: path,
+            uploadedBy: userId,
+            extraMetadata: ["dogId": dogId, "photoId": photoId]
+        )
+        return (photoId: photoId, url: downloadURL.absoluteString)
     }
 }

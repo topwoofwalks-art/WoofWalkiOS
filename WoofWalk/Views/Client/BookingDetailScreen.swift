@@ -28,6 +28,10 @@ class BookingDetailViewModel: ObservableObject {
     @Published var showReportSheet = false
     @Published var reportText = ""
 
+    // On My Way
+    @Published var isOnMyWay = false
+    @Published var isSendingOnMyWay = false
+
     // Snackbar
     @Published var snackbarMessage: String?
 
@@ -101,8 +105,20 @@ class BookingDetailViewModel: ObservableObject {
         reportText = ""
     }
 
+    func sendOnMyWay() {
+        guard !isSendingOnMyWay else { return }
+        isSendingOnMyWay = true
+        // In a real app this would update the booking document / send a push
+        Task {
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            isOnMyWay = true
+            isSendingOnMyWay = false
+            snackbarMessage = "Your provider has been notified!"
+        }
+    }
+
     func formatPrice(_ amount: Double) -> String {
-        String(format: "$%.2f", amount)
+        CurrencyFormatter.shared.formatPrice(amount)
     }
 
     deinit {
@@ -213,6 +229,13 @@ struct BookingDetailScreen: View {
                 statusHeader(booking)
                 providerCard(booking)
                 bookingDetailsCard(booking)
+
+                // Service-specific detail card
+                ServiceDetailCard(
+                    serviceType: booking.serviceTypeEnum,
+                    bookingStatus: booking.statusEnum,
+                    serviceDetails: nil // Populated from Firestore serviceDetails sub-doc when available
+                )
 
                 if booking.statusEnum == .completed {
                     walkReportCard(booking)
@@ -382,7 +405,7 @@ struct BookingDetailScreen: View {
                 detailRow(icon: "mappin.and.ellipse", label: "Location", value: booking.location)
             }
 
-            detailRow(icon: "banknote", label: "Price", value: String(format: "$%.2f", booking.price))
+            detailRow(icon: "banknote", label: "Price", value: CurrencyFormatter.shared.formatPrice(booking.price))
 
             if booking.isPaid {
                 HStack(spacing: 6) {
@@ -578,7 +601,65 @@ struct BookingDetailScreen: View {
                 .foregroundColor(AppColors.Dark.onSurface)
 
             switch booking.statusEnum {
-            case .pending, .confirmed:
+            case .pending:
+                // Cancel Booking
+                Button {
+                    viewModel.showCancelDialog = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "xmark.circle.fill")
+                        Text("Cancel Booking")
+                            .font(.subheadline.bold())
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.error50)
+                    )
+                }
+
+            case .confirmed:
+                // On My Way button
+                if !viewModel.isOnMyWay {
+                    Button {
+                        viewModel.sendOnMyWay()
+                    } label: {
+                        HStack(spacing: 8) {
+                            if viewModel.isSendingOnMyWay {
+                                ProgressView()
+                                    .tint(AppColors.Dark.onPrimary)
+                            } else {
+                                Image(systemName: "figure.walk.departure")
+                            }
+                            Text("I'm On My Way")
+                                .font(.subheadline.bold())
+                        }
+                        .foregroundColor(AppColors.Dark.onPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(red: 0.18, green: 0.49, blue: 0.20))
+                        )
+                    }
+                    .disabled(viewModel.isSendingOnMyWay)
+                } else {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text("Provider Notified")
+                            .font(.subheadline.bold())
+                    }
+                    .foregroundColor(Color(red: 0.18, green: 0.49, blue: 0.20))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(red: 0.18, green: 0.49, blue: 0.20), lineWidth: 1)
+                    )
+                }
+
                 // Cancel Booking
                 Button {
                     viewModel.showCancelDialog = true
@@ -598,12 +679,11 @@ struct BookingDetailScreen: View {
                 }
 
             case .inProgress:
-                Button {
-                    // Navigate to live tracking
-                } label: {
+                // Service-aware live tracking navigation
+                NavigationLink(destination: liveScreenForBooking(booking)) {
                     HStack(spacing: 8) {
-                        Image(systemName: "location.fill")
-                        Text("View Live Tracking")
+                        Image(systemName: liveIconForService(booking.serviceTypeEnum))
+                        Text(liveLabelForService(booking.serviceTypeEnum))
                             .font(.subheadline.bold())
                     }
                     .foregroundColor(AppColors.Dark.onPrimary)
@@ -693,6 +773,55 @@ struct BookingDetailScreen: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(AppColors.Dark.surfaceVariant)
         )
+    }
+
+    // MARK: - Service-Aware Live Navigation
+
+    @ViewBuilder
+    private func liveScreenForBooking(_ booking: Booking) -> some View {
+        let sessionId = booking.id ?? bookingId
+        switch booking.serviceTypeEnum {
+        case .walk, .meetGreet:
+            LiveTrackingScreen(
+                walkId: sessionId,
+                onNavigateBack: {},
+                onNavigateToChat: { _ in }
+            )
+        case .grooming:
+            GroomingLiveScreen(sessionId: sessionId)
+        case .inSitting, .outSitting, .petSitting:
+            CareLiveScreen(sessionId: sessionId, serviceType: .sitting)
+        case .boarding:
+            CareLiveScreen(sessionId: sessionId, serviceType: .boarding)
+        case .daycare:
+            DaycareLiveScreen(sessionId: sessionId)
+        case .training:
+            TrainingLiveScreen(sessionId: sessionId)
+        }
+    }
+
+    private func liveIconForService(_ type: BookingServiceType) -> String {
+        switch type {
+        case .walk:       return "location.fill"
+        case .grooming:   return "scissors"
+        case .inSitting, .outSitting, .petSitting: return "house.fill"
+        case .boarding:   return "bed.double.fill"
+        case .daycare:    return "sun.and.horizon.fill"
+        case .training:   return "star.fill"
+        case .meetGreet:  return "hand.wave.fill"
+        }
+    }
+
+    private func liveLabelForService(_ type: BookingServiceType) -> String {
+        switch type {
+        case .walk:       return "View Live Tracking"
+        case .grooming:   return "View Grooming Progress"
+        case .inSitting, .outSitting, .petSitting: return "View Care Updates"
+        case .boarding:   return "View Boarding Updates"
+        case .daycare:    return "View Daycare Activity"
+        case .training:   return "View Training Session"
+        case .meetGreet:  return "View Live Tracking"
+        }
     }
 
     // MARK: - Cancel Sheet

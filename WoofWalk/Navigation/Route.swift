@@ -89,6 +89,14 @@ enum AppRoute: Hashable {
     case nearbyPubs
     case pubDetail(pubId: String)
 
+    // Live Tracking (Professional Services)
+    case groomingLive(sessionId: String)
+    case careLive(sessionId: String, serviceType: String)
+    case daycareLive(sessionId: String)
+    case trainingLive(sessionId: String)
+    case daycareConsole(bookingId: String, dogIds: [String])
+    case trainingSession(sessionId: String)
+
     // Settings
     case languageSettings
     case autoReplySettings
@@ -161,6 +169,12 @@ enum AppRoute: Hashable {
         case .routeDetail(let id): hasher.combine("routeDetail"); hasher.combine(id)
         case .nearbyPubs: hasher.combine("nearbyPubs")
         case .pubDetail(let id): hasher.combine("pubDetail"); hasher.combine(id)
+        case .groomingLive(let id): hasher.combine("groomingLive"); hasher.combine(id)
+        case .careLive(let id, let type): hasher.combine("careLive"); hasher.combine(id); hasher.combine(type)
+        case .daycareLive(let id): hasher.combine("daycareLive"); hasher.combine(id)
+        case .trainingLive(let id): hasher.combine("trainingLive"); hasher.combine(id)
+        case .daycareConsole(let id, let dogIds): hasher.combine("daycareConsole"); hasher.combine(id); hasher.combine(dogIds)
+        case .trainingSession(let id): hasher.combine("trainingSession"); hasher.combine(id)
         case .languageSettings: hasher.combine("languageSettings")
         case .autoReplySettings: hasher.combine("autoReplySettings")
         case .notificationSettings: hasher.combine("notificationSettings")

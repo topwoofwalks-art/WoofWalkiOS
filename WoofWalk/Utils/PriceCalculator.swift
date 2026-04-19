@@ -107,11 +107,11 @@ enum PriceCalculator {
 
     /// Format a price amount with currency symbol and 2 decimal places.
     static func formatPrice(_ amount: Double) -> String {
-        String(format: "\u{00A3}%.2f", amount)
+        CurrencyFormatter.shared.formatPrice(amount)
     }
 
     /// Format a price amount with sign (for discounts shown as negative).
     static func formatDiscount(_ amount: Double) -> String {
-        String(format: "-\u{00A3}%.2f", amount)
+        CurrencyFormatter.shared.formatDiscount(amount)
     }
 }

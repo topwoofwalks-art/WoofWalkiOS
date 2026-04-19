@@ -32,6 +32,25 @@ struct Booking: Identifiable, Codable {
     var createdAt: Int64
     var updatedAt: Int64
 
+    // MARK: - Service Selection (Phase 1)
+
+    /// ID of the selected variant (walk duration, sitting visit type, etc.)
+    var selectedVariantId: String?
+    /// Display name of the selected variant
+    var selectedVariantName: String?
+    /// ID of the selected package (grooming, boarding, daycare, training programme)
+    var selectedPackageId: String?
+    /// Display name of the selected package
+    var selectedPackageName: String?
+    /// Training specialism ID, if applicable
+    var specialism: String?
+    /// Dog size for grooming price tier
+    var dogSize: String?
+    /// IDs of selected grooming add-ons
+    var selectedAddOns: [String]?
+    /// Final computed price from service config
+    var computedPrice: Double?
+
     // MARK: - Computed Properties
 
     /// Typed booking status
@@ -93,7 +112,15 @@ struct Booking: Identifiable, Codable {
         specialRequirements: String? = nil,
         cancellationReason: String? = nil,
         createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
-        updatedAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000)
+        updatedAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
+        selectedVariantId: String? = nil,
+        selectedVariantName: String? = nil,
+        selectedPackageId: String? = nil,
+        selectedPackageName: String? = nil,
+        specialism: String? = nil,
+        dogSize: String? = nil,
+        selectedAddOns: [String]? = nil,
+        computedPrice: Double? = nil
     ) {
         self.id = id
         self.clientId = clientId
@@ -122,6 +149,14 @@ struct Booking: Identifiable, Codable {
         self.cancellationReason = cancellationReason
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.selectedVariantId = selectedVariantId
+        self.selectedVariantName = selectedVariantName
+        self.selectedPackageId = selectedPackageId
+        self.selectedPackageName = selectedPackageName
+        self.specialism = specialism
+        self.dogSize = dogSize
+        self.selectedAddOns = selectedAddOns
+        self.computedPrice = computedPrice
     }
 
     // MARK: - Static Helpers

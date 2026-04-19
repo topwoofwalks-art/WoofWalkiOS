@@ -30,7 +30,7 @@ struct EarningRecord: Identifiable {
 
     var formattedAmount: String {
         let prefix = isIncome ? "+" : "-"
-        return "\(prefix)\(String(format: "\u{00A3}%.2f", abs(netAmount)))"
+        return "\(prefix)\(CurrencyFormatter.shared.formatPrice(abs(netAmount)))"
     }
 
     var formattedDate: String {
@@ -301,7 +301,7 @@ struct BusinessEarningsScreen: View {
         HStack(spacing: 0) {
             earningsStat(
                 title: "Revenue",
-                value: String(format: "\u{00A3}%.2f", totalRevenue),
+                value: CurrencyFormatter.shared.formatPrice(totalRevenue),
                 icon: "sterlingsign.circle.fill",
                 color: .green
             )
@@ -315,7 +315,7 @@ struct BusinessEarningsScreen: View {
             Divider().frame(height: 50)
             earningsStat(
                 title: "Avg/Walk",
-                value: String(format: "\u{00A3}%.2f", averagePerWalk),
+                value: CurrencyFormatter.shared.formatPrice(averagePerWalk),
                 icon: "chart.line.uptrend.xyaxis",
                 color: .orange
             )
@@ -372,7 +372,7 @@ struct BusinessEarningsScreen: View {
                     AxisMarks { value in
                         AxisValueLabel {
                             if let amount = value.as(Double.self) {
-                                Text("\u{00A3}\(Int(amount))")
+                                Text(CurrencyFormatter.shared.formatInteger(Int(amount)))
                                     .font(.caption2)
                             }
                         }
@@ -492,7 +492,7 @@ struct BusinessEarningsScreen: View {
 
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(String(format: "\u{00A3}%.2f", pendingPayout))
+                    Text(CurrencyFormatter.shared.formatPrice(pendingPayout))
                         .font(.title2.bold())
                         .foregroundColor(.green)
                     Text("Estimated for \(nextPayoutDate)")

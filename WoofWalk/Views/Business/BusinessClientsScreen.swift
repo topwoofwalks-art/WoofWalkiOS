@@ -180,7 +180,7 @@ struct BusinessClientsScreen: View {
         ], spacing: 12) {
             ClientStatCard(title: "Total Clients", value: "\(viewModel.totalClients)", icon: "person.2.fill", color: .blue)
             ClientStatCard(title: "Active", value: String(format: "%.1f%%", viewModel.activePercentage), icon: "checkmark.circle.fill", color: .green)
-            ClientStatCard(title: "Avg LTV", value: String(format: "\u{00A3}%.2f", viewModel.averageLTV), icon: "sterlingsign.circle.fill", color: .purple)
+            ClientStatCard(title: "Avg LTV", value: CurrencyFormatter.shared.formatPrice(viewModel.averageLTV), icon: "sterlingsign.circle.fill", color: .purple)
             ClientStatCard(title: "Churn Rate", value: String(format: "%.1f%%", viewModel.churnRate), icon: "arrow.down.right", color: .orange)
         }
     }

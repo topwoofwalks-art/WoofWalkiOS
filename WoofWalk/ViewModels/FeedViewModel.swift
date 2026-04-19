@@ -594,17 +594,28 @@ class FeedViewModel: ObservableObject {
     }
 
     /// Upload a photo to Firebase Storage and create a post with the image URL.
-    /// Storage path mirrors Android: post_images/{postId}/{UUID}.jpg
+    /// Storage path mirrors Android: feedPosts/{postId}/{imageId}.jpg
     func createPostWithImage(text: String, imageData: Data, locationTag: String? = nil) async throws {
         guard let uid = auth.currentUser?.uid else { return }
 
+        // EXIF strip + resize. Raw image data often carries GPS tags from
+        // camera capture — those must never leave the device.
+        let sanitized = try ImageSanitizer.prepareForUpload(
+            imageData: imageData,
+            target: .feedPost
+        )
+
         let postId = UUID().uuidString
-        let fileName = "\(UUID().uuidString).jpg"
-        let storageRef = storage.reference().child("post_images/\(postId)/\(fileName)")
+        let imageId = UUID().uuidString
+        let storageRef = storage.reference().child("feedPosts/\(postId)/\(imageId).jpg")
 
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
-        _ = try await storageRef.putDataAsync(imageData, metadata: metadata)
+        metadata.customMetadata = [
+            "uploadedBy": uid,
+            "postId": postId
+        ]
+        _ = try await storageRef.putDataAsync(sanitized, metadata: metadata)
         let downloadURL = try await storageRef.downloadURL()
 
         let userDoc = try? await db.collection("users").document(uid).getDocument()

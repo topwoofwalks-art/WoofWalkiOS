@@ -147,6 +147,23 @@ struct RouteDestination: View {
         case .booking(let providerId):
             BookingFlowScreen(preselectedProviderId: providerId)
 
+        // Live service screens
+        case .groomingLive(let sessionId):
+            GroomingLiveScreen(sessionId: sessionId)
+        case .careLive(let sessionId, let serviceType):
+            CareLiveScreen(
+                sessionId: sessionId,
+                serviceType: CareServiceType(rawValue: serviceType) ?? .sitting
+            )
+        case .daycareLive(let sessionId):
+            DaycareLiveScreen(sessionId: sessionId)
+        case .trainingLive(let sessionId):
+            TrainingLiveScreen(sessionId: sessionId)
+        case .daycareConsole(let bookingId, let dogIds):
+            DaycareConsoleScreen(sessionId: bookingId, bookingId: bookingId, dogIds: dogIds)
+        case .trainingSession(let sessionId):
+            TrainingSessionScreen(sessionId: sessionId)
+
         // Map features
         case .hazardReport:
             HazardReportScreen()

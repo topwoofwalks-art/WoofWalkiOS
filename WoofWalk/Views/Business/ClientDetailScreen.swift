@@ -573,7 +573,7 @@ struct ClientDetailScreen: View {
             GridItem(.flexible(), spacing: 12)
         ], spacing: 12) {
             StatCell(title: "Total Bookings", value: "\(viewModel.totalBookings)", icon: "calendar.badge.checkmark", color: .blue)
-            StatCell(title: "Total Spent", value: String(format: "\u{00A3}%.2f", viewModel.totalSpent), icon: "sterlingsign.circle.fill", color: .green)
+            StatCell(title: "Total Spent", value: CurrencyFormatter.shared.formatPrice(viewModel.totalSpent), icon: "sterlingsign.circle.fill", color: .green)
             StatCell(title: "Avg Rating", value: viewModel.averageRating > 0 ? String(format: "%.1f", viewModel.averageRating) : "--", icon: "star.fill", color: .orange)
             StatCell(title: "Member Since", value: memberSinceString, icon: "person.badge.clock", color: .purple)
         }
@@ -650,7 +650,7 @@ struct ClientDetailScreen: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 4) {
-                Text(String(format: "\u{00A3}%.2f", booking.price))
+                Text(CurrencyFormatter.shared.formatPrice(booking.price))
                     .font(.subheadline.bold())
                 bookingStatusBadge(booking.status)
             }
@@ -707,7 +707,7 @@ struct ClientDetailScreen: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 4) {
-                Text(String(format: "\u{00A3}%.2f", invoice.amount))
+                Text(CurrencyFormatter.shared.formatPrice(invoice.amount))
                     .font(.subheadline.bold())
                 Text(invoice.isPaid ? "Paid" : "Unpaid")
                     .font(.caption2.bold())

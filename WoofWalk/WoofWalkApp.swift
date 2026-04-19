@@ -33,10 +33,31 @@ struct WoofWalkApp: App {
                     OnboardingView(onComplete: {
                         hasCompletedOnboarding = true
                     })
+                } else if authViewModel.authState == .authenticated && authViewModel.needsProfileSetup {
+                    NavigationView {
+                        ProfileSetupView(
+                            viewModel: authViewModel,
+                            onComplete: {
+                                authViewModel.needsProfileSetup = false
+                            }
+                        )
+                    }
                 } else if authViewModel.authState == .authenticated {
                     MainTabView()
                 } else {
                     AuthRootView(authViewModel: authViewModel)
+                }
+            }
+            .onChange(of: authViewModel.authState) { newState in
+                if case .authenticated = newState {
+                    // Pre-fill display name from the auth provider
+                    if let user = authViewModel.currentUser {
+                        if authViewModel.profileSetupUiState.displayName.isEmpty,
+                           let name = user.displayName, !name.isEmpty {
+                            authViewModel.updateProfileDisplayName(name)
+                        }
+                    }
+                    authViewModel.checkProfileExists()
                 }
             }
             .task {
@@ -62,6 +83,7 @@ struct AuthRootView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if showSignup {
                 SignupView(
+                    viewModel: authViewModel,
                     onNavigateToLogin: { showSignup = false },
                     onSignupSuccess: { }
                 )
@@ -74,6 +96,7 @@ struct AuthRootView: View {
                     }
             } else {
                 LoginView(
+                    viewModel: authViewModel,
                     onNavigateToSignup: { showSignup = true },
                     onNavigateToForgotPassword: { showForgotPassword = true },
                     onLoginSuccess: { }

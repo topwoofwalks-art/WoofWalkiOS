@@ -437,8 +437,13 @@ class ChatDetailViewModel: ObservableObject {
 
     func sendPhotoMessage(_ image: UIImage) {
         guard !currentUserId.isEmpty else { return }
-        guard let imageData = image.jpegData(compressionQuality: 0.7) else {
-            print("Failed to compress image to JPEG")
+        let imageData: Data
+        do {
+            // EXIF strip + resize + re-encode — prevents GPS / device
+            // metadata from leaking into the chat thread.
+            imageData = try ImageSanitizer.prepareForUpload(image: image, target: .chatMessage)
+        } catch {
+            print("Failed to sanitize chat image: \(error.localizedDescription)")
             return
         }
 
@@ -448,6 +453,11 @@ class ChatDetailViewModel: ObservableObject {
         let storageRef = Storage.storage().reference().child(fileName)
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
+        // Storage rule requires uploadedBy == auth.uid.
+        metadata.customMetadata = [
+            "uploadedBy": currentUserId,
+            "threadId": chatId
+        ]
 
         let uploadTask = storageRef.putData(imageData, metadata: metadata)
 

@@ -265,14 +265,10 @@ class UserRepository: ObservableObject {
 
         let docRef = try await db.collection("friendships").addDocument(data: friendshipData)
 
-        // Create notification for the target user
-        try? await createFriendNotification(
-            userId: toUserId,
-            type: "FRIEND_REQUEST",
-            title: "New Friend Request",
-            body: "You have a new friend request",
-            metadata: ["friendshipId": docRef.documentID, "fromUserId": userId]
-        )
+        // Notifications are created server-side by the onFriendshipWrite
+        // Cloud Function trigger. The /notifications collection rejects
+        // client writes (allow create: if false) so any client-side attempt
+        // here would be silently rejected.
 
         print("Friend request sent: \(docRef.documentID)")
     }
@@ -305,14 +301,8 @@ class UserRepository: ObservableObject {
             "acceptedAt": FieldValue.serverTimestamp()
         ])
 
-        // Notify the requester
-        try? await createFriendNotification(
-            userId: requestedBy,
-            type: "FRIEND_ACCEPTED",
-            title: "Friend Request Accepted",
-            body: "Your friend request was accepted",
-            metadata: ["friendshipId": friendshipId, "fromUserId": userId]
-        )
+        // Acceptance notification to the original requester is created
+        // server-side by onFriendshipWrite (PENDING → ACCEPTED transition).
 
         print("Friend request accepted: \(friendshipId)")
     }
@@ -504,19 +494,6 @@ class UserRepository: ObservableObject {
         return nil
     }
 
-    /// Create a notification document for friend-related events.
-    private func createFriendNotification(userId: String, type: String, title: String, body: String, metadata: [String: String]) async throws {
-        let notification: [String: Any] = [
-            "userId": userId,
-            "type": type,
-            "title": title,
-            "body": body,
-            "read": false,
-            "metadata": metadata,
-            "createdAt": FieldValue.serverTimestamp()
-        ]
-        try await db.collection("notifications").addDocument(data: notification)
-    }
 }
 
 extension Array {
