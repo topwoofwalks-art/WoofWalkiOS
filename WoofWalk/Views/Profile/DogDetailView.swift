@@ -29,6 +29,7 @@ struct DogDetailView: View {
 
                     DogMedicalSection(
                         dogId: dog.id,
+                        dogName: dog.name,
                         isOwner: isOwner
                     )
                 }
