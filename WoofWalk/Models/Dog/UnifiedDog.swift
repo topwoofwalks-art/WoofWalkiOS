@@ -34,7 +34,10 @@ struct UnifiedDog: Identifiable, Codable {
 
     // Medical
     var vetInfo: DogVetInfo?
-    var vaccinations: [DogVaccination]
+    // Structured vaccinations live in the
+    // `/dogs/{dogId}/medicalRecords` subcollection (type = .vaccination).
+    // Firestore rules reject inline medical arrays on the main doc, so
+    // the inline field has been dropped in favour of `MedicalRecordsRepository`.
     var vaccinationStatus: String?
     var allergies: String?
     var medications: String?
@@ -71,8 +74,8 @@ struct UnifiedDog: Identifiable, Codable {
         return Calendar.current.dateComponents([.year], from: birthDate, to: Date()).year ?? 0
     }
 
-    init(id: String? = nil, name: String = "", primaryOwnerId: String = "", sharedWithUserIds: [String] = [], organizationAccess: [OrgAccess] = [], breed: String? = nil, birthdate: Int64? = nil, sex: String? = nil, color: String? = nil, photoUrl: String? = nil, photoUrls: [String] = [], weight: Double? = nil, weightHistory: [WeightLog] = [], size: String? = nil, microchipId: String? = nil, temperament: String? = nil, nervousDog: Bool = false, behavioralNotes: String? = nil, warningNote: String? = nil, trainingLevel: String? = nil, goodWithKids: Bool? = nil, goodWithDogs: Bool? = nil, goodWithCats: Bool? = nil, vetInfo: DogVetInfo? = nil, vaccinations: [DogVaccination] = [], vaccinationStatus: String? = nil, allergies: String? = nil, medications: String? = nil, medicationUpToDate: Bool = false, medicalConditions: String? = nil, specialNeeds: String? = nil, dietaryRestrictions: String? = nil, selectedGroomerId: String? = nil, selectedWalkerId: String? = nil, selectedVetId: String? = nil, serviceNotes: String? = nil, activityLevel: String? = nil, walkPreferences: WalkPreferences? = nil, createdAt: Int64 = 0, updatedAt: Int64 = 0, isArchived: Bool = false, archivedAt: Int64? = nil, archivedBy: String? = nil, version: Int = 1, lastSyncedAt: Int64? = nil, syncStatus: String = "synced", species: String? = nil, gender: String? = nil, neutered: Bool = false) {
-        self.id = id; self.name = name; self.primaryOwnerId = primaryOwnerId; self.sharedWithUserIds = sharedWithUserIds; self.organizationAccess = organizationAccess; self.breed = breed; self.birthdate = birthdate; self.sex = sex; self.color = color; self.photoUrl = photoUrl; self.photoUrls = photoUrls; self.weight = weight; self.weightHistory = weightHistory; self.size = size; self.microchipId = microchipId; self.temperament = temperament; self.nervousDog = nervousDog; self.behavioralNotes = behavioralNotes; self.warningNote = warningNote; self.trainingLevel = trainingLevel; self.goodWithKids = goodWithKids; self.goodWithDogs = goodWithDogs; self.goodWithCats = goodWithCats; self.vetInfo = vetInfo; self.vaccinations = vaccinations; self.vaccinationStatus = vaccinationStatus; self.allergies = allergies; self.medications = medications; self.medicationUpToDate = medicationUpToDate; self.medicalConditions = medicalConditions; self.specialNeeds = specialNeeds; self.dietaryRestrictions = dietaryRestrictions; self.selectedGroomerId = selectedGroomerId; self.selectedWalkerId = selectedWalkerId; self.selectedVetId = selectedVetId; self.serviceNotes = serviceNotes; self.activityLevel = activityLevel; self.walkPreferences = walkPreferences; self.createdAt = createdAt; self.updatedAt = updatedAt; self.isArchived = isArchived; self.archivedAt = archivedAt; self.archivedBy = archivedBy; self.version = version; self.lastSyncedAt = lastSyncedAt; self.syncStatus = syncStatus; self.species = species; self.gender = gender; self.neutered = neutered
+    init(id: String? = nil, name: String = "", primaryOwnerId: String = "", sharedWithUserIds: [String] = [], organizationAccess: [OrgAccess] = [], breed: String? = nil, birthdate: Int64? = nil, sex: String? = nil, color: String? = nil, photoUrl: String? = nil, photoUrls: [String] = [], weight: Double? = nil, weightHistory: [WeightLog] = [], size: String? = nil, microchipId: String? = nil, temperament: String? = nil, nervousDog: Bool = false, behavioralNotes: String? = nil, warningNote: String? = nil, trainingLevel: String? = nil, goodWithKids: Bool? = nil, goodWithDogs: Bool? = nil, goodWithCats: Bool? = nil, vetInfo: DogVetInfo? = nil, vaccinationStatus: String? = nil, allergies: String? = nil, medications: String? = nil, medicationUpToDate: Bool = false, medicalConditions: String? = nil, specialNeeds: String? = nil, dietaryRestrictions: String? = nil, selectedGroomerId: String? = nil, selectedWalkerId: String? = nil, selectedVetId: String? = nil, serviceNotes: String? = nil, activityLevel: String? = nil, walkPreferences: WalkPreferences? = nil, createdAt: Int64 = 0, updatedAt: Int64 = 0, isArchived: Bool = false, archivedAt: Int64? = nil, archivedBy: String? = nil, version: Int = 1, lastSyncedAt: Int64? = nil, syncStatus: String = "synced", species: String? = nil, gender: String? = nil, neutered: Bool = false) {
+        self.id = id; self.name = name; self.primaryOwnerId = primaryOwnerId; self.sharedWithUserIds = sharedWithUserIds; self.organizationAccess = organizationAccess; self.breed = breed; self.birthdate = birthdate; self.sex = sex; self.color = color; self.photoUrl = photoUrl; self.photoUrls = photoUrls; self.weight = weight; self.weightHistory = weightHistory; self.size = size; self.microchipId = microchipId; self.temperament = temperament; self.nervousDog = nervousDog; self.behavioralNotes = behavioralNotes; self.warningNote = warningNote; self.trainingLevel = trainingLevel; self.goodWithKids = goodWithKids; self.goodWithDogs = goodWithDogs; self.goodWithCats = goodWithCats; self.vetInfo = vetInfo; self.vaccinationStatus = vaccinationStatus; self.allergies = allergies; self.medications = medications; self.medicationUpToDate = medicationUpToDate; self.medicalConditions = medicalConditions; self.specialNeeds = specialNeeds; self.dietaryRestrictions = dietaryRestrictions; self.selectedGroomerId = selectedGroomerId; self.selectedWalkerId = selectedWalkerId; self.selectedVetId = selectedVetId; self.serviceNotes = serviceNotes; self.activityLevel = activityLevel; self.walkPreferences = walkPreferences; self.createdAt = createdAt; self.updatedAt = updatedAt; self.isArchived = isArchived; self.archivedAt = archivedAt; self.archivedBy = archivedBy; self.version = version; self.lastSyncedAt = lastSyncedAt; self.syncStatus = syncStatus; self.species = species; self.gender = gender; self.neutered = neutered
     }
 }
 
@@ -138,20 +141,9 @@ struct WalkPreferences: Codable {
     }
 }
 
-struct DogVaccination: Identifiable, Codable {
-    var id: String
-    var name: String
-    var date: Int64
-    var expiryDate: Int64?
-    var veterinarian: String
-    var batchNumber: String?
-    var nextDueDate: Int64?
-    var documentUrl: String?
-
-    init(id: String = UUID().uuidString, name: String = "", date: Int64 = 0, expiryDate: Int64? = nil, veterinarian: String = "", batchNumber: String? = nil, nextDueDate: Int64? = nil, documentUrl: String? = nil) {
-        self.id = id; self.name = name; self.date = date; self.expiryDate = expiryDate; self.veterinarian = veterinarian; self.batchNumber = batchNumber; self.nextDueDate = nextDueDate; self.documentUrl = documentUrl
-    }
-}
+// `DogVaccination` (inline vaccination struct) was removed — vaccinations
+// are now stored in the `/dogs/{dogId}/medicalRecords` subcollection and
+// read through `MedicalRecordsRepository` as `MedicalRecord` values.
 
 struct DogInvite: Identifiable, Codable {
     @DocumentID var id: String?
