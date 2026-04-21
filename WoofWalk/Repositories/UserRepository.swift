@@ -180,7 +180,29 @@ class UserRepository: ObservableObject {
 
     // MARK: - Friend Request Workflow (matches Android FriendRepository)
 
-    /// Send a friend request to another user. Creates a doc in "friendships" with status PENDING.
+    /// Canonical friendship doc ID: `"{lowerUid}_{higherUid}"`.
+    ///
+    /// A single pair has exactly one doc regardless of which side sent
+    /// the request, making duplicates structurally impossible. Stored
+    /// fields follow the same ordering (userId1 < userId2
+    /// lexicographically) so reads can query either direction without
+    /// missing records. Mirrors FriendRepository.kt on Android.
+    private func canonicalPair(_ a: String, _ b: String) -> (lo: String, hi: String) {
+        return a <= b ? (a, b) : (b, a)
+    }
+
+    private func canonicalFriendshipId(_ a: String, _ b: String) -> String {
+        let pair = canonicalPair(a, b)
+        return "\(pair.lo)_\(pair.hi)"
+    }
+
+    /// Send a friend request. Race-safe via a transaction that collapses
+    /// two simultaneous "friend them / friend you" taps into one doc.
+    ///   1. No existing doc      -> create PENDING
+    ///   2. PENDING by us        -> already-sent error
+    ///   3. PENDING by other side -> upgrade to ACCEPTED (reverse accept)
+    ///   4. ACCEPTED             -> already-friends error
+    ///   5. BLOCKED              -> cannot-request error
     func sendFriendRequest(toUserId: String) async throws {
         guard let userId = auth.currentUser?.uid else {
             throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
@@ -190,38 +212,59 @@ class UserRepository: ObservableObject {
             throw NSError(domain: "UserRepository", code: 400, userInfo: [NSLocalizedDescriptionKey: "Cannot send friend request to yourself"])
         }
 
-        // Check for existing friendship in either direction
-        let existing = try await getFriendshipBetween(userId1: userId, userId2: toUserId)
-        if let existing = existing {
-            let status = existing["status"] as? String ?? ""
-            switch status {
-            case FriendStatus.pending.rawValue:
-                throw NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "Friend request already sent"])
-            case FriendStatus.accepted.rawValue:
-                throw NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "Already friends with this user"])
-            case FriendStatus.blocked.rawValue:
-                throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Cannot send friend request to this user"])
-            default:
-                break
+        let pair = canonicalPair(userId, toUserId)
+        let docId = "\(pair.lo)_\(pair.hi)"
+        let docRef = db.collection("friendships").document(docId)
+
+        _ = try await db.runTransaction { txn, errorPointer -> Any? in
+            let snap: DocumentSnapshot
+            do {
+                snap = try txn.getDocument(docRef)
+            } catch let fetchError as NSError {
+                errorPointer?.pointee = fetchError
+                return nil
             }
+
+            if let data = snap.data() {
+                let status = data["status"] as? String ?? ""
+                let requestedBy = data["requestedBy"] as? String ?? ""
+                switch status {
+                case FriendStatus.blocked.rawValue:
+                    errorPointer?.pointee = NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Cannot send friend request to this user"])
+                    return nil
+                case FriendStatus.accepted.rawValue:
+                    errorPointer?.pointee = NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "Already friends with this user"])
+                    return nil
+                case FriendStatus.pending.rawValue:
+                    if requestedBy == userId {
+                        errorPointer?.pointee = NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "Friend request already sent"])
+                        return nil
+                    }
+                    // Other side already requested us — reverse-accept.
+                    txn.updateData([
+                        "status": FriendStatus.accepted.rawValue,
+                        "acceptedAt": FieldValue.serverTimestamp()
+                    ], forDocument: docRef)
+                default:
+                    errorPointer?.pointee = NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "Cannot send friend request"])
+                    return nil
+                }
+            } else {
+                txn.setData([
+                    "userId1": pair.lo,
+                    "userId2": pair.hi,
+                    "status": FriendStatus.pending.rawValue,
+                    "requestedBy": userId,
+                    "createdAt": FieldValue.serverTimestamp()
+                ], forDocument: docRef)
+            }
+            return nil
         }
 
-        let friendshipData: [String: Any] = [
-            "userId1": userId,
-            "userId2": toUserId,
-            "status": FriendStatus.pending.rawValue,
-            "requestedBy": userId,
-            "createdAt": FieldValue.serverTimestamp()
-        ]
-
-        let docRef = try await db.collection("friendships").addDocument(data: friendshipData)
-
-        // Notifications are created server-side by the onFriendshipWrite
-        // Cloud Function trigger. The /notifications collection rejects
-        // client writes (allow create: if false) so any client-side attempt
-        // here would be silently rejected.
-
-        print("Friend request sent: \(docRef.documentID)")
+        // Notifications (PENDING create, PENDING→ACCEPTED update) are
+        // emitted server-side by onFriendshipWrite — /notifications
+        // rejects client writes (allow create: if false).
+        print("Friend request sent / reverse-accepted: \(docId)")
     }
 
     /// Accept an incoming friend request. Updates status to ACCEPTED.
@@ -416,33 +459,14 @@ class UserRepository: ObservableObject {
         }
     }
 
-    /// Look up an existing friendship doc between two users (in either direction).
+    /// Look up the friendship between two users via the canonical doc ID.
+    /// A single `getDocument` replaces the previous two directional queries.
     private func getFriendshipBetween(userId1: String, userId2: String) async throws -> [String: Any]? {
-        // Check userId1 -> userId2
-        let snapshot1 = try await db.collection("friendships")
-            .whereField("userId1", isEqualTo: userId1)
-            .whereField("userId2", isEqualTo: userId2)
-            .getDocuments()
-
-        if let doc = snapshot1.documents.first {
-            var data = doc.data()
-            data["docId"] = doc.documentID
-            return data
-        }
-
-        // Check userId2 -> userId1 (reverse direction)
-        let snapshot2 = try await db.collection("friendships")
-            .whereField("userId1", isEqualTo: userId2)
-            .whereField("userId2", isEqualTo: userId1)
-            .getDocuments()
-
-        if let doc = snapshot2.documents.first {
-            var data = doc.data()
-            data["docId"] = doc.documentID
-            return data
-        }
-
-        return nil
+        let docId = canonicalFriendshipId(userId1, userId2)
+        let snap = try await db.collection("friendships").document(docId).getDocument()
+        guard var data = snap.data() else { return nil }
+        data["docId"] = snap.documentID
+        return data
     }
 
 }
