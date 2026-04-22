@@ -10,7 +10,7 @@ class ProviderRepository {
     func searchProviders(
         serviceType: String,
         location: CLLocationCoordinate2D,
-        radiusKm: Double = 25
+        radiusKm: Double = BusinessRanker.MAX_RADIUS_KM
     ) async throws -> [ServiceProviderLite] {
         // Map ServiceType display name to Firestore service field value
         let firestoreServiceName = mapServiceTypeToFirestoreValue(serviceType)
@@ -22,6 +22,10 @@ class ProviderRepository {
 
         let snapshot = try await query.limit(to: 100).getDocuments()
 
+        // Hydrate + distance-annotate each doc. `verifiedSince` comes in
+        // via Codable (Firestore Timestamp → Date). We keep the radius
+        // gate here to avoid paying to score providers far beyond the
+        // half-life curve.
         let providers: [ServiceProviderLite] = snapshot.documents.compactMap { doc in
             var provider = try? doc.data(as: ServiceProviderLite.self)
             provider?.id = doc.documentID
@@ -29,10 +33,7 @@ class ProviderRepository {
         }
         .filter { $0.acceptingNewClients }
         .compactMap { provider -> ServiceProviderLite? in
-            guard let lat = provider.latitude, let lng = provider.longitude else {
-                // Providers without coordinates are excluded from location-based search
-                return nil
-            }
+            guard let lat = provider.latitude, let lng = provider.longitude else { return nil }
             let distanceKm = haversineDistance(
                 lat1: location.latitude, lon1: location.longitude,
                 lat2: lat, lon2: lng
@@ -42,9 +43,12 @@ class ProviderRepository {
             result.distance = distanceKm
             return result
         }
-        .sorted { ($0.distance ?? .infinity) < ($1.distance ?? .infinity) }
 
-        return Array(providers.prefix(30))
+        // WOOF_RANK scoring — distance decay × relevance × Bayesian quality
+        // × (base trust × tenure). Mirror of Android ProviderRepository.kt.
+        let query = DiscoveryServiceType(rawValue: firestoreServiceName)
+        let ranked = BusinessRanker.rank(providers, queryService: query)
+        return Array(ranked.prefix(30))
     }
 
     /// Fetch full provider detail by ID.
