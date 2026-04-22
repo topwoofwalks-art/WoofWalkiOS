@@ -1,6 +1,21 @@
 import Foundation
 import FirebaseFirestore
 
+/// Who can see a post. Mirrors the Firestore rule whitelist on /posts:
+///
+///     request.resource.data.visibility in ['PUBLIC', 'FRIENDS', 'PRIVATE']
+///
+/// Changing the cases here requires an equivalent rule + Android update.
+enum PostVisibility: String, Codable, CaseIterable {
+    case `public` = "PUBLIC"
+    case friends = "FRIENDS"
+    case `private` = "PRIVATE"
+
+    static func from(_ raw: String?) -> PostVisibility {
+        PostVisibility(rawValue: raw ?? "PUBLIC") ?? .public
+    }
+}
+
 enum PostCategory: String, Codable, CaseIterable {
     case update = "UPDATE"
     case walkHighlight = "WALK_HIGHLIGHT"

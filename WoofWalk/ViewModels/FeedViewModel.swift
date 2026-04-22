@@ -569,27 +569,44 @@ class FeedViewModel: ObservableObject {
         return Self.linkPattern.firstMatch(in: text, range: range) != nil
     }
 
-    func createPost(text: String, photoUrl: String?) {
+    func createPost(
+        text: String,
+        photoUrl: String?,
+        visibility: PostVisibility = .public
+    ) {
         guard let uid = auth.currentUser?.uid else { return }
         Task {
             let userDoc = try? await db.collection("users").document(uid).getDocument()
             let userName = userDoc?.data()?["username"] as? String ?? "User"
             let userAvatar = userDoc?.data()?["photoUrl"] as? String
 
-            let post = Post(
-                id: UUID().uuidString,
-                authorId: uid,
-                authorName: userName,
-                authorAvatar: userAvatar,
-                type: "TEXT",
-                text: text,
-                createdAt: Timestamp(),
-                commentCount: 0,
-                photoUrl: photoUrl,
-                likeCount: 0,
-                likedBy: []
-            )
-            try? db.collection("posts").document(post.id ?? "").setData(from: post)
+            // Required by the /posts create rule (firestore.rules:1451-1460):
+            // `hasFields(['authorId', 'visibility', 'createdAt'])`. Omitting
+            // it produces PERMISSION_DENIED on every post attempt (fixed in
+            // v7.7.5 release).
+            var postData: [String: Any] = [
+                "authorId": uid,
+                "authorName": userName,
+                "type": "TEXT",
+                "text": text,
+                "createdAt": Int(Date().timeIntervalSince1970 * 1000),
+                "commentCount": 0,
+                "likeCount": 0,
+                "likedBy": [String](),
+                "reactionBy": [String: String](),
+                "bookmarkedBy": [String](),
+                "shareCount": 0,
+                "hashtags": extractHashtags(text),
+                "visibility": visibility.rawValue
+            ]
+            if let userAvatar { postData["authorAvatar"] = userAvatar }
+            if let photoUrl {
+                postData["photoUrl"] = photoUrl
+                postData["media"] = [["url": photoUrl, "type": "PHOTO"]]
+            }
+
+            let postId = UUID().uuidString
+            try? await db.collection("posts").document(postId).setData(postData)
         }
     }
 
@@ -629,14 +646,16 @@ class FeedViewModel: ObservableObject {
             "text": text,
             "photoUrl": downloadURL.absoluteString,
             "media": [["url": downloadURL.absoluteString, "type": "PHOTO"]],
-            "createdAt": Timestamp(),
+            "createdAt": Int(Date().timeIntervalSince1970 * 1000),
             "commentCount": 0,
             "likeCount": 0,
             "likedBy": [String](),
             "reactionBy": [String: String](),
             "bookmarkedBy": [String](),
             "shareCount": 0,
-            "hashtags": extractHashtags(text)
+            "hashtags": extractHashtags(text),
+            // Required by the /posts create rule (firestore.rules:1451-1460).
+            "visibility": "PUBLIC"
         ]
 
         if let userAvatar { postData["authorAvatar"] = userAvatar }
