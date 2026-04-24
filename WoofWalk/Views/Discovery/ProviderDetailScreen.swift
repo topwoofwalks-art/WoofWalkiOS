@@ -277,7 +277,7 @@ struct ProviderDetailScreen: View {
                         }
                     }
                     Spacer()
-                    Text(item.price)
+                    Text(CurrencyFormatter.shared.formatPrice(item.price, code: item.currencyCode))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.turquoise60)

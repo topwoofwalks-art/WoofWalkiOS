@@ -40,8 +40,16 @@ struct ServiceProviderLite: Identifiable, Codable {
 struct ServicePriceItem: Identifiable, Codable, Hashable {
     var id: String { name }
     var name: String
-    var price: String
+    var price: Double
+    var currencyCode: String
     var duration: String?
+
+    init(name: String, price: Double, currencyCode: String = "GBP", duration: String? = nil) {
+        self.name = name
+        self.price = price
+        self.currencyCode = currencyCode
+        self.duration = duration
+    }
 }
 
 struct ProviderReview: Identifiable, Codable {
