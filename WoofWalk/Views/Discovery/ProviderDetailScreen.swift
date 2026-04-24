@@ -266,21 +266,29 @@ struct ProviderDetailScreen: View {
                 .font(.headline)
 
             ForEach(provider.servicePricing) { item in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.name)
-                            .font(.subheadline)
-                        if let duration = item.duration {
-                            Text(duration)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.name)
+                                .font(.subheadline)
+                            if let duration = item.duration {
+                                Text(duration)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
+                        Spacer()
+                        Text(CurrencyFormatter.shared.formatPrice(item.price, code: item.currencyCode))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.turquoise60)
                     }
-                    Spacer()
-                    Text(CurrencyFormatter.shared.formatPrice(item.price, code: item.currencyCode))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.turquoise60)
+                    if let description = item.description, !description.isEmpty {
+                        Text(description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 .padding(.vertical, 6)
                 .padding(.horizontal, 12)

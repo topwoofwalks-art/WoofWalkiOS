@@ -43,12 +43,14 @@ struct ServicePriceItem: Identifiable, Codable, Hashable {
     var price: Double
     var currencyCode: String
     var duration: String?
+    var description: String?
 
-    init(name: String, price: Double, currencyCode: String = "GBP", duration: String? = nil) {
+    init(name: String, price: Double, currencyCode: String = "GBP", duration: String? = nil, description: String? = nil) {
         self.name = name
         self.price = price
         self.currencyCode = currencyCode
         self.duration = duration
+        self.description = description
     }
 }
 
