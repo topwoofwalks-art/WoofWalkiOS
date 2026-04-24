@@ -332,9 +332,13 @@ struct ServiceProviderCard: View {
                         }
                     }
 
-                    // Service tags
+                    // Service tags (audit #18: raised cap from 3 to 5 so
+                    // businesses with wider catalogues don't silently hide
+                    // the bulk of their services behind a "+N" pill. Kept
+                    // as HStack — anything higher and chips overflow the
+                    // card width on a narrow phone).
                     HStack(spacing: 4) {
-                        ForEach(provider.services.prefix(3), id: \.self) { service in
+                        ForEach(provider.services.prefix(5), id: \.self) { service in
                             Text(service)
                                 .font(.caption2)
                                 .padding(.horizontal, 6)
@@ -342,8 +346,8 @@ struct ServiceProviderCard: View {
                                 .background(Capsule().fill(Color.turquoise90))
                                 .foregroundColor(.turquoise30)
                         }
-                        if provider.services.count > 3 {
-                            Text("+\(provider.services.count - 3)")
+                        if provider.services.count > 5 {
+                            Text("+\(provider.services.count - 5)")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
