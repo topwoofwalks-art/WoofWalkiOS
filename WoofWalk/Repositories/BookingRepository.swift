@@ -1,6 +1,7 @@
 import Foundation
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseFunctions
 import Combine
 
 /// Repository for booking operations against the "bookings" Firestore collection.
@@ -8,6 +9,7 @@ import Combine
 class BookingRepository: ObservableObject {
     private let db = Firestore.firestore()
     private let auth = Auth.auth()
+    private lazy var functions = Functions.functions(region: "europe-west2")
     private var listeners: [ListenerRegistration] = []
 
     private static let collectionBookings = "bookings"
@@ -139,58 +141,116 @@ class BookingRepository: ObservableObject {
     // MARK: - Write Operations
 
     /// Create a new booking. Returns the new document ID.
+    ///
+    /// **P0 SECURITY:** routes through the `createClientBooking` Cloud
+    /// Function (parity with Android `UnifiedBookingFlowViewModel` and
+    /// the Portal `ClientNewBookingSheet`). The CF re-resolves the price
+    /// from the listing's sub-config server-side, so the client cannot
+    /// pick the cheapest grooming size and charge Stripe for the most
+    /// expensive. Direct `addDocument(...)` writes are unsafe — the
+    /// pricing path bypasses `resolveSubSelection`.
+    ///
     /// `subSelection` (R9) — optional per-vertical sub-config selection
-    /// (e.g. `["walk": ["durationOptionId": "..."]]`). Persisted on the
-    /// booking doc so the receipt UI and server-side resolvers can echo
-    /// the actual option the client chose. `subSelectionLabel` is a
-    /// pre-formatted human echo of the same.
+    /// (e.g. `["walk": ["durationOptionId": "..."]]`). The CF resolves
+    /// the actual price from this. `subSelectionLabel` is a pre-formatted
+    /// human echo persisted on the doc for receipt UI.
+    ///
+    /// iOS-only fields on the local `Booking` struct (telemetry, optimistic
+    /// UI markers, computed display strings) are NOT forwarded — the CF
+    /// rejects unknown keys. Caller-side state lives in the local model.
     func createBooking(
         _ booking: Booking,
         subSelection: [String: Any]? = nil,
         subSelectionLabel: String? = nil
     ) async throws -> String {
-        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        // Resolve dog IDs. Booking carries a single `petId` today; the CF
+        // expects an array. If absent, fall back to empty (CF will reject
+        // with invalid-argument — surface that error).
+        let dogIds: [String] = booking.petId.map { [$0] } ?? []
 
-        var data: [String: Any] = [
-            "clientId": booking.clientId,
-            "clientName": booking.clientName,
-            "businessId": booking.businessId,
-            "orgId": booking.orgId,
-            "organizationId": booking.organizationId,
-            "dogName": booking.dogName,
+        // CF expects providerId == org doc ID. Booking.orgId / businessId
+        // are all set to provider.id by the call site; prefer orgId, fall
+        // back through the same chain we've used in mappers.
+        let providerId: String = !booking.orgId.isEmpty
+            ? booking.orgId
+            : (!booking.businessId.isEmpty ? booking.businessId : booking.organizationId)
+
+        var payload: [String: Any] = [
+            "providerId": providerId,
             "serviceType": booking.serviceType,
+            "dogIds": dogIds,
             "startTime": booking.startTime,
-            "endTime": booking.endTime,
-            "status": BookingStatus.pending.rawValue,
-            "location": booking.location,
-            "price": booking.price,
-            "isPaid": false,
-            "createdAt": now,
-            "updatedAt": now
+            "endTime": booking.endTime
         ]
 
-        // Optional fields
-        if let v = booking.dogBreed { data["dogBreed"] = v }
-        if let v = booking.notes { data["notes"] = v }
-        if let v = booking.assignedTo { data["assignedTo"] = v }
-        if let v = booking.clientPhone { data["clientPhone"] = v }
-        if let v = booking.clientEmail { data["clientEmail"] = v }
-        if let v = booking.clientAvatar { data["clientAvatar"] = v }
-        if let v = booking.dogAvatar { data["dogAvatar"] = v }
-        if let v = booking.petId { data["petId"] = v }
-        if let v = booking.specialInstructions { data["specialInstructions"] = v }
-        if let v = booking.specialRequirements { data["specialRequirements"] = v }
+        // Notes — concatenate the structured iOS instructions blocks the
+        // way Android does in `buildNotes`. Caller has already merged
+        // them into `booking.notes`, so just forward.
+        if let notes = booking.notes, !notes.isEmpty {
+            payload["notes"] = notes
+        }
 
-        // R9: catalogue sub-selection. Server (createClientBooking) reads
-        // this same shape; iOS writes directly to Firestore today, so the
-        // selection is persisted on the doc rather than routed through
-        // the callable.
-        if let s = subSelection { data["subSelection"] = s }
-        if let l = subSelectionLabel { data["subSelectionLabel"] = l }
+        // R9 sub-selection (CF resolves price from this).
+        if let sel = subSelection {
+            payload["subSelection"] = sel
+        }
+        if let label = subSelectionLabel {
+            payload["subSelectionLabel"] = label
+        }
 
-        let docRef = try await db.collection(Self.collectionBookings).addDocument(data: data)
-        print("[BookingRepository] Created booking: \(docRef.documentID)")
-        return docRef.documentID
+        // Per-vertical config dicts — CF accepts these as pass-through and
+        // persists them on the booking doc. iOS' `Booking` struct flattens
+        // the picker output into top-level fields (selectedVariantId,
+        // selectedPackageId, dogSize, selectedAddOns, specialism), so
+        // re-shape them into the dict-shape the CF / portal use.
+        switch booking.serviceTypeEnum {
+        case .walk:
+            var walkConfig: [String: Any] = [:]
+            if let id = booking.selectedVariantId { walkConfig["selectedDurationId"] = id }
+            if !walkConfig.isEmpty { payload["walkConfig"] = walkConfig }
+        case .grooming:
+            var groomingConfig: [String: Any] = [:]
+            if let id = booking.selectedVariantId { groomingConfig["selectedMenuItemId"] = id }
+            if let id = booking.selectedPackageId { groomingConfig["selectedPackageId"] = id }
+            if let addOns = booking.selectedAddOns, !addOns.isEmpty { groomingConfig["selectedAddOnIds"] = addOns }
+            if let size = booking.dogSize { groomingConfig["dogSize"] = size }
+            if !groomingConfig.isEmpty { payload["groomingConfig"] = groomingConfig }
+        case .boarding:
+            var boardingConfig: [String: Any] = [:]
+            if let id = booking.selectedPackageId { boardingConfig["selectedRoomTypeId"] = id }
+            if !boardingConfig.isEmpty { payload["boardingConfig"] = boardingConfig }
+        case .training:
+            var trainingConfig: [String: Any] = [:]
+            if let id = booking.selectedVariantId { trainingConfig["sessionTypeId"] = id }
+            if let id = booking.selectedPackageId { trainingConfig["programmeId"] = id }
+            if let s = booking.specialism { trainingConfig["specialismId"] = s }
+            if !trainingConfig.isEmpty { payload["trainingConfig"] = trainingConfig }
+        case .daycare:
+            var daycareConfig: [String: Any] = [:]
+            if let id = booking.selectedVariantId { daycareConfig["sessionType"] = id }
+            if !daycareConfig.isEmpty { payload["daycareConfig"] = daycareConfig }
+        case .petSitting, .inSitting, .outSitting:
+            var petSittingConfig: [String: Any] = [:]
+            if let id = booking.selectedVariantId { petSittingConfig["visitType"] = id }
+            if !petSittingConfig.isEmpty { payload["petSittingConfig"] = petSittingConfig }
+        case .meetGreet:
+            break // No per-vertical config — CF uses listing.basePrice.
+        }
+
+        // Call the CF. CF returns { bookingId, status, price }.
+        let result = try await functions
+            .httpsCallable("createClientBooking")
+            .call(payload)
+
+        guard let response = result.data as? [String: Any],
+              let bookingId = response["bookingId"] as? String else {
+            print("[BookingRepository] createClientBooking returned malformed response: \(String(describing: result.data))")
+            throw BookingError.notFound
+        }
+
+        let resolvedPrice = (response["price"] as? NSNumber)?.doubleValue
+        print("[BookingRepository] Created booking via CF: \(bookingId) (server price: \(resolvedPrice ?? -1))")
+        return bookingId
     }
 
     /// Check the caller is a participant in the booking (client, business, or assigned provider).
