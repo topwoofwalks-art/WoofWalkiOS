@@ -551,6 +551,28 @@ struct BusinessSettingsScreen: View {
 
     var body: some View {
         Form {
+            // Service Catalogue — R6 entry point
+            Section {
+                NavigationLink {
+                    ServiceSettingsView()
+                } label: {
+                    HStack {
+                        Image(systemName: "list.bullet.rectangle")
+                            .foregroundColor(.turquoise60)
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Services & Pricing")
+                                .foregroundColor(.primary)
+                            Text("Toggle services and edit base prices")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            } header: {
+                Text("Catalogue")
+            }
+
             // Business Profile
             Section("Business Profile") {
                 HStack {

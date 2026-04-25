@@ -37,6 +37,13 @@ struct BusinessHomeScreen: View {
         }
         .navigationTitle("Business")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                NavigationLink(value: AppRoute.businessSettings) {
+                    Image(systemName: "gearshape")
+                }
+            }
+        }
     }
 
     // MARK: - Management Tools Banner
