@@ -135,6 +135,15 @@ class BookingFlowViewModel: ObservableObject {
     @Published var bookingCreatedId: String?
     @Published var isSearchingProviders = false
 
+    // R9: Catalogue → Client Wiring. Sub-config selection (walk duration,
+    // grooming menu item + dog size, boarding room + nights, etc.).
+    // `subSelectionPayload` matches the server's createClientBooking
+    // contract; nil means the user hasn't picked or there's no sub-config
+    // for this listing → fall back to provider.basePrice.
+    @Published var subSelectionPayload: [String: Any]?
+    @Published var subSelectionLabel: String?
+    @Published var subSelectionPrice: Double?
+
     private let db = Firestore.firestore()
     private var currentUserId: String? { Auth.auth().currentUser?.uid }
 
@@ -230,6 +239,9 @@ class BookingFlowViewModel: ObservableObject {
         selectedDogIds.removeAll()
         selectedProvider = nil
         selectedTimeSlot = nil
+        subSelectionPayload = nil
+        subSelectionLabel = nil
+        subSelectionPrice = nil
     }
 
     // Map UI ServiceType to BookingServiceType
@@ -352,12 +364,22 @@ class BookingFlowViewModel: ObservableObject {
         guard let service = selectedService,
               let provider = selectedProvider else { return }
 
-        let basePrice = provider.basePrice
+        // R9: prefer the price resolved from the sub-config pick
+        // (boarding/grooming/etc.) over the legacy provider basePrice.
+        let basePrice = subSelectionPrice ?? provider.basePrice
         let extraDogsFee = selectedDogIds.count > 1 ? Double(selectedDogIds.count - 1) * 5.0 : 0.0
-        let defaultDuration = service.defaultDuration
-        let durationAdjustment: Double = defaultDuration > 60
-            ? Double(defaultDuration - 60) / 30.0 * 5.0
-            : 0.0
+        // When a sub-config option is picked, duration is implicit in the
+        // option (e.g. 30 vs 60 min walk) — skip the legacy default-duration
+        // adjustment to avoid double-charging.
+        let durationAdjustment: Double
+        if subSelectionPrice != nil {
+            durationAdjustment = 0
+        } else {
+            let defaultDuration = service.defaultDuration
+            durationAdjustment = defaultDuration > 60
+                ? Double(defaultDuration - 60) / 30.0 * 5.0
+                : 0.0
+        }
         let subtotal = basePrice + extraDogsFee + durationAdjustment
         let platformFee = subtotal * 0.10
 
@@ -407,10 +429,16 @@ class BookingFlowViewModel: ObservableObject {
         )
 
         let bookingRepo = BookingRepository()
+        let subSelection = subSelectionPayload
+        let subLabel = subSelectionLabel
 
         Task {
             do {
-                let bookingId = try await bookingRepo.createBooking(booking)
+                let bookingId = try await bookingRepo.createBooking(
+                    booking,
+                    subSelection: subSelection,
+                    subSelectionLabel: subLabel
+                )
                 await MainActor.run {
                     self.isLoading = false
                     self.bookingCreatedId = bookingId
@@ -1050,6 +1078,31 @@ struct BookingFlowScreen: View {
                     .font(.subheadline)
                     .foregroundColor(.neutral60)
 
+                // R9: catalogue sub-selection picker. Renders nothing if
+                // the listing has no sub-config for this service type
+                // (empty-state fallback → use provider.basePrice).
+                if let provider = viewModel.selectedProvider,
+                   let service = viewModel.selectedService,
+                   let dateTime = viewModel.selectedDateTime {
+                    R9SubSelectionPicker(
+                        orgId: provider.id,
+                        serviceType: service,
+                        basePrice: provider.basePrice,
+                        bookingStartTime: dateTime,
+                        bookingEndTime: Calendar.current.date(byAdding: .minute, value: service.defaultDuration, to: dateTime) ?? dateTime
+                    ) { selection in
+                        if let sel = selection {
+                            viewModel.subSelectionPayload = sel.payload
+                            viewModel.subSelectionLabel = sel.label
+                            viewModel.subSelectionPrice = sel.price
+                        } else {
+                            viewModel.subSelectionPayload = nil
+                            viewModel.subSelectionLabel = nil
+                            viewModel.subSelectionPrice = nil
+                        }
+                    }
+                }
+
                 detailField(
                     label: "Special Instructions",
                     icon: "text.bubble",
@@ -1280,7 +1333,24 @@ struct BookingFlowScreen: View {
                 .foregroundColor(.neutral60)
 
             VStack(spacing: 8) {
-                priceRow("Base price", viewModel.priceBreakdown.basePrice)
+                // R9: echo the catalogue selection so the user can see
+                // exactly what they're paying for (e.g. "Full Groom – Medium – £35").
+                if let label = viewModel.subSelectionLabel, !label.isEmpty {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.turquoise60)
+                        Text(label)
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+                        Spacer()
+                    }
+                    .padding(.bottom, 4)
+                }
+
+                priceRow(viewModel.subSelectionPrice != nil ? "Selected option" : "Base price",
+                         viewModel.priceBreakdown.basePrice)
 
                 if viewModel.priceBreakdown.additionalDogFee > 0 {
                     priceRow("Additional dogs", viewModel.priceBreakdown.additionalDogFee)

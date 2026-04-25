@@ -139,7 +139,16 @@ class BookingRepository: ObservableObject {
     // MARK: - Write Operations
 
     /// Create a new booking. Returns the new document ID.
-    func createBooking(_ booking: Booking) async throws -> String {
+    /// `subSelection` (R9) — optional per-vertical sub-config selection
+    /// (e.g. `["walk": ["durationOptionId": "..."]]`). Persisted on the
+    /// booking doc so the receipt UI and server-side resolvers can echo
+    /// the actual option the client chose. `subSelectionLabel` is a
+    /// pre-formatted human echo of the same.
+    func createBooking(
+        _ booking: Booking,
+        subSelection: [String: Any]? = nil,
+        subSelectionLabel: String? = nil
+    ) async throws -> String {
         let now = Int64(Date().timeIntervalSince1970 * 1000)
 
         var data: [String: Any] = [
@@ -171,6 +180,13 @@ class BookingRepository: ObservableObject {
         if let v = booking.petId { data["petId"] = v }
         if let v = booking.specialInstructions { data["specialInstructions"] = v }
         if let v = booking.specialRequirements { data["specialRequirements"] = v }
+
+        // R9: catalogue sub-selection. Server (createClientBooking) reads
+        // this same shape; iOS writes directly to Firestore today, so the
+        // selection is persisted on the doc rather than routed through
+        // the callable.
+        if let s = subSelection { data["subSelection"] = s }
+        if let l = subSelectionLabel { data["subSelectionLabel"] = l }
 
         let docRef = try await db.collection(Self.collectionBookings).addDocument(data: data)
         print("[BookingRepository] Created booking: \(docRef.documentID)")
