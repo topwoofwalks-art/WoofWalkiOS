@@ -150,6 +150,15 @@ class BookingFlowViewModel: ObservableObject {
     /// commission debited from their wallet on confirm.
     @Published var paymentMethod: String = "card"
 
+    /// Methods the selected provider accepts. Loaded from
+    /// `organizations/{orgId}.paymentSettings.acceptedMethods` after a
+    /// provider is picked, with a fallback to the legacy
+    /// `organization_settings/{orgId}.payments.{acceptCard,acceptCash}`
+    /// shape and a final default of `["card"]` when neither is present.
+    /// Drives the picker on the review/confirm step: 2 entries → segmented
+    /// picker; 1 entry → read-only line; never empty (we coerce to ["card"]).
+    @Published var acceptedPaymentMethods: [String] = ["card"]
+
     // Cash-shortage notify CTA state. Surfaces when the booking submit
     // fails with `failed-precondition` and the message matches the wallet-
     // empty signal in functions/src/index.ts:2266 / :2545.
@@ -255,6 +264,12 @@ class BookingFlowViewModel: ObservableObject {
         subSelectionPayload = nil
         subSelectionLabel = nil
         subSelectionPrice = nil
+        // Reset payment-method state too — the next provider's
+        // acceptedMethods will repopulate this when picked. Defaulting
+        // back to card-only avoids a stale cash-only list flashing on the
+        // review step before the new provider's settings load.
+        acceptedPaymentMethods = ["card"]
+        paymentMethod = "card"
     }
 
     // Map UI ServiceType to BookingServiceType
@@ -288,10 +303,101 @@ class BookingFlowViewModel: ObservableObject {
                     bio: data["bio"] as? String,
                     isVerified: data["isVerified"] as? Bool ?? false
                 )
-                self.selectedProvider = provider
+                self.selectProvider(provider)
                 if !self.providers.contains(where: { $0.id == providerId }) {
                     self.providers.insert(provider, at: 0)
                 }
+            }
+        }
+    }
+
+    /// Set the chosen provider and refresh the accepted-payment-methods
+    /// list from `organizations/{orgId}.paymentSettings.acceptedMethods`
+    /// (with a legacy fallback). The provider-card tap and the deep-link
+    /// pre-select path both flow through here so the picker on the review
+    /// step is always in sync with whatever provider the user landed on.
+    func selectProvider(_ provider: SelectableProvider) {
+        selectedProvider = provider
+        loadAcceptedPaymentMethods(forOrgId: provider.id)
+    }
+
+    /// Read the provider's accepted payment methods. Source of truth is
+    /// `organizations/{orgId}.paymentSettings.acceptedMethods: [String]`
+    /// (e.g. `["card"]`, `["cash"]`, or `["card","cash"]`). Falls back to
+    /// the legacy `organization_settings/{orgId}.payments.acceptCash` /
+    /// `.acceptCard` booleans for older docs, then to `["card"]` if
+    /// neither is set. Never returns an empty list — that would lock the
+    /// user out of submitting.
+    ///
+    /// On completion this also reconciles `paymentMethod` so the default
+    /// matches the first accepted entry (the previous default of "card"
+    /// would otherwise survive on a cash-only provider, which would then
+    /// be rejected at submit).
+    func loadAcceptedPaymentMethods(forOrgId orgId: String) {
+        guard !orgId.isEmpty else {
+            self.acceptedPaymentMethods = ["card"]
+            self.paymentMethod = "card"
+            return
+        }
+        let db = Firestore.firestore()
+        db.collection("organizations").document(orgId).getDocument { [weak self] snapshot, _ in
+            guard let self = self else { return }
+            let data = snapshot?.data()
+            // Primary: paymentSettings.acceptedMethods on the org doc.
+            var methods: [String] = []
+            if let settings = data?["paymentSettings"] as? [String: Any],
+               let raw = settings["acceptedMethods"] as? [String] {
+                methods = raw
+                    .map { $0.lowercased() }
+                    .filter { $0 == "card" || $0 == "cash" }
+            }
+            if methods.isEmpty {
+                // Legacy fallback on the same doc — some older orgs put
+                // `acceptCash` / `acceptCard` directly under `paymentSettings`.
+                if let settings = data?["paymentSettings"] as? [String: Any] {
+                    if (settings["acceptCard"] as? Bool) == true { methods.append("card") }
+                    if (settings["acceptCash"] as? Bool) == true { methods.append("cash") }
+                }
+            }
+            if methods.isEmpty {
+                // Final fallback: organization_settings/{orgId}.payments.*.
+                self.legacyLoadAcceptCardCash(orgId: orgId)
+                return
+            }
+            self.applyAcceptedMethods(methods)
+        }
+    }
+
+    /// Read `organization_settings/{orgId}.payments.acceptCash`/`.acceptCard`
+    /// for orgs that haven't migrated to the consolidated `paymentSettings`
+    /// shape. Defaults to `["card"]` if neither is present.
+    private func legacyLoadAcceptCardCash(orgId: String) {
+        let db = Firestore.firestore()
+        db.collection("organization_settings").document(orgId).getDocument { [weak self] snapshot, _ in
+            guard let self = self else { return }
+            var methods: [String] = []
+            if let payments = snapshot?.data()?["payments"] as? [String: Any] {
+                if (payments["acceptCard"] as? Bool) == true { methods.append("card") }
+                if (payments["acceptCash"] as? Bool) == true { methods.append("cash") }
+            }
+            if methods.isEmpty { methods = ["card"] }
+            self.applyAcceptedMethods(methods)
+        }
+    }
+
+    /// Push the resolved accepted-methods list to state on the main queue
+    /// and reconcile the current selection so we never submit a method
+    /// the provider doesn't accept.
+    private func applyAcceptedMethods(_ methods: [String]) {
+        // De-dupe while preserving order (card-first feels more natural
+        // when both are accepted; the source-of-truth ordering wins).
+        var seen = Set<String>()
+        let deduped = methods.filter { seen.insert($0).inserted }
+        let resolved = deduped.isEmpty ? ["card"] : deduped
+        DispatchQueue.main.async {
+            self.acceptedPaymentMethods = resolved
+            if !resolved.contains(self.paymentMethod) {
+                self.paymentMethod = resolved.first ?? "card"
             }
         }
     }
@@ -604,7 +710,19 @@ struct BookingFlowScreen: View {
                 dismiss()
             }
         } message: {
-            Text("Your booking has been submitted. The provider will confirm shortly.")
+            // Cash flow skips the (still-to-come) Stripe sheet entirely:
+            // payment happens in person, so we surface the amount the
+            // user owes the provider on the day instead of a generic
+            // "submitted" copy. Card flow keeps the original message —
+            // when the iOS Stripe payment sheet lands it'll gate on
+            // `paymentMethod == "card"` and we'll move that copy into
+            // the post-payment success state.
+            if viewModel.paymentMethod == "cash" {
+                let total = CurrencyFormatter.shared.formatPrice(viewModel.priceBreakdown.total)
+                Text("Pay \(total) to the provider on the day. They'll confirm the booking shortly.")
+            } else {
+                Text("Your booking has been submitted. The provider will confirm shortly.")
+            }
         }
         .alert("Error", isPresented: .init(
             get: { viewModel.errorMessage != nil },
@@ -987,7 +1105,7 @@ struct BookingFlowScreen: View {
     private func providerCard(_ provider: SelectableProvider) -> some View {
         let isSelected = viewModel.selectedProvider?.id == provider.id
         return Button {
-            viewModel.selectedProvider = provider
+            viewModel.selectProvider(provider)
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
@@ -1430,32 +1548,98 @@ struct BookingFlowScreen: View {
         }
     }
 
+    @ViewBuilder
     private var paymentMethodPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Payment method", systemImage: "creditcard")
                 .font(.subheadline.bold())
                 .foregroundColor(.neutral60)
 
-            HStack(spacing: 10) {
-                paymentChoiceButton(label: "Card", icon: "creditcard.fill", value: "card")
-                paymentChoiceButton(label: "Cash", icon: "banknote", value: "cash")
+            // When the provider only accepts one method we render a
+            // read-only line — no picker, no choice. When both are
+            // accepted, two radio cards. The list is never empty (the
+            // loader coerces to ["card"] before publishing).
+            if viewModel.acceptedPaymentMethods.count > 1 {
+                HStack(spacing: 10) {
+                    ForEach(viewModel.acceptedPaymentMethods, id: \.self) { method in
+                        paymentChoiceButton(
+                            label: paymentChoiceTitle(method),
+                            icon: paymentChoiceIcon(method),
+                            subtitle: paymentChoiceSubtitle(method),
+                            value: method
+                        )
+                    }
+                }
+            } else {
+                let only = viewModel.acceptedPaymentMethods.first ?? "card"
+                HStack(spacing: 10) {
+                    Image(systemName: paymentChoiceIcon(only))
+                        .foregroundColor(.turquoise60)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(paymentChoiceTitle(only))
+                            .font(.body.bold())
+                            .foregroundColor(.white)
+                        Text(paymentChoiceSubtitle(only))
+                            .font(.caption)
+                            .foregroundColor(.neutral60)
+                    }
+                    Spacer()
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.neutral20)
+                )
             }
         }
     }
 
-    private func paymentChoiceButton(label: String, icon: String, value: String) -> some View {
+    /// Localised label + icon + helper-copy lookups, kept inline rather
+    /// than as model-side helpers because the strings are UI-presentational
+    /// (booking review step copy) and shouldn't leak into the VM.
+    private func paymentChoiceTitle(_ method: String) -> String {
+        switch method {
+        case "cash": return "Pay in cash"
+        default: return "Pay by card"
+        }
+    }
+
+    private func paymentChoiceIcon(_ method: String) -> String {
+        switch method {
+        case "cash": return "banknote"
+        default: return "creditcard.fill"
+        }
+    }
+
+    private func paymentChoiceSubtitle(_ method: String) -> String {
+        switch method {
+        case "cash": return "Pay the provider directly on the day."
+        default: return "Charged when booking is confirmed."
+        }
+    }
+
+    private func paymentChoiceButton(label: String, icon: String, subtitle: String, value: String) -> some View {
         let isSelected = viewModel.paymentMethod == value
         return Button {
             viewModel.paymentMethod = value
         } label: {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                Text(label)
-                    .font(.body.bold())
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Image(systemName: icon)
+                    Text(label)
+                        .font(.body.bold())
+                }
+                .foregroundColor(isSelected ? .white : .neutral60)
+
+                Text(subtitle)
+                    .font(.caption2)
+                    .foregroundColor(isSelected ? .white.opacity(0.85) : .neutral50)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .foregroundColor(isSelected ? .white : .neutral60)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(isSelected ? Color.turquoise60 : Color.neutral20)
