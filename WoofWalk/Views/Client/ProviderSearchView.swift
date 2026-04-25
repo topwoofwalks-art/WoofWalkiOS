@@ -214,21 +214,11 @@ struct ProviderSearchCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
-                // Avatar
-                Circle().fill(Color.neutral90).frame(width: 52, height: 52)
-                    .overlay {
-                        if let url = provider.photoUrl, let imgUrl = URL(string: url) {
-                            AsyncImage(url: imgUrl) { img in
-                                img.resizable().scaledToFill()
-                            } placeholder: {
-                                Color.clear
-                            }
-                            .clipShape(Circle())
-                        } else {
-                            Image(systemName: "person.fill")
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                BusinessAvatarView(
+                    photoUrl: provider.photoUrl,
+                    isExternal: provider.isExternal,
+                    size: 52
+                )
 
                 VStack(alignment: .leading, spacing: 4) {
                     // Name + verified badge
@@ -427,20 +417,12 @@ struct ProviderDetailSheet: View {
 
             // Name overlay
             HStack(alignment: .bottom, spacing: 12) {
-                Circle().fill(Color.white.opacity(0.2)).frame(width: 56, height: 56)
-                    .overlay {
-                        if let url = provider.photoUrl, let imgUrl = URL(string: url) {
-                            AsyncImage(url: imgUrl) { img in
-                                img.resizable().scaledToFill()
-                            } placeholder: { Color.clear }
-                            .clipShape(Circle())
-                        } else {
-                            Image(systemName: "person.fill")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                BusinessAvatarView(
+                    photoUrl: provider.photoUrl,
+                    isExternal: provider.isExternal,
+                    size: 56
+                )
+                .overlay(Circle().stroke(Color.white, lineWidth: 2))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(provider.name)

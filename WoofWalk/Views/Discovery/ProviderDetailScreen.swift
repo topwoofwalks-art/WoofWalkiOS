@@ -116,23 +116,15 @@ struct ProviderDetailScreen: View {
 
             // Overlay content
             HStack(alignment: .bottom, spacing: 12) {
-                // Provider avatar
-                Circle().fill(Color.white.opacity(0.2)).frame(width: 60, height: 60)
-                    .overlay {
-                        if let url = provider.photoUrl, let imgUrl = URL(string: url) {
-                            AsyncImage(url: imgUrl) { img in
-                                img.resizable().scaledToFill()
-                            } placeholder: { Color.clear }
-                            .clipShape(Circle())
-                        } else {
-                            Image(systemName: "building.2.fill")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .overlay(
-                        Circle().stroke(Color.white, lineWidth: 2)
-                    )
+                // Provider avatar — placeholder logic centralised in
+                // BusinessAvatarView (no-logo vs awaiting-invite based on
+                // provider.isExternal).
+                BusinessAvatarView(
+                    photoUrl: provider.photoUrl,
+                    isExternal: provider.isExternal,
+                    size: 60
+                )
+                .overlay(Circle().stroke(Color.white, lineWidth: 2))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(provider.name)

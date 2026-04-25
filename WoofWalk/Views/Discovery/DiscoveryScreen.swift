@@ -275,21 +275,15 @@ struct ServiceProviderCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
-                // Avatar
-                Circle().fill(Color.neutral90).frame(width: 52, height: 52)
-                    .overlay {
-                        if let url = provider.photoUrl, let imgUrl = URL(string: url) {
-                            AsyncImage(url: imgUrl) { img in
-                                img.resizable().scaledToFill()
-                            } placeholder: {
-                                Color.clear
-                            }
-                            .clipShape(Circle())
-                        } else {
-                            Image(systemName: "building.2")
-                                .foregroundColor(.secondary)
-                        }
-                    }
+                // Avatar — BusinessAvatarView centralises the logo/placeholder
+                // logic. External/unclaimed businesses get the dashed-border
+                // "awaiting invite" mark; WoofWalk businesses with no uploaded
+                // logo get the clean paw placeholder.
+                BusinessAvatarView(
+                    photoUrl: provider.photoUrl,
+                    isExternal: provider.isExternal,
+                    size: 52
+                )
 
                 VStack(alignment: .leading, spacing: 4) {
                     // Name + badges
