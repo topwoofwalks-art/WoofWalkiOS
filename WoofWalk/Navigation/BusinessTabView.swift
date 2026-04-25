@@ -20,12 +20,13 @@ enum BusinessTab: String, CaseIterable {
 
 struct BusinessTabView: View {
     @State private var selectedTab: BusinessTab = .home
+    @State private var homePath = NavigationPath()
     @StateObject private var businessViewModel = BusinessViewModel()
 
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $selectedTab) {
-                NavigationStack {
+                NavigationStack(path: $homePath) {
                     BusinessHomeScreen(viewModel: businessViewModel)
                         .navigationDestination(for: AppRoute.self) { route in
                             RouteDestination(route: route)
@@ -75,5 +76,13 @@ struct BusinessTabView: View {
             AdBannerPlaceholder()
         }
         .tint(.turquoise60)
+        .onReceive(NotificationCenter.default.publisher(for: .deepLinkRouteRequested)) { note in
+            // FCM cash-topup deep link → open on the Home stack so the
+            // user lands back on the dashboard after the reply view pops.
+            if let route = note.userInfo?["route"] as? AppRoute {
+                selectedTab = .home
+                homePath.append(route)
+            }
+        }
     }
 }

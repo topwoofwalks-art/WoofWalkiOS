@@ -236,9 +236,59 @@ class NotificationService: NSObject, ObservableObject, UNUserNotificationCenterD
         case UNNotificationDefaultActionIdentifier:
             // User tapped the notification itself
             NotificationCenter.default.post(name: .openFromNotification, object: nil, userInfo: userInfo)
+            routeFromActionUrl(in: userInfo)
         default:
             break
         }
+    }
+
+    // MARK: - Deep-link routing (FCM `actionUrl`)
+
+    /// Map an `actionUrl` from the FCM payload to an `AppRoute` and
+    /// broadcast it via `.deepLinkRouteRequested`. The root navigator
+    /// observes this and pushes onto the appropriate NavigationStack.
+    ///
+    /// Supported patterns:
+    ///   * `/client/cash-requests/<id>`   → `.clientCashRequest(requestId:)`
+    ///   * `/business/cash-requests/<id>` → `.businessCashRequest(requestId:)`
+    private func routeFromActionUrl(in userInfo: [AnyHashable: Any]) {
+        let actionUrl = (userInfo["actionUrl"] as? String)
+            ?? (userInfo["action_url"] as? String)
+            ?? (userInfo["url"] as? String)
+        guard let actionUrl, !actionUrl.isEmpty else { return }
+
+        if let route = NotificationService.appRoute(forActionUrl: actionUrl) {
+            NotificationCenter.default.post(
+                name: .deepLinkRouteRequested,
+                object: nil,
+                userInfo: ["route": route]
+            )
+        }
+    }
+
+    /// Pure mapper — exposed for unit tests / preview wiring.
+    static func appRoute(forActionUrl actionUrl: String) -> AppRoute? {
+        // Strip an optional scheme/host so we work for both
+        // "/client/cash-requests/<id>" and "https://woofwalk.app/client/...".
+        var path = actionUrl
+        if let url = URL(string: actionUrl), url.host != nil {
+            path = url.path
+        }
+        let segments = path
+            .split(separator: "/", omittingEmptySubsequences: true)
+            .map(String.init)
+
+        if segments.count == 3,
+           segments[0] == "client",
+           segments[1] == "cash-requests" {
+            return .clientCashRequest(requestId: segments[2])
+        }
+        if segments.count == 3,
+           segments[0] == "business",
+           segments[1] == "cash-requests" {
+            return .businessCashRequest(requestId: segments[2])
+        }
+        return nil
     }
 }
 
@@ -251,4 +301,10 @@ extension Notification.Name {
     static let replyFromNotification = Notification.Name("replyFromNotification")
     static let markReadFromNotification = Notification.Name("markReadFromNotification")
     static let openFromNotification = Notification.Name("openFromNotification")
+
+    /// Posted by `NotificationService` when an FCM payload's `actionUrl`
+    /// resolves to a known `AppRoute`. `userInfo["route"]` is the resolved
+    /// `AppRoute`. Root navigators (e.g. `MainTabView`, `BusinessTabView`)
+    /// listen and push onto the active stack.
+    static let deepLinkRouteRequested = Notification.Name("deepLinkRouteRequested")
 }

@@ -81,6 +81,15 @@ struct MainTabView: View {
         .task {
             await updateChecker.checkForUpdate()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .deepLinkRouteRequested)) { note in
+            // FCM-driven (and in-app cash-shortage sheet) deep-link entry.
+            // Currently we only need to push the route onto the active
+            // navigator path; tab selection stays untouched (the route
+            // resolves the same destination regardless of source tab).
+            if let route = note.userInfo?["route"] as? AppRoute {
+                navigator.navigate(to: route)
+            }
+        }
         .tint(.turquoise60)
         .overlay {
             if let achievement = badgeService.pendingAchievements.first {

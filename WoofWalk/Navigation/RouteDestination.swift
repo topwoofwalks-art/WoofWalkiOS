@@ -195,6 +195,12 @@ struct RouteDestination: View {
             NotificationSettingsScreen()
         case .privacySettings:
             PrivacySettingsScreen()
+
+        // Cash-shortage notify flow
+        case .clientCashRequest(let requestId):
+            CashTopupRequestView(requestId: requestId)
+        case .businessCashRequest(let requestId):
+            CashTopupReplyView(requestId: requestId)
         }
     }
 }

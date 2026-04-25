@@ -161,7 +161,8 @@ class BookingRepository: ObservableObject {
     func createBooking(
         _ booking: Booking,
         subSelection: [String: Any]? = nil,
-        subSelectionLabel: String? = nil
+        subSelectionLabel: String? = nil,
+        paymentMethod: String? = nil
     ) async throws -> String {
         // Resolve dog IDs. Booking carries a single `petId` today; the CF
         // expects an array. If absent, fall back to empty (CF will reject
@@ -196,6 +197,16 @@ class BookingRepository: ObservableObject {
         }
         if let label = subSelectionLabel {
             payload["subSelectionLabel"] = label
+        }
+
+        // Phase 1 payments: forward paymentMethod ('card' | 'cash') to the
+        // CF. Default is card (CF normalises anyway). Cash bookings trigger
+        // the wallet-balance precondition check on the server; an empty
+        // wallet rejects with `failed-precondition` and the message
+        // "This provider cannot accept cash bookings right now — their
+        // wallet balance is empty" (functions/src/index.ts:2266).
+        if let method = paymentMethod {
+            payload["paymentMethod"] = method
         }
 
         // Per-vertical config dicts — CF accepts these as pass-through and

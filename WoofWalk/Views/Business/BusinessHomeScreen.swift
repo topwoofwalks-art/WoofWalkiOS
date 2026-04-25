@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 struct BusinessHomeScreen: View {
     // MARK: - ViewModel
@@ -9,6 +10,11 @@ struct BusinessHomeScreen: View {
     private let darkTeal = Color.turquoise30
     private let cardBackground = Color.neutral20
     private let surfaceBackground = Color.neutral10
+
+    // MARK: - Cash-shortage inbox state
+    @State private var cashRequests: [CashTopupRequest] = []
+    @State private var isLoadingCashRequests = false
+    private let cashRepo = CashTopupRepository()
 
     /// Route to walk console for the next upcoming job, if available.
     private var nextJobWalkConsoleRoute: AppRoute? {
@@ -22,6 +28,9 @@ struct BusinessHomeScreen: View {
                 VStack(spacing: 16) {
                     managementToolsBanner
                     onlineStatusCard
+                    if !cashRequests.isEmpty {
+                        cashRequestsCard
+                    }
                     jobsCard
                     Spacer(minLength: 100)
                 }
@@ -31,6 +40,10 @@ struct BusinessHomeScreen: View {
             .background(surfaceBackground.ignoresSafeArea())
             .refreshable {
                 viewModel.refresh()
+                await loadCashRequests()
+            }
+            .task {
+                await loadCashRequests()
             }
 
             quickActionsBar
@@ -125,6 +138,108 @@ struct BusinessHomeScreen: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(cardBackground)
         )
+    }
+
+    // MARK: - Cash booking requests inbox
+
+    /// Compact inbox card surfaced on the business home when there are
+    /// pending cash-shortage requests for this org. Tapping a row pushes
+    /// `CashTopupReplyView` via `.businessCashRequest`. Empty state renders
+    /// nothing (the card is conditionally added in `body`).
+    private var cashRequestsCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "banknote")
+                    .foregroundColor(tealAccent)
+                Text("Cash booking requests")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Spacer()
+                Text("\(cashRequests.count)")
+                    .font(.caption.bold())
+                    .foregroundColor(Color.neutral10)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(tealAccent))
+            }
+
+            VStack(spacing: 8) {
+                ForEach(cashRequests) { req in
+                    NavigationLink(value: AppRoute.businessCashRequest(requestId: req.id)) {
+                        cashRequestRow(req)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(cardBackground)
+        )
+    }
+
+    private func cashRequestRow(_ req: CashTopupRequest) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(tealAccent.opacity(0.25))
+                    .frame(width: 36, height: 36)
+                Image(systemName: "person.fill")
+                    .font(.subheadline)
+                    .foregroundColor(tealAccent)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack {
+                    Text(req.clientName.isEmpty ? "A WoofWalk client" : req.clientName)
+                        .font(.subheadline.bold())
+                        .foregroundColor(.white)
+                    Spacer()
+                    Text(req.requestedAt, style: .relative)
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                if let preview = req.messages.last?.text, !preview.isEmpty {
+                    Text(preview)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                        .lineLimit(2)
+                }
+            }
+        }
+        .padding(.vertical, 6)
+    }
+
+    /// Server-side list of pending requests for this business. We use the
+    /// callable rather than a direct collection-group query because the
+    /// list rule requires `auth.token.organizationId` which not every
+    /// business user has set; the callable verifies membership server-side.
+    @MainActor
+    private func loadCashRequests() async {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            cashRequests = []
+            return
+        }
+        isLoadingCashRequests = true
+        defer { isLoadingCashRequests = false }
+        do {
+            // Convention across the iOS codebase (see BusinessViewModel
+            // online-status writes): the organization doc id is the
+            // owner's Firebase Auth uid.
+            let requests = try await cashRepo.listOrgCashTopupRequests(
+                orgId: userId,
+                status: "pending",
+                limit: 5
+            )
+            self.cashRequests = requests
+        } catch {
+            // Permission-denied is expected when the user is logged in
+            // but isn't claimed as an org member yet (fresh signup).
+            // Don't surface — empty inbox is the correct render.
+            print("[BusinessHomeScreen] cash topup inbox load failed: \(error.localizedDescription)")
+            self.cashRequests = []
+        }
     }
 
     // MARK: - Jobs Card

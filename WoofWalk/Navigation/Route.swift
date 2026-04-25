@@ -103,6 +103,10 @@ enum AppRoute: Hashable {
     case notificationSettings
     case privacySettings
 
+    // Cash-shortage notify flow
+    case clientCashRequest(requestId: String)
+    case businessCashRequest(requestId: String)
+
     func hash(into hasher: inout Hasher) {
         switch self {
         case .map: hasher.combine("map")
@@ -179,6 +183,8 @@ enum AppRoute: Hashable {
         case .autoReplySettings: hasher.combine("autoReplySettings")
         case .notificationSettings: hasher.combine("notificationSettings")
         case .privacySettings: hasher.combine("privacySettings")
+        case .clientCashRequest(let id): hasher.combine("clientCashRequest"); hasher.combine(id)
+        case .businessCashRequest(let id): hasher.combine("businessCashRequest"); hasher.combine(id)
         }
     }
 

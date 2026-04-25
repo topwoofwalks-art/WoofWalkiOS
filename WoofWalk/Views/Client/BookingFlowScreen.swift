@@ -1,6 +1,7 @@
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseFunctions
 
 // MARK: - Booking Step
 
@@ -143,6 +144,18 @@ class BookingFlowViewModel: ObservableObject {
     @Published var subSelectionPayload: [String: Any]?
     @Published var subSelectionLabel: String?
     @Published var subSelectionPrice: Double?
+
+    /// Payment method for the booking. "card" routes through Stripe;
+    /// "cash" books with the provider taking cash and the platform
+    /// commission debited from their wallet on confirm.
+    @Published var paymentMethod: String = "card"
+
+    // Cash-shortage notify CTA state. Surfaces when the booking submit
+    // fails with `failed-precondition` and the message matches the wallet-
+    // empty signal in functions/src/index.ts:2266 / :2545.
+    @Published var showCashShortageSheet: Bool = false
+    @Published var cashShortageRequestId: String?
+    @Published var cashShortageAlreadyOpen: Bool = false
 
     private let db = Firestore.firestore()
     private var currentUserId: String? { Auth.auth().currentUser?.uid }
@@ -431,13 +444,16 @@ class BookingFlowViewModel: ObservableObject {
         let bookingRepo = BookingRepository()
         let subSelection = subSelectionPayload
         let subLabel = subSelectionLabel
+        let method = paymentMethod
+        let providerOrgId = provider.id
 
         Task {
             do {
                 let bookingId = try await bookingRepo.createBooking(
                     booking,
                     subSelection: subSelection,
-                    subSelectionLabel: subLabel
+                    subSelectionLabel: subLabel,
+                    paymentMethod: method
                 )
                 await MainActor.run {
                     self.isLoading = false
@@ -446,10 +462,88 @@ class BookingFlowViewModel: ObservableObject {
             } catch {
                 await MainActor.run {
                     self.isLoading = false
-                    self.errorMessage = error.localizedDescription
+                    // Cash-shortage detection: when the CF rejects a cash
+                    // booking because the provider's wallet balance is <=0,
+                    // it throws Functions error code `failedPrecondition`
+                    // with one of the wallet-empty signal strings. Don't
+                    // show a generic alert — surface the notify sheet so
+                    // the user can ping the business to top up.
+                    if method == "cash",
+                       BookingFlowViewModel.isWalletEmptySignal(error: error) {
+                        self.cashShortageRequestId = nil
+                        self.cashShortageAlreadyOpen = false
+                        self.showCashShortageSheet = true
+                        // Stash the orgId for the sheet via a side channel.
+                        self.pendingCashShortageOrgId = providerOrgId
+                    } else {
+                        self.errorMessage = error.localizedDescription
+                    }
                 }
             }
         }
+    }
+
+    // MARK: - Cash-shortage helpers
+
+    /// Org id captured at submit-time, used by the notify sheet.
+    var pendingCashShortageOrgId: String?
+
+    /// Detect the wallet-empty rejection from `createClientBooking`. The CF
+    /// throws `failed-precondition` from two sites:
+    ///   1) functions/src/index.ts:2266 — "This provider cannot accept cash
+    ///      bookings right now — their wallet balance is empty"
+    ///   2) functions/src/index.ts:2545 — "Insufficient wallet balance to
+    ///      accept this cash booking. Need £…"
+    /// Both surface as `NSError` in `FunctionsErrorDomain`. We match either
+    /// the error code (failedPrecondition) coupled with a wallet keyword
+    /// in the message, OR the message alone if the SDK transcoded the
+    /// error domain.
+    static func isWalletEmptySignal(error: Error) -> Bool {
+        let nsErr = error as NSError
+        let message = (nsErr.userInfo[NSLocalizedDescriptionKey] as? String) ?? nsErr.localizedDescription
+        let lower = message.lowercased()
+        let hasWalletSignal = lower.contains("wallet") &&
+            (lower.contains("empty") || lower.contains("insufficient") || lower.contains("top up") || lower.contains("balance"))
+        // The CF throws BOTH `failed-precondition` and a wallet-keyword
+        // message (functions/src/index.ts:2266 / :2545). Other failed-
+        // precondition rejects (e.g. "Stripe not configured") would
+        // false-positive if we matched on code alone, so require both.
+        let isFunctionsFailedPrecondition = nsErr.domain == FunctionsErrorDomain
+            && nsErr.code == FunctionsErrorCode.failedPrecondition.rawValue
+        return isFunctionsFailedPrecondition && hasWalletSignal
+    }
+
+    /// Fire the `requestCashTopup` callable from the notify sheet.
+    /// Sets `cashShortageRequestId` on success so the sheet flips to its
+    /// success state. The CF is idempotent — `already-exists` (or
+    /// `alreadyOpen: true` in the response) flips `cashShortageAlreadyOpen`.
+    func submitCashShortageNotify(message: String?) async {
+        guard let orgId = pendingCashShortageOrgId, !orgId.isEmpty else { return }
+        let repo = CashTopupRepository()
+        do {
+            let id = try await repo.requestCashTopup(orgId: orgId, message: message)
+            await MainActor.run {
+                self.cashShortageRequestId = id
+                self.cashShortageAlreadyOpen = false
+            }
+        } catch CashTopupError.alreadyOpen(let id) {
+            await MainActor.run {
+                self.cashShortageRequestId = id
+                self.cashShortageAlreadyOpen = true
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    /// Flip to card and re-fire submitBooking. Wired to the secondary CTA
+    /// on the cash-shortage sheet.
+    func switchToCardAndResubmit() {
+        paymentMethod = "card"
+        showCashShortageSheet = false
+        submitBooking()
     }
 }
 
@@ -519,6 +613,13 @@ struct BookingFlowScreen: View {
             Button("OK") { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .sheet(isPresented: $viewModel.showCashShortageSheet) {
+            CashShortageNotifySheet(
+                viewModel: viewModel,
+                onDismiss: { viewModel.showCashShortageSheet = false }
+            )
+            .presentationDetents([.medium, .large])
         }
     }
 
@@ -1257,6 +1358,9 @@ struct BookingFlowScreen: View {
                     }
                 }
 
+                // Payment method picker (Phase 1 payments).
+                paymentMethodPicker
+
                 // Price breakdown
                 priceBreakdownSection
 
@@ -1324,6 +1428,44 @@ struct BookingFlowScreen: View {
                 .font(.caption)
                 .foregroundColor(.white)
         }
+    }
+
+    private var paymentMethodPicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Payment method", systemImage: "creditcard")
+                .font(.subheadline.bold())
+                .foregroundColor(.neutral60)
+
+            HStack(spacing: 10) {
+                paymentChoiceButton(label: "Card", icon: "creditcard.fill", value: "card")
+                paymentChoiceButton(label: "Cash", icon: "banknote", value: "cash")
+            }
+        }
+    }
+
+    private func paymentChoiceButton(label: String, icon: String, value: String) -> some View {
+        let isSelected = viewModel.paymentMethod == value
+        return Button {
+            viewModel.paymentMethod = value
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                Text(label)
+                    .font(.body.bold())
+            }
+            .foregroundColor(isSelected ? .white : .neutral60)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.turquoise60 : Color.neutral20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isSelected ? Color.turquoise60 : Color.clear, lineWidth: 2)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var priceBreakdownSection: some View {
@@ -1402,6 +1544,191 @@ struct BookingFlowScreen: View {
 
 private extension Color {
     static let bookingNeutral15 = Color(hex: 0x1A1A2E)
+}
+
+// MARK: - Cash-shortage Notify Sheet
+
+/// Modal sheet shown when a cash booking submit fails because the
+/// provider's wallet balance is empty. Two states:
+///   1) `cashShortageRequestId == nil` → form: optional note + "Notify
+///      business" / "Pay by card instead" buttons.
+///   2) `cashShortageRequestId != nil` → success state. Tells the user
+///      we've pinged the provider and offers a "View conversation" link
+///      via the deep-link route.
+struct CashShortageNotifySheet: View {
+    @ObservedObject var viewModel: BookingFlowViewModel
+    var onDismiss: () -> Void
+
+    @State private var note: String = ""
+    @State private var isSubmitting: Bool = false
+    @FocusState private var isNoteFocused: Bool
+
+    private let noteCharLimit = 280
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                if let requestId = viewModel.cashShortageRequestId {
+                    successState(requestId: requestId)
+                } else {
+                    formState
+                }
+            }
+            .padding(20)
+        }
+        .background(Color.neutral10.ignoresSafeArea())
+        .preferredColorScheme(.dark)
+    }
+
+    // MARK: Form
+
+    private var formState: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 8) {
+                Image(systemName: "banknote")
+                    .font(.title)
+                    .foregroundColor(.turquoise60)
+                Text("This business can't take cash bookings right now.")
+                    .font(.title3.bold())
+                    .foregroundColor(.white)
+                Text("Their cash wallet needs topping up. Send a message and we'll let them know you're waiting.")
+                    .font(.subheadline)
+                    .foregroundColor(.neutral60)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Add a note — when do you need it?")
+                    .font(.caption.bold())
+                    .foregroundColor(.neutral60)
+                TextField("Optional", text: $note, axis: .vertical)
+                    .lineLimit(2...5)
+                    .focused($isNoteFocused)
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.neutral20)
+                    )
+                    .foregroundColor(.white)
+                    .onChange(of: note) { newValue in
+                        if newValue.count > noteCharLimit {
+                            note = String(newValue.prefix(noteCharLimit))
+                        }
+                    }
+                Text("\(note.count)/\(noteCharLimit)")
+                    .font(.caption2)
+                    .foregroundColor(.neutral50)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+
+            Button {
+                Task { await sendNotify() }
+            } label: {
+                HStack {
+                    if isSubmitting {
+                        ProgressView().tint(.white)
+                    } else {
+                        Image(systemName: "paperplane.fill")
+                        Text("Notify business")
+                            .font(.body.bold())
+                    }
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.turquoise60)
+                )
+            }
+            .disabled(isSubmitting)
+            .buttonStyle(.plain)
+
+            Button {
+                viewModel.switchToCardAndResubmit()
+            } label: {
+                Text("Pay by card instead")
+                    .font(.body.bold())
+                    .foregroundColor(.turquoise60)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.turquoise60, lineWidth: 1.5)
+                    )
+            }
+            .disabled(isSubmitting)
+            .buttonStyle(.plain)
+
+            Button("Not now", action: onDismiss)
+                .font(.caption)
+                .foregroundColor(.neutral60)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+    }
+
+    // MARK: Success
+
+    private func successState(requestId: String) -> some View {
+        // The sheet is presented above the NavigationStack, so we can't
+        // push a NavigationLink directly from in here — it would be lost
+        // when the sheet dismisses. Instead we broadcast the route via
+        // `.deepLinkRouteRequested` (the same notification the FCM
+        // handler uses) after dismissing. Root navigators that listen
+        // will push onto the active stack.
+        VStack(alignment: .leading, spacing: 16) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.largeTitle)
+                .foregroundColor(.success40)
+
+            Text(viewModel.cashShortageAlreadyOpen
+                 ? "You've already sent a request — we'll ping you when they reply."
+                 : "Sent! We'll let you know when they reply.")
+                .font(.title3.bold())
+                .foregroundColor(.white)
+
+            Text("You can keep the conversation open and check back any time.")
+                .font(.subheadline)
+                .foregroundColor(.neutral60)
+
+            Button {
+                NotificationCenter.default.post(
+                    name: .deepLinkRouteRequested,
+                    object: nil,
+                    userInfo: ["route": AppRoute.clientCashRequest(requestId: requestId)]
+                )
+                onDismiss()
+            } label: {
+                HStack {
+                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                    Text("View conversation")
+                        .font(.body.bold())
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.turquoise60)
+                )
+            }
+            .buttonStyle(.plain)
+
+            Button("Done", action: onDismiss)
+                .font(.body.bold())
+                .foregroundColor(.neutral60)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+        }
+    }
+
+    // MARK: Actions
+
+    private func sendNotify() async {
+        isSubmitting = true
+        defer { isSubmitting = false }
+        let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        await viewModel.submitCashShortageNotify(message: trimmed.isEmpty ? nil : trimmed)
+    }
 }
 
 // MARK: - Preview
