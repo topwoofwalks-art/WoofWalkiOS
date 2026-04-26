@@ -326,6 +326,17 @@ struct ServiceProviderCard: View {
                         }
                     }
 
+                    // Description (founder privacy stance: discovery cards
+                    // show Name + description + services. Phone/email/URL
+                    // are kept in-data for the WhatsApp invite path but
+                    // never rendered on the card.)
+                    if let bio = provider.bio, !bio.isEmpty {
+                        Text(bio)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+
                     // Service tags (audit #18: raised cap from 3 to 5 so
                     // businesses with wider catalogues don't silently hide
                     // the bulk of their services behind a "+N" pill. Kept
