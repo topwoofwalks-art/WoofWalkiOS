@@ -99,6 +99,7 @@
 		'A1000001000000000000273' = {isa = PBXBuildFile; fileRef = A1000001000000000000272; };
 		'A1000001000000000000275' = {isa = PBXBuildFile; fileRef = A1000001000000000000274; };
 		'A1000001000000000000277' = {isa = PBXBuildFile; fileRef = A1000001000000000000276; };
+		'A1000001000000000099002' = {isa = PBXBuildFile; fileRef = A1000001000000000099001; };
 		'A1000001000000000000279' = {isa = PBXBuildFile; fileRef = A1000001000000000000278; };
 		'A1000001000000000000281' = {isa = PBXBuildFile; fileRef = A1000001000000000000280; };
 		'A1000001000000000000283' = {isa = PBXBuildFile; fileRef = A1000001000000000000282; };
@@ -495,6 +496,7 @@
 		'A1000001000000000000272' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
 		'A1000001000000000000274' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		'A1000001000000000000276' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateChecker.swift; sourceTree = "<group>"; };
+		'A1000001000000000099001' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StripePaymentService.swift; sourceTree = "<group>"; };
 		'A1000001000000000000278' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		'A1000001000000000000280' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeAwardingService.swift; sourceTree = "<group>"; };
 		'A1000001000000000000282' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicWorldCacheManager.swift; sourceTree = "<group>"; };
@@ -977,6 +979,7 @@
 				A1000001000000000000910,
 				A1000001000000000000926,
 				A1000001000000000001176,
+				A1000001000000000099001,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -1877,6 +1880,7 @@
 				A1000001000000000000273,
 				A1000001000000000000275,
 				A1000001000000000000277,
+				A1000001000000000099002,
 				A1000001000000000000279,
 				A1000001000000000000281,
 				A1000001000000000000283,

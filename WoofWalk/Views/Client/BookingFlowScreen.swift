@@ -2,6 +2,7 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 import FirebaseFunctions
+import StripePaymentSheet
 
 // MARK: - Booking Step
 
@@ -175,6 +176,26 @@ class BookingFlowViewModel: ObservableObject {
     @Published var showCashShortageSheet: Bool = false
     @Published var cashShortageRequestId: String?
     @Published var cashShortageAlreadyOpen: Bool = false
+
+    // Stripe PaymentSheet state. Mirrors Android's flow:
+    //   - submit creates the booking (CF: createClientBooking)
+    //   - if card + total > 0: request clientSecret (CF: processBookingPayment)
+    //   - present PaymentSheet
+    //   - on .completed: confirmPayment (CF: confirmPayment) → success alert
+    //   - on .canceled / .failed: clear state, stay on review step
+    /// Stripe PaymentIntent clientSecret returned from `processBookingPayment`.
+    @Published var paymentClientSecret: String?
+    /// Booking ID waiting for payment confirmation. We hold off setting
+    /// `bookingCreatedId` (which drives the success alert) until the
+    /// PaymentSheet completes successfully.
+    @Published var pendingPaymentBookingId: String?
+    /// Drives the PaymentSheet `.paymentSheet(isPresented:…)` modifier.
+    /// Flipped true once we have a clientSecret in hand.
+    @Published var presentPaymentSheet: Bool = false
+    /// True while `processBookingPayment` is in flight, OR while the
+    /// PaymentSheet is open. Used to gate the submit button copy / spinner
+    /// without conflating with the booking-creation `isLoading` state.
+    @Published var paymentInFlight: Bool = false
 
     private let db = Firestore.firestore()
     private var currentUserId: String? { Auth.auth().currentUser?.uid }
@@ -626,6 +647,8 @@ class BookingFlowViewModel: ObservableObject {
         let providerOrgId = provider.id
         let boardingDates = boardingDatesPayload
 
+        let total = priceBreakdown.total
+
         Task {
             do {
                 let bookingId = try await bookingRepo.createBooking(
@@ -635,10 +658,49 @@ class BookingFlowViewModel: ObservableObject {
                     paymentMethod: method,
                     boardingDates: boardingDates
                 )
-                await MainActor.run {
-                    self.isLoading = false
-                    self.bookingCreatedId = bookingId
+
+                // Cash flow: provider takes payment in person — no Stripe.
+                // Surface success immediately. (Mirrors Android's
+                // `isCash` branch in UnifiedBookingFlowViewModel#submitBooking.)
+                if method == "cash" || total <= 0 {
+                    await MainActor.run {
+                        self.isLoading = false
+                        self.bookingCreatedId = bookingId
+                    }
+                    return
                 }
+
+                // Card flow: kick off Stripe PaymentIntent creation. We
+                // intentionally DON'T set bookingCreatedId yet — that
+                // drives the success alert, and we want the success alert
+                // gated on PaymentSheet completion (Android does the same:
+                // it transitions to the PAYMENT step and only emits
+                // BookingUiState.BookingCreated after confirmPayment).
+                await MainActor.run {
+                    self.paymentInFlight = true
+                }
+
+                do {
+                    let stripeService = StripePaymentService()
+                    let secret = try await stripeService.requestClientSecret(bookingId: bookingId)
+                    await MainActor.run {
+                        self.isLoading = false
+                        self.paymentClientSecret = secret
+                        self.pendingPaymentBookingId = bookingId
+                        self.presentPaymentSheet = true
+                    }
+                } catch {
+                    // PaymentIntent creation failed. The booking doc is
+                    // still created server-side (sitting in `pending`); we
+                    // surface the error and let the user retry from the
+                    // review step. Don't set bookingCreatedId.
+                    await MainActor.run {
+                        self.isLoading = false
+                        self.paymentInFlight = false
+                        self.errorMessage = "Couldn't start payment: \(error.localizedDescription)"
+                    }
+                }
+                return
             } catch {
                 await MainActor.run {
                     self.isLoading = false
@@ -661,6 +723,78 @@ class BookingFlowViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    // MARK: - Stripe PaymentSheet completion
+
+    /// Handle the result of the PaymentSheet. Mirrors Android's
+    /// `confirmPayment()` + `onPaymentFailed()` in UnifiedBookingFlowViewModel.
+    ///
+    /// - `.completed` → call `confirmPayment` server-side, then surface
+    ///   the success alert (sets `bookingCreatedId`).
+    /// - `.canceled` → user backed out of the sheet. Stay on review step,
+    ///   no error. Booking doc remains `pending` server-side; user can
+    ///   retry submit from the review step.
+    /// - `.failed(error)` → Stripe-side payment failure. Surface error
+    ///   message to the user; same recovery path as canceled.
+    func confirmPayment(_ result: PaymentSheetResult) {
+        switch result {
+        case .completed:
+            guard let secret = paymentClientSecret,
+                  let bookingId = pendingPaymentBookingId,
+                  let paymentIntentId = StripePaymentService.paymentIntentId(fromClientSecret: secret) else {
+                // Shouldn't happen — completion implies we had both. Surface
+                // a sentinel error so the user contacts support rather than
+                // silently leaving the booking in an unconfirmed state.
+                errorMessage = "Payment captured but confirm failed — contact support"
+                clearPaymentState()
+                return
+            }
+
+            let stripeService = StripePaymentService()
+            Task {
+                do {
+                    try await stripeService.confirmOnServer(
+                        bookingId: bookingId,
+                        paymentIntentId: paymentIntentId
+                    )
+                    await MainActor.run {
+                        self.bookingCreatedId = bookingId
+                        self.clearPaymentState()
+                    }
+                } catch {
+                    // Stripe charged the customer but our confirm-callable
+                    // failed. The webhook on `payment_intent.succeeded`
+                    // will eventually flip the booking server-side; tell
+                    // the user to contact support so we don't double-charge
+                    // on retry.
+                    print("[BookingFlowViewModel] confirmOnServer failed: \(error.localizedDescription)")
+                    await MainActor.run {
+                        self.errorMessage = "Payment captured but confirm failed — contact support"
+                        self.clearPaymentState()
+                    }
+                }
+            }
+
+        case .canceled:
+            // User backed out. No error — they can re-submit. Don't surface
+            // an alert (matches Android's silent dismiss path).
+            presentPaymentSheet = false
+            paymentInFlight = false
+
+        case .failed(let error):
+            errorMessage = "Payment failed: \(error.localizedDescription)"
+            clearPaymentState()
+        }
+    }
+
+    /// Reset all in-flight Stripe state. Called from terminal states
+    /// (.completed → success, .failed → error) so a fresh submit starts clean.
+    private func clearPaymentState() {
+        paymentClientSecret = nil
+        pendingPaymentBookingId = nil
+        presentPaymentSheet = false
+        paymentInFlight = false
     }
 
     // MARK: - Cash-shortage helpers
@@ -734,6 +868,12 @@ struct BookingFlowScreen: View {
     @StateObject private var viewModel = BookingFlowViewModel()
     @State private var showSuccessAlert = false
 
+    /// Stripe PaymentSheet instance, built lazily once we have a clientSecret.
+    /// Held as @State so the same sheet survives across re-renders while
+    /// the user interacts with it. Re-built whenever
+    /// `viewModel.paymentClientSecret` changes (e.g. after a cancel + retry).
+    @State private var paymentSheet: PaymentSheet?
+
     var preselectedService: ServiceType?
     var preselectedProviderId: String?
 
@@ -784,18 +924,15 @@ struct BookingFlowScreen: View {
                 dismiss()
             }
         } message: {
-            // Cash flow skips the (still-to-come) Stripe sheet entirely:
-            // payment happens in person, so we surface the amount the
-            // user owes the provider on the day instead of a generic
-            // "submitted" copy. Card flow keeps the original message —
-            // when the iOS Stripe payment sheet lands it'll gate on
-            // `paymentMethod == "card"` and we'll move that copy into
-            // the post-payment success state.
+            // Cash flow: payment happens in person, surface what's owed.
+            // Card flow: PaymentSheet has already completed and the server
+            // has confirmed the PaymentIntent — booking is paid, awaiting
+            // the provider's confirm.
             if viewModel.paymentMethod == "cash" {
                 let total = CurrencyFormatter.shared.formatPrice(viewModel.priceBreakdown.total)
                 Text("Pay \(total) to the provider on the day. They'll confirm the booking shortly.")
             } else {
-                Text("Your booking has been submitted. The provider will confirm shortly.")
+                Text("Payment received. Your booking is confirmed and the provider will be in touch shortly.")
             }
         }
         .alert("Error", isPresented: .init(
@@ -812,6 +949,48 @@ struct BookingFlowScreen: View {
                 onDismiss: { viewModel.showCashShortageSheet = false }
             )
             .presentationDetents([.medium, .large])
+        }
+        // Stripe PaymentSheet — re-build whenever the clientSecret changes.
+        // `merchantDisplayName` matches Android's Stripe PaymentSheet config.
+        // `allowsDelayedPaymentMethods = false` mirrors Android's real-time
+        // capture for booking flows (no SEPA / iDEAL multi-day settlement).
+        .onChange(of: viewModel.paymentClientSecret) { newSecret in
+            guard let secret = newSecret, !secret.isEmpty else {
+                paymentSheet = nil
+                return
+            }
+            var config = PaymentSheet.Configuration()
+            config.merchantDisplayName = "WoofWalk"
+            config.allowsDelayedPaymentMethods = false
+            paymentSheet = PaymentSheet(
+                paymentIntentClientSecret: secret,
+                configuration: config
+            )
+        }
+        // Attach the PaymentSheet modifier on a hidden zero-size sentinel
+        // view so the modifier can take a non-optional `PaymentSheet`. We
+        // only render this sentinel when we actually have a sheet to
+        // present, so the modifier itself only exists when valid.
+        .background(paymentSheetSentinel)
+    }
+
+    /// Hidden sentinel view that hosts the Stripe `.paymentSheet` modifier.
+    /// Stripe's SwiftUI helper needs a non-optional `PaymentSheet`; this
+    /// view only exists when one is available.
+    @ViewBuilder
+    private var paymentSheetSentinel: some View {
+        if let sheet = paymentSheet {
+            Color.clear
+                .frame(width: 0, height: 0)
+                .paymentSheet(
+                    isPresented: $viewModel.presentPaymentSheet,
+                    paymentSheet: sheet,
+                    onCompletion: { result in
+                        viewModel.confirmPayment(result)
+                    }
+                )
+        } else {
+            Color.clear.frame(width: 0, height: 0)
         }
     }
 

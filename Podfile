@@ -18,6 +18,14 @@ target 'WoofWalk' do
 
   pod 'Alamofire', '5.8.1'
   pod 'Kingfisher', '7.11.0'
+
+  # Stripe PaymentSheet — full PaymentSheet parity with Android. The
+  # umbrella `StripePaymentSheet` pod pulls Stripe core (Stripe, StripeCore,
+  # StripePayments, StripeUICore) transitively, so we don't need to list
+  # each. PaymentSheet supports Stripe Connect destination charges via the
+  # client_secret returned from `processBookingPayment` (the on_behalf_of
+  # + transfer_data are baked into the PaymentIntent server-side).
+  pod 'StripePaymentSheet', '~> 23.30'
 end
 
 post_install do |installer|

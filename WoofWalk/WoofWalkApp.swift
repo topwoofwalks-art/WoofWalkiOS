@@ -1,6 +1,7 @@
 import SwiftUI
 import Firebase
 import FirebaseAuth
+import StripePaymentSheet
 
 @main
 struct WoofWalkApp: App {
@@ -14,6 +15,13 @@ struct WoofWalkApp: App {
         } else {
             print("[WoofWalk] GoogleService-Info.plist not found - Firebase disabled")
         }
+
+        // Stripe SDK — full PaymentSheet parity with Android. The publishable
+        // key is hard-coded to match Android's `WoofWalkApplication.kt`
+        // (the live key for the WoofWalk Stripe account). PaymentIntents
+        // are created server-side by `processBookingPayment`; the
+        // PaymentSheet client only needs the publishable key + clientSecret.
+        StripeAPI.defaultPublishableKey = "pk_live_51Sg8grCHt9yHTLb1wpKwVN5LyUR93kgUYJmjxs5NrD4rHXGyFuAnyskiQYCRZKQNJVALvnnHeZol3Xv8gaIIF0aD00NoVlE74t"
 
         NotificationService.shared.configure()
     }
