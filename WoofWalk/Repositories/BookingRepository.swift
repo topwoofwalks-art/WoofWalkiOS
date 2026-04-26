@@ -163,7 +163,9 @@ class BookingRepository: ObservableObject {
         subSelection: [String: Any]? = nil,
         subSelectionLabel: String? = nil,
         paymentMethod: String? = nil,
-        boardingDates: (checkInMs: Int64, checkOutMs: Int64)? = nil
+        boardingDates: (checkInMs: Int64, checkOutMs: Int64)? = nil,
+        dogDetails: [String: Any]? = nil,
+        perVerticalOverlay: (key: String, value: [String: Any])? = nil
     ) async throws -> String {
         // Resolve dog IDs. Booking carries a single `petId` today; the CF
         // expects an array. If absent, fall back to empty (CF will reject
@@ -258,6 +260,47 @@ class BookingRepository: ObservableObject {
             if !petSittingConfig.isEmpty { payload["petSittingConfig"] = petSittingConfig }
         case .meetGreet:
             break // No per-vertical config — CF uses listing.basePrice.
+        }
+
+        // R10: rich dog-details payload (spec
+        // design_audit_2026_04_26_portal_services/06_booking_dog_details.md).
+        // The CF currently only forwards a fixed allow-list of keys
+        // (walkConfig, groomingConfig, boardingConfig, trainingConfig,
+        // daycareConfig, petSittingConfig — see createClientBooking.ts:289)
+        // and silently drops unknown top-level keys. To land the rich
+        // dogDetails snapshot WITHOUT a CF change we nest it under the
+        // matching per-vertical config dict and also keep it at the
+        // top-level for forward-compat (the next CF rev will accept it).
+        //
+        // The per-vertical overlay (walkConfigOverlay etc.) merges into
+        // the same per-vertical config the CF already accepts. When the
+        // existing entry from the per-vertical switch above is present we
+        // merge keys rather than overwrite — explicit overlay wins on
+        // collision so coat type / lead manners / access method etc. all
+        // land alongside selectedMenuItemId or visitType.
+        if let overlay = perVerticalOverlay {
+            let targetKey: String
+            switch overlay.key {
+            case "walkConfigOverlay":      targetKey = "walkConfig"
+            case "groomingConfigOverlay":  targetKey = "groomingConfig"
+            case "petSittingConfigOverlay": targetKey = "petSittingConfig"
+            default:                       targetKey = overlay.key
+            }
+            var merged: [String: Any] = (payload[targetKey] as? [String: Any]) ?? [:]
+            for (k, v) in overlay.value {
+                merged[k] = v
+            }
+            // Tuck dogDetails under the same per-vertical config so it
+            // survives the CF's allow-list filter.
+            if let dogDetails = dogDetails, !dogDetails.isEmpty {
+                merged["dogDetails"] = dogDetails
+            }
+            payload[targetKey] = merged
+        }
+        // Belt-and-braces: also send at top-level for the day the CF
+        // forwards it natively (a one-line change, see spec §7).
+        if let dogDetails = dogDetails, !dogDetails.isEmpty {
+            payload["dogDetails"] = dogDetails
         }
 
         // Call the CF. CF returns { bookingId, status, price }.

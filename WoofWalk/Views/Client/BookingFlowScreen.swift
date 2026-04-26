@@ -177,6 +177,29 @@ class BookingFlowViewModel: ObservableObject {
     @Published var cashShortageRequestId: String?
     @Published var cashShortageAlreadyOpen: Bool = false
 
+    // R10: rich dog-details capture for grooming / walking / sitting.
+    // Spec: design_audit_2026_04_26_portal_services/06_booking_dog_details.md
+    //
+    // The form is preloaded once at addDetails-step entry from
+    // `dogs/{dogId}` and follows a (value, isDirty) per-field guard so a
+    // back-nav doesn't clobber the user's in-progress edits.
+    /// Live, editable form state.
+    @Published var dogDetails: BookingDogDetails = .init()
+    /// Originally-loaded dog snapshot. Used as the diff baseline for the
+    /// "Update [name]'s profile" save-back toggle and to detect whether
+    /// anything's actually changed.
+    @Published var dogProfileSnapshot: UnifiedDog?
+    /// True when a profile fetch is in flight at step entry.
+    @Published var dogDetailsLoading: Bool = false
+    /// Drives the "Confirm size" caption when the loaded profile didn't
+    /// have a size and we've defaulted to MEDIUM.
+    @Published var dogDetailsSizeNudgeShown: Bool = false
+    /// Soft-validation banner under the Continue button when breed/size
+    /// are empty. Cleared as soon as the user fills them.
+    @Published var dogDetailsValidationError: String?
+    /// Inline-toast text for save-back failure (booking still succeeds).
+    @Published var dogDetailsSaveBackToast: String?
+
     // Stripe PaymentSheet state. Mirrors Android's flow:
     //   - submit creates the booking (CF: createClientBooking)
     //   - if card + total > 0: request clientSecret (CF: processBookingPayment)
@@ -227,7 +250,16 @@ class BookingFlowViewModel: ObservableObject {
             }
             return selectedTimeSlot != nil && isDateTimeValid
         case .addDetails:
-            return true // Details are optional
+            // R10: grooming / walking / sitting verticals require breed +
+            // size on the rich dog-details form. Boarding / daycare /
+            // training keep the legacy free-text-only flow.
+            switch selectedService {
+            case .grooming, .walk, .meetGreet,
+                 .petSitting, .inSitting, .outSitting:
+                return dogDetails.isValidForVerticals
+            default:
+                return true
+            }
         case .reviewConfirm:
             let hasDate = selectedService == .boarding
                 ? (boardingCheckInDate != nil && boardingCheckOutDate != nil)
@@ -312,8 +344,97 @@ class BookingFlowViewModel: ObservableObject {
             currentStep = next
         }
 
+        if next == .addDetails {
+            // R10: kick off profile preload for the first selected dog so
+            // the form lands on rich, prefilled fields rather than blanks.
+            loadDogDetailsIfNeeded()
+        }
+
         if next == .reviewConfirm {
             calculatePrice()
+        }
+    }
+
+    // MARK: - R10: Dog details preload + save-back
+
+    /// One-shot fetch of the full UnifiedDog for the *first* selected dog
+    /// (multi-dog bookings still capture details once for now — flagged
+    /// as a Phase-2 enhancement in the spec). Honours the dirty-flag guard
+    /// in `BookingDogDetailsLoader.prefill` so a back-nav into the step
+    /// keeps the user's edits intact.
+    func loadDogDetailsIfNeeded() {
+        guard let service = selectedService else { return }
+        guard let dogId = selectedDogIds.first, !dogId.isEmpty else { return }
+
+        // If we've already loaded this dog and the snapshot matches, skip
+        // re-fetch — the dirty-flag guard would no-op anyway, but this
+        // saves a Firestore round-trip per back-nav.
+        let snapshotMatches = (dogProfileSnapshot?.id ?? "") == dogId
+        if snapshotMatches && dogDetails.dogId == dogId {
+            return
+        }
+
+        // Reset form state when switching dogs (different selection between
+        // back-nav cycles). Preserve dirty-flag semantics by only resetting
+        // when the dog actually changed.
+        if dogDetails.dogId != dogId {
+            dogDetails = BookingDogDetails()
+            dogDetails.dogId = dogId
+            dogDetailsSizeNudgeShown = false
+        }
+
+        // Echo the lightweight name/breed from the SelectableDog into the
+        // form synchronously so the UI doesn't flash blank while the full
+        // doc loads.
+        if let lite = dogs.first(where: { $0.id == dogId }) {
+            dogDetails.dogName = lite.name
+            if dogDetails.breed.value.isEmpty && !dogDetails.breed.isDirty {
+                dogDetails.breed.prefill(lite.breed ?? "")
+            }
+        }
+
+        dogDetailsLoading = true
+        Task {
+            let dog = await BookingDogDetailsLoader.loadDog(id: dogId)
+            await MainActor.run {
+                self.dogDetailsLoading = false
+                guard let dog = dog else { return }
+                self.dogProfileSnapshot = dog
+                let hadSize = (dog.size?.isEmpty == false)
+                BookingDogDetailsLoader.prefill(
+                    &self.dogDetails,
+                    from: dog,
+                    serviceType: service
+                )
+                self.dogDetailsSizeNudgeShown = !hadSize
+            }
+        }
+    }
+
+    /// Diff the form against the originally-loaded dog and write the diff
+    /// to `dogs/{dogId}`. Non-blocking — failures surface as a soft toast
+    /// while the booking still proceeds. Called from `submitBooking`
+    /// before the booking is created so the profile is in sync if the
+    /// booking succeeds.
+    func saveDogDetailsBackToProfile() async {
+        guard dogDetails.saveBackToProfile,
+              let original = dogProfileSnapshot,
+              let dogId = dogDetails.dogId, !dogId.isEmpty else { return }
+        let diff = BookingDogDetailsLoader.profileDiff(
+            details: dogDetails,
+            original: original
+        )
+        guard !diff.isEmpty else { return }
+        do {
+            try await BookingDogDetailsLoader.writeProfileDiff(
+                dogId: dogId,
+                diff: diff
+            )
+        } catch {
+            print("[BookingFlow] saveDogDetailsBackToProfile failed: \(error.localizedDescription)")
+            await MainActor.run {
+                self.dogDetailsSaveBackToast = "Couldn't update profile, but your booking is in"
+            }
         }
     }
 
@@ -647,16 +768,43 @@ class BookingFlowViewModel: ObservableObject {
         let providerOrgId = provider.id
         let boardingDates = boardingDatesPayload
 
+        // R10: pack the rich dog-details block when the vertical is
+        // grooming / walking / sitting. Boarding / daycare / training
+        // skip it (their detail capture lives elsewhere).
+        let dogDetailsPayload: [String: Any]?
+        let perVerticalConfig: (key: String, value: [String: Any])?
+        switch service {
+        case .grooming:
+            dogDetailsPayload = dogDetails.toServerPayload(serviceType: service)
+            perVerticalConfig = ("groomingConfigOverlay", dogDetails.grooming.toPayload())
+        case .walk, .meetGreet:
+            dogDetailsPayload = dogDetails.toServerPayload(serviceType: service)
+            perVerticalConfig = ("walkConfigOverlay", dogDetails.walk.toPayload())
+        case .petSitting, .inSitting, .outSitting:
+            dogDetailsPayload = dogDetails.toServerPayload(serviceType: service)
+            perVerticalConfig = ("petSittingConfigOverlay", dogDetails.sitting.toPayload())
+        default:
+            dogDetailsPayload = nil
+            perVerticalConfig = nil
+        }
+
         let total = priceBreakdown.total
 
         Task {
+            // R10: write profile diff back if the user opted in. Run
+            // before the booking call so a successful save shows on
+            // the profile by the time the confirmation lands.
+            await self.saveDogDetailsBackToProfile()
+
             do {
                 let bookingId = try await bookingRepo.createBooking(
                     booking,
                     subSelection: subSelection,
                     subSelectionLabel: subLabel,
                     paymentMethod: method,
-                    boardingDates: boardingDates
+                    boardingDates: boardingDates,
+                    dogDetails: dogDetailsPayload,
+                    perVerticalOverlay: perVerticalConfig
                 )
 
                 // Cash flow: provider takes payment in person — no Stripe.
@@ -1667,7 +1815,7 @@ struct BookingFlowScreen: View {
                     .font(.title3.bold())
                     .foregroundColor(.white)
 
-                Text("Optional notes for your provider.")
+                Text(richDetailsHelpText)
                     .font(.subheadline)
                     .foregroundColor(.neutral60)
 
@@ -1696,36 +1844,94 @@ struct BookingFlowScreen: View {
                     }
                 }
 
+                // R10: rich dog-details capture for grooming / walking /
+                // sitting. Other verticals fall through to the existing
+                // free-text notes blocks.
+                if isRichDetailsVertical, let service = viewModel.selectedService {
+                    if viewModel.dogDetailsLoading {
+                        HStack {
+                            ProgressView().tint(.white)
+                            Text("Loading \(viewModel.dogDetails.dogName.isEmpty ? "dog" : viewModel.dogDetails.dogName)'s profile…")
+                                .font(.caption)
+                                .foregroundColor(.neutral60)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    BookingDogDetailsView(
+                        details: $viewModel.dogDetails,
+                        serviceType: service,
+                        originalDog: viewModel.dogProfileSnapshot,
+                        isSizeNudgeShown: viewModel.dogDetailsSizeNudgeShown
+                    )
+
+                    if !viewModel.dogDetails.isValidForVerticals {
+                        let breedEmpty = viewModel.dogDetails.breed.value
+                            .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        Text(breedEmpty
+                             ? "Breed is required so your provider knows what to expect"
+                             : "Pick a size — S / M / L / XL")
+                            .font(.caption)
+                            .foregroundColor(Color(hex: 0xFF7B7B))
+                    }
+
+                    Divider().background(Color.neutral20).padding(.vertical, 8)
+                }
+
+                // Free-text catch-alls — kept for ALL verticals so the
+                // user can still hand-write a note even when the structured
+                // capture covers the bases.
                 detailField(
-                    label: "Special Instructions",
+                    label: "Anything else for your provider?",
                     icon: "text.bubble",
-                    placeholder: "Any special requests or care instructions...",
+                    placeholder: "Optional — any special requests or care instructions...",
                     text: $viewModel.instructions.specialInstructions
                 )
 
-                detailField(
-                    label: "Access Instructions",
-                    icon: "key.fill",
-                    placeholder: "Gate code, key location, parking info...",
-                    text: $viewModel.instructions.accessInstructions
-                )
+                if !isRichDetailsVertical {
+                    detailField(
+                        label: "Access Instructions",
+                        icon: "key.fill",
+                        placeholder: "Gate code, key location, parking info...",
+                        text: $viewModel.instructions.accessInstructions
+                    )
 
-                detailField(
-                    label: "Feeding Notes",
-                    icon: "fork.knife",
-                    placeholder: "Feeding schedule, dietary restrictions...",
-                    text: $viewModel.instructions.feedingNotes
-                )
+                    detailField(
+                        label: "Feeding Notes",
+                        icon: "fork.knife",
+                        placeholder: "Feeding schedule, dietary restrictions...",
+                        text: $viewModel.instructions.feedingNotes
+                    )
 
-                detailField(
-                    label: "Emergency Contact",
-                    icon: "phone.fill",
-                    placeholder: "Name and phone number...",
-                    text: $viewModel.instructions.emergencyContact
-                )
+                    detailField(
+                        label: "Emergency Contact",
+                        icon: "phone.fill",
+                        placeholder: "Name and phone number...",
+                        text: $viewModel.instructions.emergencyContact
+                    )
+                }
             }
             .padding(16)
         }
+    }
+
+    /// True for grooming / walking / sitting — drives whether the rich
+    /// dog-details capture (spec doc 06) renders on the step.
+    private var isRichDetailsVertical: Bool {
+        switch viewModel.selectedService {
+        case .grooming, .walk, .meetGreet,
+             .petSitting, .inSitting, .outSitting:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private var richDetailsHelpText: String {
+        if isRichDetailsVertical {
+            return "Tell your provider about your dog. Breed and size are required; everything else is optional but helps them give the best care."
+        }
+        return "Optional notes for your provider."
     }
 
     private func detailField(label: String, icon: String, placeholder: String, text: Binding<String>) -> some View {
