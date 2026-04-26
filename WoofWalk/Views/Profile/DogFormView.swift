@@ -14,6 +14,9 @@ struct DogFormView: View {
     @State private var warningNote: String = ""
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var nameError: String?
+    // One-shot submit guard — prevents tapping Save twice during the
+    // dismiss-animation window from creating duplicate dogs.
+    @State private var hasSubmitted = false
 
     let temperamentOptions = ["Friendly", "Shy", "Energetic", "Calm", "Playful", "Protective"]
 
@@ -34,6 +37,7 @@ struct DogFormView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") { saveDog() }
+                        .disabled(hasSubmitted)
                 }
             }
             .onAppear {
@@ -235,10 +239,12 @@ struct DogFormView: View {
     }
 
     private func saveDog() {
+        guard !hasSubmitted else { return }
         guard !name.isEmpty else {
             nameError = "Name is required"
             return
         }
+        hasSubmitted = true
 
         let dogProfile = DogProfile(
             id: dog?.id ?? UUID().uuidString,

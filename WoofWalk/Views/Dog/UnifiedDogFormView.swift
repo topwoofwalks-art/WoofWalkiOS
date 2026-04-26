@@ -7,6 +7,11 @@ struct UnifiedDogFormView: View {
     let isEditing: Bool
     let onSave: (DogProfile) -> Void
 
+    // One-shot submit guard. After the first Save tap we hand a profile up
+    // and dismiss; this prevents a second tap during the dismiss-animation
+    // window from kicking off a duplicate add.
+    @State private var hasSubmitted = false
+
     // Collapsible section state
     @State private var showPhysical = true
     @State private var showBehavior = true
@@ -38,10 +43,12 @@ struct UnifiedDogFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        guard !hasSubmitted else { return }
+                        hasSubmitted = true
                         onSave(viewModel.toDogProfile())
                         dismiss()
                     }
-                    .disabled(viewModel.name.isEmpty)
+                    .disabled(viewModel.name.isEmpty || hasSubmitted)
                 }
             }
         }
