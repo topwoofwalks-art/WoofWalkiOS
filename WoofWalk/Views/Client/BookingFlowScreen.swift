@@ -129,6 +129,16 @@ class BookingFlowViewModel: ObservableObject {
     @Published var providers: [SelectableProvider] = []
     @Published var selectedDate: Date = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
     @Published var selectedTimeSlot: TimeSlot?
+
+    // Multi-night boarding state — replaces selectedDate + selectedTimeSlot
+    // for the boarding service vertical. Match Android's contract:
+    //   - check-in defaults to 14:00 on checkInDate
+    //   - check-out defaults to 11:00 on checkOutDate
+    //   - both are required, checkOut must be strictly after checkIn,
+    //     checkIn must be at least 24 hours from now
+    // Server payload sends both as epoch millis under `boardingConfig`.
+    @Published var boardingCheckInDate: Date?
+    @Published var boardingCheckOutDate: Date?
     @Published var instructions = BookingInstructionsData()
     @Published var priceBreakdown = BookingPriceBreakdown()
     @Published var isLoading = false
@@ -191,14 +201,20 @@ class BookingFlowViewModel: ObservableObject {
         case .selectProvider:
             return selectedProvider != nil
         case .pickDateTime:
+            if selectedService == .boarding {
+                return isBoardingDateRangeValid
+            }
             return selectedTimeSlot != nil && isDateTimeValid
         case .addDetails:
             return true // Details are optional
         case .reviewConfirm:
+            let hasDate = selectedService == .boarding
+                ? (boardingCheckInDate != nil && boardingCheckOutDate != nil)
+                : (selectedTimeSlot != nil)
             return selectedService != nil &&
                    !selectedDogIds.isEmpty &&
                    selectedProvider != nil &&
-                   selectedTimeSlot != nil
+                   hasDate
         }
     }
 
@@ -212,11 +228,45 @@ class BookingFlowViewModel: ObservableObject {
         return dateTime > minDateTime
     }
 
+    /// Boarding-only validation — both dates set, check-out strictly after
+    /// check-in, check-in at least 24 hours from now. Matches Android's
+    /// `BoardingBookingStep` rules in `UnifiedBookingFlowViewModel.kt`.
+    var isBoardingDateRangeValid: Bool {
+        guard let checkIn = boardingCheckInDate,
+              let checkOut = boardingCheckOutDate else { return false }
+        guard let checkInAt14 = Self.dateAtTime(checkIn, hour: 14, minute: 0) else { return false }
+        let minDateTime = Calendar.current.date(byAdding: .hour, value: 24, to: Date()) ?? Date()
+        return checkInAt14 > minDateTime && checkOut > checkIn
+    }
+
+    /// Number of nights for a boarding stay, or nil if either date is unset.
+    /// Used by the review screen + price calc.
+    var boardingNights: Int? {
+        guard let checkIn = boardingCheckInDate,
+              let checkOut = boardingCheckOutDate else { return nil }
+        let cal = Calendar.current
+        let inDay = cal.startOfDay(for: checkIn)
+        let outDay = cal.startOfDay(for: checkOut)
+        let nights = cal.dateComponents([.day], from: inDay, to: outDay).day ?? 0
+        return max(nights, 0)
+    }
+
     var selectedDateTime: Date? {
+        if selectedService == .boarding {
+            guard let checkIn = boardingCheckInDate else { return nil }
+            return Self.dateAtTime(checkIn, hour: 14, minute: 0)
+        }
         guard let slot = selectedTimeSlot else { return nil }
         var components = Calendar.current.dateComponents([.year, .month, .day], from: selectedDate)
         components.hour = slot.hour
         components.minute = slot.minute
+        return Calendar.current.date(from: components)
+    }
+
+    private static func dateAtTime(_ date: Date, hour: Int, minute: Int) -> Date? {
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        components.hour = hour
+        components.minute = minute
         return Calendar.current.date(from: components)
     }
 
@@ -526,8 +576,30 @@ class BookingFlowViewModel: ObservableObject {
         errorMessage = nil
 
         let dogNames = dogs.filter { selectedDogIds.contains($0.id) }.map { $0.name }
-        let durationMinutes = service.defaultDuration
-        let endTime = Calendar.current.date(byAdding: .minute, value: durationMinutes, to: dateTime) ?? dateTime
+
+        // Endpoint for the booking window. For boarding: check-out at 11:00.
+        // For everything else: dateTime + service.defaultDuration minutes.
+        // Android applies the same 14:00 / 11:00 contract in
+        // UnifiedBookingFlowViewModel#submitBooking.
+        let endTime: Date
+        let boardingDatesPayload: (checkInMs: Int64, checkOutMs: Int64)?
+        if service == .boarding,
+           let checkInDate = boardingCheckInDate,
+           let checkOutDate = boardingCheckOutDate,
+           let checkInAt14 = Calendar.current.date(
+               bySettingHour: 14, minute: 0, second: 0, of: checkInDate),
+           let checkOutAt11 = Calendar.current.date(
+               bySettingHour: 11, minute: 0, second: 0, of: checkOutDate) {
+            endTime = checkOutAt11
+            boardingDatesPayload = (
+                checkInMs: Booking.toEpochMs(checkInAt14),
+                checkOutMs: Booking.toEpochMs(checkOutAt11)
+            )
+        } else {
+            let durationMinutes = service.defaultDuration
+            endTime = Calendar.current.date(byAdding: .minute, value: durationMinutes, to: dateTime) ?? dateTime
+            boardingDatesPayload = nil
+        }
 
         let booking = Booking(
             clientId: userId,
@@ -552,6 +624,7 @@ class BookingFlowViewModel: ObservableObject {
         let subLabel = subSelectionLabel
         let method = paymentMethod
         let providerOrgId = provider.id
+        let boardingDates = boardingDatesPayload
 
         Task {
             do {
@@ -559,7 +632,8 @@ class BookingFlowViewModel: ObservableObject {
                     booking,
                     subSelection: subSelection,
                     subSelectionLabel: subLabel,
-                    paymentMethod: method
+                    paymentMethod: method,
+                    boardingDates: boardingDates
                 )
                 await MainActor.run {
                     self.isLoading = false
@@ -1199,70 +1273,191 @@ struct BookingFlowScreen: View {
     private var pickDateTimeStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Pick a date & time")
-                    .font(.title3.bold())
-                    .foregroundColor(.white)
-
-                Text("Bookings require at least 24 hours lead time.")
-                    .font(.subheadline)
-                    .foregroundColor(.neutral60)
-
-                // Date picker
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Date", systemImage: "calendar")
-                        .font(.subheadline.bold())
-                        .foregroundColor(.neutral60)
-
-                    DatePicker(
-                        "Select date",
-                        selection: $viewModel.selectedDate,
-                        in: viewModel.minimumDate...,
-                        displayedComponents: .date
-                    )
-                    .datePickerStyle(.graphical)
-                    .tint(Color(hex: 0x7C4DFF))
-                    .colorScheme(.dark)
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.neutral20)
-                    )
-                }
-
-                // Time slots grid
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Time", systemImage: "clock")
-                        .font(.subheadline.bold())
-                        .foregroundColor(.neutral60)
-
-                    LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: 8),
-                        GridItem(.flexible(), spacing: 8),
-                        GridItem(.flexible(), spacing: 8),
-                        GridItem(.flexible(), spacing: 8),
-                    ], spacing: 8) {
-                        ForEach(viewModel.timeSlots) { slot in
-                            timeSlotButton(slot)
-                        }
-                    }
-                }
-
-                if !viewModel.isDateTimeValid && viewModel.selectedTimeSlot != nil {
-                    HStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.caption)
-                        Text("Selected time must be at least 24 hours from now.")
-                            .font(.caption)
-                    }
-                    .foregroundColor(.orange)
-                    .padding(10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.orange.opacity(0.1))
-                    )
+                if viewModel.selectedService == .boarding {
+                    boardingDateRangeStep
+                } else {
+                    standardDateTimeStep
                 }
             }
             .padding(16)
+        }
+    }
+
+    /// Single-day date + time-slot UI for non-boarding services. Original
+    /// pickDateTimeStep extracted so the boarding branch can render its
+    /// own check-in / check-out picker without nesting.
+    @ViewBuilder
+    private var standardDateTimeStep: some View {
+        Text("Pick a date & time")
+            .font(.title3.bold())
+            .foregroundColor(.white)
+
+        Text("Bookings require at least 24 hours lead time.")
+            .font(.subheadline)
+            .foregroundColor(.neutral60)
+
+        // Date picker
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Date", systemImage: "calendar")
+                .font(.subheadline.bold())
+                .foregroundColor(.neutral60)
+
+            DatePicker(
+                "Select date",
+                selection: $viewModel.selectedDate,
+                in: viewModel.minimumDate...,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .tint(Color(hex: 0x7C4DFF))
+            .colorScheme(.dark)
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.neutral20)
+            )
+        }
+
+        // Time slots grid
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Time", systemImage: "clock")
+                .font(.subheadline.bold())
+                .foregroundColor(.neutral60)
+
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8),
+            ], spacing: 8) {
+                ForEach(viewModel.timeSlots) { slot in
+                    timeSlotButton(slot)
+                }
+            }
+        }
+
+        if !viewModel.isDateTimeValid && viewModel.selectedTimeSlot != nil {
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                Text("Selected time must be at least 24 hours from now.")
+                    .font(.caption)
+            }
+            .foregroundColor(.orange)
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.orange.opacity(0.1))
+            )
+        }
+    }
+
+    /// Multi-night boarding date-range picker (parity with Android's
+    /// `BoardingBookingStep`). Two date pickers — check-in and check-out —
+    /// no time slots; check-in time is fixed at 14:00 and check-out at
+    /// 11:00 to match the canonical home-boarding contract enforced
+    /// server-side. Server expects check-in/check-out as epoch millis
+    /// inside `boardingConfig`.
+    @ViewBuilder
+    private var boardingDateRangeStep: some View {
+        Text("Boarding stay")
+            .font(.title3.bold())
+            .foregroundColor(.white)
+
+        Text("Pick check-in and check-out dates. Bookings require at least 24 hours lead time. Drop-off is 14:00, pickup before 11:00.")
+            .font(.subheadline)
+            .foregroundColor(.neutral60)
+
+        let checkInBinding = Binding<Date>(
+            get: { viewModel.boardingCheckInDate ?? viewModel.minimumDate },
+            set: { newValue in
+                viewModel.boardingCheckInDate = newValue
+                // If check-out is now <= check-in, push it forward by one
+                // day so the pair stays internally consistent. User can
+                // still adjust the check-out picker afterwards.
+                if let out = viewModel.boardingCheckOutDate, out <= newValue {
+                    viewModel.boardingCheckOutDate = Calendar.current.date(byAdding: .day, value: 1, to: newValue)
+                }
+            }
+        )
+        let checkOutMinimum: Date = {
+            let base = viewModel.boardingCheckInDate ?? viewModel.minimumDate
+            return Calendar.current.date(byAdding: .day, value: 1, to: base) ?? base
+        }()
+        let checkOutBinding = Binding<Date>(
+            get: { viewModel.boardingCheckOutDate ?? checkOutMinimum },
+            set: { viewModel.boardingCheckOutDate = $0 }
+        )
+
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Check-in", systemImage: "arrow.right.to.line.compact")
+                .font(.subheadline.bold())
+                .foregroundColor(.neutral60)
+            DatePicker(
+                "Check-in date",
+                selection: checkInBinding,
+                in: viewModel.minimumDate...,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .tint(Color(hex: 0x7C4DFF))
+            .colorScheme(.dark)
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.neutral20)
+            )
+        }
+
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Check-out", systemImage: "arrow.left.to.line.compact")
+                .font(.subheadline.bold())
+                .foregroundColor(.neutral60)
+            DatePicker(
+                "Check-out date",
+                selection: checkOutBinding,
+                in: checkOutMinimum...,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .tint(Color(hex: 0x7C4DFF))
+            .colorScheme(.dark)
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.neutral20)
+            )
+        }
+
+        if let nights = viewModel.boardingNights, nights > 0 {
+            HStack(spacing: 6) {
+                Image(systemName: "moon.stars.fill")
+                    .font(.caption)
+                Text("\(nights) night\(nights == 1 ? "" : "s")")
+                    .font(.caption.bold())
+            }
+            .foregroundColor(Color(hex: 0xB388FF))
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(hex: 0x7C4DFF).opacity(0.15))
+            )
+        }
+
+        if viewModel.boardingCheckInDate != nil && viewModel.boardingCheckOutDate != nil
+            && !viewModel.isBoardingDateRangeValid {
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                Text("Check-in must be at least 24 hours from now and check-out must be after check-in.")
+                    .font(.caption)
+            }
+            .foregroundColor(.orange)
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.orange.opacity(0.1))
+            )
         }
     }
 
@@ -1442,15 +1637,52 @@ struct BookingFlowScreen: View {
                     }
                 }
 
-                // Date & Time summary
-                reviewSection(title: "Date & Time", icon: "calendar") {
-                    if let dateTime = viewModel.selectedDateTime {
+                // Date & Time summary — boarding shows the full check-in /
+                // check-out range + nights count; everything else shows the
+                // single-shot date+time pair.
+                if viewModel.selectedService == .boarding,
+                   let checkIn = viewModel.boardingCheckInDate,
+                   let checkOut = viewModel.boardingCheckOutDate {
+                    reviewSection(title: "Boarding stay", icon: "calendar") {
                         HStack {
-                            Text(dateTime, style: .date)
-                                .foregroundColor(.white)
+                            Text("Check-in")
+                                .foregroundColor(.neutral60)
                             Spacer()
-                            Text(dateTime, style: .time)
+                            Text(checkIn, style: .date)
                                 .foregroundColor(.white)
+                            Text("14:00")
+                                .foregroundColor(.neutral60)
+                        }
+                        HStack {
+                            Text("Check-out")
+                                .foregroundColor(.neutral60)
+                            Spacer()
+                            Text(checkOut, style: .date)
+                                .foregroundColor(.white)
+                            Text("11:00")
+                                .foregroundColor(.neutral60)
+                        }
+                        if let nights = viewModel.boardingNights, nights > 0 {
+                            HStack {
+                                Text("Total nights")
+                                    .foregroundColor(.neutral60)
+                                Spacer()
+                                Text("\(nights)")
+                                    .foregroundColor(.white)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                    }
+                } else {
+                    reviewSection(title: "Date & Time", icon: "calendar") {
+                        if let dateTime = viewModel.selectedDateTime {
+                            HStack {
+                                Text(dateTime, style: .date)
+                                    .foregroundColor(.white)
+                                Spacer()
+                                Text(dateTime, style: .time)
+                                    .foregroundColor(.white)
+                            }
                         }
                     }
                 }

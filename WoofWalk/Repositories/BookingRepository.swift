@@ -162,7 +162,8 @@ class BookingRepository: ObservableObject {
         _ booking: Booking,
         subSelection: [String: Any]? = nil,
         subSelectionLabel: String? = nil,
-        paymentMethod: String? = nil
+        paymentMethod: String? = nil,
+        boardingDates: (checkInMs: Int64, checkOutMs: Int64)? = nil
     ) async throws -> String {
         // Resolve dog IDs. Booking carries a single `petId` today; the CF
         // expects an array. If absent, fall back to empty (CF will reject
@@ -229,6 +230,17 @@ class BookingRepository: ObservableObject {
         case .boarding:
             var boardingConfig: [String: Any] = [:]
             if let id = booking.selectedPackageId { boardingConfig["selectedRoomTypeId"] = id }
+            // Multi-night boarding: forward the canonical check-in/check-out
+            // pair as epoch millis. Server's createClientBooking passes
+            // boardingConfig through as a Record<string, any>, and Android
+            // sends the same `checkInDate` / `checkOutDate` keys
+            // (UnifiedBookingFlowViewModel.kt). Without these, the booking
+            // is stored as a single-day stay and the provider's calendar
+            // can't reflect the full range.
+            if let dates = boardingDates {
+                boardingConfig["checkInDate"] = dates.checkInMs
+                boardingConfig["checkOutDate"] = dates.checkOutMs
+            }
             if !boardingConfig.isEmpty { payload["boardingConfig"] = boardingConfig }
         case .training:
             var trainingConfig: [String: Any] = [:]
