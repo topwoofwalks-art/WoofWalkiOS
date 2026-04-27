@@ -31,6 +31,18 @@ enum BusinessRanker {
     static let MAX_TENURE_BOOST: Double = 0.10
     static let TENURE_RAMP_DAYS: Double = 365.0
 
+    // Mobile-confidence multiplier — applies to unclaimed scrape rows whose
+    // phone has been independently corroborated. Compounds onto BaseTrust ×
+    // Tenure. Values mirror BusinessRanker.kt + businessRanker.ts.
+    static let MOBILE_CONFIDENCE_TRIPLE: Double = 1.10
+    static let MOBILE_CONFIDENCE_VERIFIED: Double = 1.05
+    static let MOBILE_CONFIDENCE_WEBSITE_CORRECTED: Double = 1.05
+    static let MOBILE_CONFIDENCE_BASELINE: Double = 1.00
+    static let MOBILE_CONFIDENCE_LEGACY: Double = 0.85
+
+    // Council-licensed flag (regulator-validated identity).
+    static let LICENSED_BONUS: Double = 1.10
+
     static let RELEVANCE_EXACT: Double = 1.0
     static let RELEVANCE_RELATED: Double = 0.4
 
@@ -97,7 +109,27 @@ enum BusinessRanker {
     static func trust(_ provider: ServiceProviderLite, now: Date) -> Double {
         let base = baseTrust(provider)
         if base == 0 { return 0 }
-        return base * tenure(provider, now: now)
+        return base
+            * tenure(provider, now: now)
+            * mobileConfidenceMultiplier(provider)
+            * licensedMultiplier(provider)
+    }
+
+    /// Reads mobileConfidence from the unclaimed-business pipeline.
+    /// Returns 1.0 (no effect) when the field isn't populated, so verified
+    /// WoofWalk partners are unaffected.
+    static func mobileConfidenceMultiplier(_ provider: ServiceProviderLite) -> Double {
+        switch provider.mobileConfidence {
+        case "triple_verified": return MOBILE_CONFIDENCE_TRIPLE
+        case "verified": return MOBILE_CONFIDENCE_VERIFIED
+        case "website_corrected": return MOBILE_CONFIDENCE_WEBSITE_CORRECTED
+        case "legacy_only": return MOBILE_CONFIDENCE_LEGACY
+        default: return MOBILE_CONFIDENCE_BASELINE
+        }
+    }
+
+    static func licensedMultiplier(_ provider: ServiceProviderLite) -> Double {
+        return provider.licensed == true ? LICENSED_BONUS : 1.0
     }
 
     static func baseTrust(_ provider: ServiceProviderLite) -> Double {

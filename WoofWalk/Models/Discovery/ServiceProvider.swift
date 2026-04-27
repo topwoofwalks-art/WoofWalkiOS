@@ -31,9 +31,16 @@ struct ServiceProviderLite: Identifiable, Codable {
     /// Date the business was most recently verified. Feeds the tenure
     /// bonus in BusinessRanker — nil for unclaimed / unverified providers.
     var verifiedSince: Date?
+    /// Phone-trust signal from the unclaimed-business pipeline.
+    /// triple_verified > verified > website_corrected > website_only
+    /// > google_only ≈ bing_only > legacy_only
+    var mobileConfidence: String?
+    /// True if matched against a UK council licensing register
+    /// (regulator-validated identity).
+    var licensed: Bool?
 
-    init(id: String = UUID().uuidString, name: String = "", photoUrl: String? = nil, rating: Double? = nil, reviewCount: Int? = nil, priceRange: String? = nil, services: [String] = [], distance: Double? = nil, hasBackgroundCheck: Bool = false, hasInsurance: Bool = false, acceptingNewClients: Bool = true, isExternal: Bool = false, bio: String? = nil, experience: String? = nil, responseTime: String? = nil, phone: String? = nil, email: String? = nil, website: String? = nil, heroPhotoUrl: String? = nil, latitude: Double? = nil, longitude: Double? = nil, isPartner: Bool = false, availableNow: Bool = false, servicePricing: [ServicePriceItem] = [], verifiedSince: Date? = nil) {
-        self.id = id; self.name = name; self.photoUrl = photoUrl; self.rating = rating; self.reviewCount = reviewCount; self.priceRange = priceRange; self.services = services; self.distance = distance; self.hasBackgroundCheck = hasBackgroundCheck; self.hasInsurance = hasInsurance; self.acceptingNewClients = acceptingNewClients; self.isExternal = isExternal; self.bio = bio; self.experience = experience; self.responseTime = responseTime; self.phone = phone; self.email = email; self.website = website; self.heroPhotoUrl = heroPhotoUrl; self.latitude = latitude; self.longitude = longitude; self.isPartner = isPartner; self.availableNow = availableNow; self.servicePricing = servicePricing; self.verifiedSince = verifiedSince
+    init(id: String = UUID().uuidString, name: String = "", photoUrl: String? = nil, rating: Double? = nil, reviewCount: Int? = nil, priceRange: String? = nil, services: [String] = [], distance: Double? = nil, hasBackgroundCheck: Bool = false, hasInsurance: Bool = false, acceptingNewClients: Bool = true, isExternal: Bool = false, bio: String? = nil, experience: String? = nil, responseTime: String? = nil, phone: String? = nil, email: String? = nil, website: String? = nil, heroPhotoUrl: String? = nil, latitude: Double? = nil, longitude: Double? = nil, isPartner: Bool = false, availableNow: Bool = false, servicePricing: [ServicePriceItem] = [], verifiedSince: Date? = nil, mobileConfidence: String? = nil, licensed: Bool? = nil) {
+        self.id = id; self.name = name; self.photoUrl = photoUrl; self.rating = rating; self.reviewCount = reviewCount; self.priceRange = priceRange; self.services = services; self.distance = distance; self.hasBackgroundCheck = hasBackgroundCheck; self.hasInsurance = hasInsurance; self.acceptingNewClients = acceptingNewClients; self.isExternal = isExternal; self.bio = bio; self.experience = experience; self.responseTime = responseTime; self.phone = phone; self.email = email; self.website = website; self.heroPhotoUrl = heroPhotoUrl; self.latitude = latitude; self.longitude = longitude; self.isPartner = isPartner; self.availableNow = availableNow; self.servicePricing = servicePricing; self.verifiedSince = verifiedSince; self.mobileConfidence = mobileConfidence; self.licensed = licensed
     }
 }
 

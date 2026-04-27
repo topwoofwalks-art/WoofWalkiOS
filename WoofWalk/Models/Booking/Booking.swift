@@ -51,7 +51,29 @@ struct Booking: Identifiable, Codable {
     /// Final computed price from service config
     var computedPrice: Double?
 
+    // MARK: - Payment
+
+    /// "card" (default — pay through Stripe at booking time) or "cash"
+    /// (pay the provider in person on the day). Drives the booking-detail
+    /// payment card UX: card bookings in AWAITING_PAYMENT show a Pay-Now
+    /// CTA, cash bookings show a "set to pay in cash — switch to card?"
+    /// confirmation card. Server-set on createClientBooking; switched
+    /// later via the switchPaymentMethodToCard Cloud Function.
+    var paymentMethod: String?
+    /// Wall-clock millisecond cutoff for the AWAITING_PAYMENT auto-cancel
+    /// sweep. Snapshotted onto the booking at create-time so later
+    /// changes to the org's autoCancelWindowHours don't retroactively
+    /// cancel in-flight bookings.
+    var autoCancelAtMillis: Int64?
+
     // MARK: - Computed Properties
+
+    /// Typed payment method (defaults to .card if missing — matches
+    /// Android's behaviour for legacy bookings created before the field
+    /// was added).
+    var paymentMethodEnum: BookingPaymentMethod {
+        BookingPaymentMethod(rawValue: (paymentMethod ?? "card").lowercased()) ?? .card
+    }
 
     /// Typed booking status
     var statusEnum: BookingStatus {
@@ -120,7 +142,9 @@ struct Booking: Identifiable, Codable {
         specialism: String? = nil,
         dogSize: String? = nil,
         selectedAddOns: [String]? = nil,
-        computedPrice: Double? = nil
+        computedPrice: Double? = nil,
+        paymentMethod: String? = nil,
+        autoCancelAtMillis: Int64? = nil
     ) {
         self.id = id
         self.clientId = clientId
@@ -157,6 +181,8 @@ struct Booking: Identifiable, Codable {
         self.dogSize = dogSize
         self.selectedAddOns = selectedAddOns
         self.computedPrice = computedPrice
+        self.paymentMethod = paymentMethod
+        self.autoCancelAtMillis = autoCancelAtMillis
     }
 
     // MARK: - Static Helpers
@@ -165,4 +191,10 @@ struct Booking: Identifiable, Codable {
     static func toEpochMs(_ date: Date) -> Int64 {
         Int64(date.timeIntervalSince1970 * 1000)
     }
+}
+
+/// Booking payment method, mirrored from Android.
+enum BookingPaymentMethod: String, Codable, CaseIterable {
+    case card
+    case cash
 }

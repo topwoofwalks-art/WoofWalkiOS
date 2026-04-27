@@ -227,6 +227,7 @@ struct BookingDetailScreen: View {
         ScrollView {
             VStack(spacing: 16) {
                 statusHeader(booking)
+                paymentCard(booking)
                 providerCard(booking)
                 bookingDetailsCard(booking)
 
@@ -280,6 +281,8 @@ struct BookingDetailScreen: View {
         switch status {
         case .pending:
             return (.orange, "Pending Confirmation", "clock.fill")
+        case .awaitingPayment:
+            return (Color(hex: 0xB26A00), "Awaiting Payment", "creditcard.fill")
         case .confirmed:
             return (.blue, "Confirmed", "checkmark.circle.fill")
         case .inProgress:
@@ -293,6 +296,74 @@ struct BookingDetailScreen: View {
         case .noShow:
             return (Color(hex: 0xC2185B), "No Show", "flag.fill")
         }
+    }
+
+    // MARK: - Payment Card
+
+    /// Cash bookings get a confirmation card matching Android's Set-to-pay-
+    /// in-cash UI; card bookings in AWAITING_PAYMENT get a payment-required
+    /// card. Bookings in any other state (or already-paid card bookings)
+    /// render no card. Mirrors the Android branch in
+    /// `ClientBookingDetailScreen.kt` after the cash-booking UX fix.
+    @ViewBuilder
+    private func paymentCard(_ booking: Booking) -> some View {
+        let isTerminal = booking.statusEnum == .completed
+            || booking.statusEnum == .cancelled
+            || booking.statusEnum == .rejected
+            || booking.statusEnum == .noShow
+
+        if booking.paymentMethodEnum == .cash && !isTerminal {
+            cashBookingCard(booking)
+        } else if booking.statusEnum == .awaitingPayment {
+            awaitingPaymentCard(booking)
+        }
+    }
+
+    private func cashBookingCard(_ booking: Booking) -> some View {
+        let priceText = String(format: "£%.2f", booking.computedPrice ?? booking.price)
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Set to pay in cash")
+                .font(.headline)
+                .foregroundColor(Color(hex: 0x1B5E20))
+            Text("You'll pay your provider \(priceText) in cash on the day. No card payment needed.")
+                .font(.body)
+                .foregroundColor(Color(hex: 0x1B5E20))
+            // Switch-to-card requires the iOS Stripe SDK integration that
+            // Android already has; surfacing the action here without that
+            // would let the user flip status to AWAITING_PAYMENT with no
+            // way to actually pay. Hide the CTA on iOS until Stripe-iOS
+            // lands; the cash-booking message is the entire fix scope here.
+            Text("To switch to card payment, open the booking on the WoofWalk Android app.")
+                .font(.footnote)
+                .foregroundColor(Color(hex: 0x2E7D32))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(hex: 0xE8F5E9))
+        )
+    }
+
+    private func awaitingPaymentCard(_ booking: Booking) -> some View {
+        let priceText = String(format: "£%.2f", booking.computedPrice ?? booking.price)
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Payment required")
+                .font(.headline)
+                .foregroundColor(Color(hex: 0x8A5600))
+            Text("Confirm this booking by paying \(priceText). Your booking starts only after payment clears.")
+                .font(.body)
+                .foregroundColor(Color(hex: 0x8A5600))
+            Text("To complete payment, open the booking on the WoofWalk Android app.")
+                .font(.footnote)
+                .foregroundColor(Color(hex: 0xB26A00))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(hex: 0xFFF8E1))
+        )
     }
 
     // MARK: - Provider Card
