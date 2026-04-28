@@ -9,10 +9,18 @@ struct ShareWalkSheet: View {
     /// Optional PB card to allow sharing PB as image
     var pbCard: PBShareCard? = nil
 
+    /// Photos taken DURING the walk (not profile photos). User can opt
+    /// individual photos in/out of the share via the strip selector below
+    /// the card preview. Empty = no selector shown. URLs hit Firebase
+    /// Storage; AsyncImage loads them inline.
+    var walkPhotos: [WalkPhoto] = []
+
     @State private var showLiveShare = false
     @State private var showSavedToast = false
     @State private var showCopiedToast = false
     @State private var selectedTab: ShareCardTab = .walk
+    @State private var selectedWalkPhotoIDs: Set<String> = []
+    @State private var loadedExtraImages: [UIImage] = []
 
     enum ShareCardTab {
         case walk
@@ -72,6 +80,37 @@ struct ShareWalkSheet: View {
                 .padding(.horizontal)
                 .scaleEffect(0.85)
 
+                // Walk-photos strip selector. Tap to opt in/out per photo.
+                // Defaults all selected so the common path is "share
+                // everything I captured". Selected photos flow through as
+                // additional UIImage items to UIActivityViewController for
+                // multi-image-friendly destinations.
+                if !walkPhotos.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Walk photos · \(selectedWalkPhotoIDs.count) of \(walkPhotos.count) selected")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(walkPhotos, id: \.id) { photo in
+                                    WalkPhotoThumb(
+                                        photo: photo,
+                                        isSelected: selectedWalkPhotoIDs.contains(photo.id)
+                                    ) {
+                                        if selectedWalkPhotoIDs.contains(photo.id) {
+                                            selectedWalkPhotoIDs.remove(photo.id)
+                                        } else {
+                                            selectedWalkPhotoIDs.insert(photo.id)
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 4)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+
                 // Share destinations
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
@@ -110,7 +149,35 @@ struct ShareWalkSheet: View {
             .sheet(isPresented: $showLiveShare) {
                 LiveShareView(walkId: walkId, onStopSharing: {})
             }
+            .onAppear {
+                // Default all walk photos selected — the user opts out
+                // per-photo if they don't want one in the share.
+                if selectedWalkPhotoIDs.isEmpty && !walkPhotos.isEmpty {
+                    selectedWalkPhotoIDs = Set(walkPhotos.map { $0.id })
+                }
+            }
+            .onChange(of: selectedWalkPhotoIDs) { _ in
+                Task { await preloadSelectedImages() }
+            }
         }
+    }
+
+    /// Pre-fetch UIImages for the selected walk photos so they're ready to
+    /// hand to UIActivityViewController when the user taps a destination.
+    /// Using URLSession + UIImage(data:) keeps this dependency-light.
+    @MainActor
+    private func preloadSelectedImages() async {
+        let urls = walkPhotos
+            .filter { selectedWalkPhotoIDs.contains($0.id) }
+            .compactMap { URL(string: $0.photoUrl) }
+        var images: [UIImage] = []
+        for url in urls {
+            if let (data, _) = try? await URLSession.shared.data(from: url),
+               let img = UIImage(data: data) {
+                images.append(img)
+            }
+        }
+        loadedExtraImages = images
     }
 
     // MARK: - Share handling
@@ -130,7 +197,10 @@ struct ShareWalkSheet: View {
 
         switch destination {
         case .saveImage:
+            // Save the card AND each selected walk photo to Photos so the
+            // user can pick what to post natively from the album.
             ShareService.shared.saveToPhotos(image)
+            for img in loadedExtraImages { ShareService.shared.saveToPhotos(img) }
             showSavedToast = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 showSavedToast = false
@@ -141,7 +211,17 @@ struct ShareWalkSheet: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 showCopiedToast = false
             }
+        case .more, .messages, .facebook, .nextdoor, .feed:
+            // System-share-friendly destinations accept multiple images.
+            // UIActivityViewController takes [UIImage] + text natively.
+            if loadedExtraImages.isEmpty {
+                ShareService.shared.shareToDestination(destination, image: image, text: shareText)
+            } else {
+                ShareService.shared.shareImages([image] + loadedExtraImages, text: shareText)
+            }
         default:
+            // Instagram Story, WhatsApp, Twitter — single-image schemes;
+            // walk photos can't be passed via their URL schemes.
             ShareService.shared.shareToDestination(destination, image: image, text: shareText)
         }
 
@@ -149,6 +229,45 @@ struct ShareWalkSheet: View {
     }
 
     // MARK: - Sub-views
+
+    /// Thumbnail with selected check badge. Uses AsyncImage with a placeholder
+    /// so the strip renders immediately and photos pop in as they download.
+    private struct WalkPhotoThumb: View {
+        let photo: WalkPhoto
+        let isSelected: Bool
+        let onToggle: () -> Void
+
+        var body: some View {
+            ZStack(alignment: .topTrailing) {
+                AsyncImage(url: URL(string: photo.photoUrl)) { phase in
+                    switch phase {
+                    case .success(let img):
+                        img.resizable().aspectRatio(contentMode: .fill)
+                    case .failure, .empty:
+                        Color.gray.opacity(0.2)
+                    @unknown default:
+                        Color.gray.opacity(0.2)
+                    }
+                }
+                .frame(width: 72, height: 72)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(isSelected ? Color.accentColor : Color.gray.opacity(0.3),
+                                       lineWidth: isSelected ? 3 : 1)
+                )
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.white)
+                        .background(Circle().fill(Color.accentColor))
+                        .padding(4)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onToggle)
+        }
+    }
 
     private func destinationButton(_ dest: ShareDestination) -> some View {
         VStack(spacing: 6) {

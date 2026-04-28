@@ -60,6 +60,17 @@ class ShareService {
         presentActivityViewController(items: items)
     }
 
+    /// Multi-image system share — used when the user has selected walk
+    /// photos in addition to the share card. UIActivityViewController
+    /// accepts a heterogeneous items array; the picked destination decides
+    /// what it can handle (Messages takes them all, Twitter clips to 4,
+    /// etc.).
+    func shareImages(_ images: [UIImage], text: String? = nil) {
+        var items: [Any] = images
+        if let text = text { items.append(text) }
+        presentActivityViewController(items: items)
+    }
+
     // MARK: - Destination routing
 
     func shareToDestination(_ destination: ShareDestination, image: UIImage, text: String) {
