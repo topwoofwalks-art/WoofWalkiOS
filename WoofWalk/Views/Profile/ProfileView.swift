@@ -24,7 +24,7 @@ struct ProfileView: View {
 
                         weeklyActivityChart()
 
-                        dogsSection(dogs: data.user.dogs)
+                        dogsSection(dogs: data.user.dogs.map(DogProfile.init(from:)))
 
                         badgesSection()
 

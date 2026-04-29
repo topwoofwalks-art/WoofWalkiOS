@@ -13,7 +13,7 @@ struct DogProfileView: View {
                             emptyState
                         } else {
                             LazyVStack(spacing: 12) {
-                                ForEach(userProfile.dogs) { dog in
+                                ForEach(userProfile.dogs.map(DogProfile.init(from:))) { dog in
                                     NavigationLink(destination: DogDetailView(dog: dog)) {
                                         DogProfileCard(dog: dog)
                                     }

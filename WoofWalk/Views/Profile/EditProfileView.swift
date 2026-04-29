@@ -161,8 +161,8 @@ struct EditProfileView: View {
                 }
             }
 
-            if let dogs = viewModel.userProfile?.dogs, !dogs.isEmpty {
-                ForEach(dogs) { dog in
+            if let publicDogs = viewModel.userProfile?.dogs, !publicDogs.isEmpty {
+                ForEach(publicDogs.map(DogProfile.init(from:))) { dog in
                     DogListItem(
                         dog: dog,
                         onEdit: {
