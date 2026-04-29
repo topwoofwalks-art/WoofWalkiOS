@@ -6,8 +6,13 @@ import FirebaseFirestore
 /// name on Firestore is `lost_dog_alerts` (Android wrote this name
 /// before iOS port; rules at firestore.rules:3908 grant read to any
 /// authenticated user, write to the reporter only).
+///
+/// `id` is plain optional (not `@DocumentID`) — the wrapper requires
+/// FirebaseFirestoreSwift and complicates manual struct
+/// initialization. The repository populates `id` from
+/// `doc.documentID` after decoding.
 struct LostDog: Identifiable, Codable {
-    @DocumentID var id: String?
+    var id: String?
 
     var dogId: String
     var dogName: String
@@ -38,6 +43,29 @@ struct LostDog: Identifiable, Codable {
         guard status == "LOST" else { return false }
         if let expiry = expiresAt?.dateValue(), expiry < Date() { return false }
         return true
+    }
+
+    // Keep `id` out of the Firestore wire payload — it lives in the
+    // doc id, not as a field. Without this, `setData(from:)` would
+    // round-trip `id: null` into the doc body.
+    enum CodingKeys: String, CodingKey {
+        case dogId
+        case dogName
+        case dogPhotoUrl
+        case dogBreed
+        case reportedBy
+        case reporterName
+        case reporterPhone
+        case lat
+        case lng
+        case geohash
+        case locationDescription
+        case description
+        case status
+        case reportedAt
+        case foundAt
+        case expiresAt
+        case alertRadiusKm
     }
 }
 

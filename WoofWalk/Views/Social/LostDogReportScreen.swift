@@ -99,7 +99,7 @@ struct LostDogReportScreen: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
-                .onChange(of: pickedItem) { _, newItem in
+                .onChange(of: pickedItem) { newItem in
                     Task {
                         if let item = newItem,
                            let data = try? await item.loadTransferable(type: Data.self) {

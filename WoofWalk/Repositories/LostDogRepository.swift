@@ -76,7 +76,6 @@ class LostDogRepository {
         let expires = Calendar.current.date(byAdding: .hour, value: durationHours, to: now) ?? now
 
         let alert = LostDog(
-            id: nil,
             dogId: dogId,
             dogName: dogName,
             dogPhotoUrl: dogPhotoUrl,
@@ -161,7 +160,7 @@ class LostDogRepository {
             .order(by: "reportedAt", descending: true)
             .addSnapshotListener { snapshot, _ in
                 let docs = snapshot?.documents ?? []
-                let parsed = docs.compactMap { try? $0.data(as: LostDog.self) }
+                let parsed: [LostDog] = docs.compactMap { Self.decode($0) }
                 onChange(parsed)
             }
     }
@@ -176,8 +175,41 @@ class LostDogRepository {
             .limit(to: 200)
             .addSnapshotListener { snapshot, _ in
                 let docs = snapshot?.documents ?? []
-                let parsed = docs.compactMap { try? $0.data(as: LostDog.self) }
+                let parsed: [LostDog] = docs.compactMap { Self.decode($0) }
                 onChange(parsed)
             }
+    }
+
+    /// Decode a Firestore document into a `LostDog`, populating `id`
+    /// from the document path. We avoid `data(as:)` because the
+    /// `FirebaseFirestoreSwift` Codable extensions require an extra
+    /// import that this target doesn't pull in; manual decoding via
+    /// JSON-roundtrip works against the basic FirebaseFirestore SDK.
+    private static func decode(_ doc: QueryDocumentSnapshot) -> LostDog? {
+        let data = doc.data()
+        guard let dogName = data["dogName"] as? String,
+              let reportedBy = data["reportedBy"] as? String
+        else { return nil }
+        var alert = LostDog(
+            dogId: data["dogId"] as? String ?? "",
+            dogName: dogName,
+            dogPhotoUrl: data["dogPhotoUrl"] as? String,
+            dogBreed: data["dogBreed"] as? String ?? "",
+            reportedBy: reportedBy,
+            reporterName: data["reporterName"] as? String ?? "",
+            reporterPhone: data["reporterPhone"] as? String,
+            lat: data["lat"] as? Double ?? 0,
+            lng: data["lng"] as? Double ?? 0,
+            geohash: data["geohash"] as? String ?? "",
+            locationDescription: data["locationDescription"] as? String ?? "",
+            description: data["description"] as? String ?? "",
+            status: data["status"] as? String ?? LostDogStatus.lost.rawValue,
+            reportedAt: data["reportedAt"] as? Timestamp,
+            foundAt: data["foundAt"] as? Timestamp,
+            expiresAt: data["expiresAt"] as? Timestamp,
+            alertRadiusKm: data["alertRadiusKm"] as? Double ?? 5.0
+        )
+        alert.id = doc.documentID
+        return alert
     }
 }
