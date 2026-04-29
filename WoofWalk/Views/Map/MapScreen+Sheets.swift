@@ -17,7 +17,7 @@ struct MapSheetModifiers: ViewModifier {
 
     let selectedPOI: POI?
     let selectedPublicDog: PublicDog?
-    let selectedLostDog: LostDog?
+    let selectedLostDog: LostDogAnnotation?
     let pendingRouteStart: CLLocationCoordinate2D?
 
     var mapViewModel: MapViewModel
@@ -108,7 +108,7 @@ struct MapSheetModifiersGroup2: ViewModifier {
     @Binding var showBackgroundLocationPrompt: Bool
     @Binding var selectedBagDrop: PooBagDrop?
 
-    let selectedLostDog: LostDog?
+    let selectedLostDog: LostDogAnnotation?
     var locationManager: LocationManager
     var walkTrackingViewModel: WalkTrackingViewModel
     var routingViewModel: RoutingViewModel
@@ -418,7 +418,7 @@ struct PublicDogInfoSheet: View {
 // MARK: - Lost Dog Info Sheet
 
 struct LostDogInfoSheet: View {
-    let lostDog: LostDog
+    let lostDog: LostDogAnnotation
     let userLocation: CLLocationCoordinate2D?
     let onContact: () -> Void
 

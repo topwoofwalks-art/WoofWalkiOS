@@ -20,7 +20,7 @@ struct MapScreen: View {
     @State var selectedPOI: POI?
     @State var selectedBagDrop: PooBagDrop?
     @State var selectedPublicDog: PublicDog?
-    @State var selectedLostDog: LostDog?
+    @State var selectedLostDog: LostDogAnnotation?
     @State var showPublicDogSheet = false
     @State var showLostDogSheet = false
     @State var showMapClickDialog = false
@@ -967,7 +967,7 @@ struct MapMarkerItem: Identifiable {
         case poi(POI)
         case pooBag(PooBagDrop)
         case publicDog(PublicDog)
-        case lostDog(LostDog)
+        case lostDog(LostDogAnnotation)
         case car
         case hazard(HazardReport)
         case trailCondition(TrailCondition)

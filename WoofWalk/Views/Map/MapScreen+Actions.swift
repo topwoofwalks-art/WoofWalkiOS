@@ -37,7 +37,7 @@ extension MapScreen {
         showPublicDogSheet = true
     }
 
-    func handleLostDogTap(_ dog: LostDog) {
+    func handleLostDogTap(_ dog: LostDogAnnotation) {
         selectedLostDog = dog
         showLostDogSheet = true
     }

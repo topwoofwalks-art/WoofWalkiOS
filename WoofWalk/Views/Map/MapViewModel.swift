@@ -14,7 +14,7 @@ class MapViewModel: ObservableObject {
     @Published var routePolyline: [CLLocationCoordinate2D] = []
     @Published var activeBagDrops: [PooBagDrop] = []
     @Published var publicDogs: [PublicDog] = []
-    @Published var lostDogs: [LostDog] = []
+    @Published var lostDogs: [LostDogAnnotation] = []
     @Published var searchResults: [SearchResult] = []
     @Published var cameraMode: CameraMode = .free
     @Published var mapStyle: WoofWalkMapStyle = .hybrid
@@ -226,21 +226,25 @@ class MapViewModel: ObservableObject {
 
     func loadLostDogs() {
         let db = Firestore.firestore()
-        db.collection("lostDogs")
+        // Canonical collection: lost_dog_alerts (matches Android +
+        // firestore.rules:3908). Was 'lostDogs' on iOS — alerts from
+        // Android never showed.
+        db.collection("lost_dog_alerts")
             .whereField("status", isEqualTo: "LOST")
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let docs = snapshot?.documents else { return }
-                self?.lostDogs = docs.compactMap { doc -> LostDog? in
+                self?.lostDogs = docs.compactMap { doc -> LostDogAnnotation? in
                     let data = doc.data()
                     guard let lat = data["lat"] as? Double,
                           let lng = data["lng"] as? Double else { return nil }
-                    return LostDog(
+                    return LostDogAnnotation(
                         id: doc.documentID,
                         name: data["dogName"] as? String ?? "Unknown",
                         breed: data["dogBreed"] as? String ?? "",
                         coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng),
                         description: data["description"] as? String ?? "",
-                        locationDescription: data["lastSeenLocation"] as? String ?? "",
+                        locationDescription: data["locationDescription"] as? String
+                            ?? data["lastSeenLocation"] as? String ?? "",
                         reporterName: data["reporterName"] as? String ?? "",
                         reporterPhone: data["reporterPhone"] as? String,
                         photoURL: (data["dogPhotoUrl"] as? String).flatMap { URL(string: $0) },

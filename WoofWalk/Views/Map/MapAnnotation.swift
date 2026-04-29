@@ -388,7 +388,12 @@ struct PublicDog: Identifiable {
     let photoURL: URL?
 }
 
-struct LostDog: Identifiable {
+/// Map-render struct for displaying a lost-dog alert on the map. The
+/// canonical Firestore model is `LostDog` in Models/LostDog.swift —
+/// this is purely the UI projection (coordinate + URL + Date instead
+/// of lat/lng + String + Timestamp). Renamed from `LostDog` to avoid
+/// a type collision with the data model.
+struct LostDogAnnotation: Identifiable {
     let id: String
     let name: String
     let breed: String
