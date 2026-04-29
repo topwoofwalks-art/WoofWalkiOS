@@ -419,7 +419,7 @@ private struct LiveTrackingMapSection: View {
 // MARK: - Walker Marker
 
 private struct WalkerMarkerView: View {
-    let heading: Double?
+    let heading: Float?
 
     var body: some View {
         ZStack {
@@ -435,7 +435,7 @@ private struct WalkerMarkerView: View {
                         Image(systemName: "location.north.fill")
                             .font(.system(size: 10))
                             .foregroundColor(.white)
-                            .rotationEffect(.degrees(heading))
+                            .rotationEffect(.degrees(Double(heading)))
                     } else {
                         Image(systemName: "figure.walk")
                             .font(.system(size: 10))
@@ -560,21 +560,21 @@ private struct WalkStatsCard: View {
                 .font(.headline)
 
             HStack {
-                StatItem(
+                LiveStatItem(
                     icon: "point.topleft.down.to.point.bottomright.curvepath",
                     value: String(format: "%.2f", stats.distanceKm),
                     unit: "km",
                     label: "Distance"
                 )
                 Spacer()
-                StatItem(
+                LiveStatItem(
                     icon: "timer",
                     value: formatDuration(stats.durationSeconds),
                     unit: "",
                     label: "Duration"
                 )
                 Spacer()
-                StatItem(
+                LiveStatItem(
                     icon: "speedometer",
                     value: String(format: "%.1f", stats.averageSpeedKmh ?? 0.0),
                     unit: "km/h",
@@ -591,7 +591,7 @@ private struct WalkStatsCard: View {
     }
 }
 
-private struct StatItem: View {
+private struct LiveStatItem: View {
     let icon: String
     let value: String
     let unit: String
@@ -642,7 +642,7 @@ private struct ETACard: View {
                 Text("Estimated Return")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                Text(timeFormatter.string(from: eta.estimatedReturnTime))
+                Text(timeFormatter.string(from: eta.estimatedReturnDate))
                     .font(.title2.bold())
             }
 
@@ -690,7 +690,7 @@ private struct LiveActivityFeedCard: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
             } else {
-                let sorted = events.sorted { $0.timestamp > $1.timestamp }
+                let sorted = events.sorted { $0.timestamp > $1.timestamp } // Int64 ms compare is fine
                 ForEach(Array(sorted.enumerated()), id: \.element.id) { index, event in
                     ActivityEventRow(event: event)
 
@@ -744,7 +744,7 @@ private struct ActivityEventRow: View {
 
             Spacer()
 
-            Text(timeFormatter.string(from: event.timestamp))
+            Text(timeFormatter.string(from: event.date))
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
@@ -826,7 +826,7 @@ private struct PhotoThumbnail: View {
                 .frame(width: 100, height: 100)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                Text(timeFormatter.string(from: photo.timestamp))
+                Text(timeFormatter.string(from: photo.date))
                     .font(.system(size: 9, weight: .medium))
                     .foregroundColor(.white)
                     .padding(.horizontal, 4)
@@ -903,7 +903,7 @@ private struct PhotoDetailSheet: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle(timeFormatter.string(from: photo.timestamp))
+            .navigationTitle(timeFormatter.string(from: photo.date))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -1049,7 +1049,7 @@ private struct QuickReplyBar: View {
 
 // MARK: - Helpers
 
-private func formatDuration(_ seconds: Int) -> String {
+private func formatDuration(_ seconds: Int64) -> String {
     let hours = seconds / 3600
     let minutes = (seconds % 3600) / 60
     if hours > 0 {

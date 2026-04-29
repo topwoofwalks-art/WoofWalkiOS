@@ -111,9 +111,3 @@ class WalkingPathViewModel: ObservableObject {
     }
 }
 
-enum DogSize: String, Codable {
-    case small = "small"
-    case medium = "medium"
-    case large = "large"
-    case giant = "giant"
-}

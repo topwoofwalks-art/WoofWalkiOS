@@ -112,10 +112,11 @@ enum LiveWalkStatus: String, Codable {
     case error = "ERROR"
 }
 
-// MARK: - Location Update
+// MARK: - Live Location Update
 
-/// Location update from walker during live tracking.
-struct LocationUpdate: Codable, Equatable {
+/// Wire-format location update from walker during live tracking.
+/// Distinct from `LocationUpdate` (the in-memory CL form used by `LocationService`).
+struct LiveLocationUpdate: Codable, Equatable {
     let latitude: Double
     let longitude: Double
     let timestamp: Int64
@@ -192,8 +193,8 @@ struct LiveWalkSession: Identifiable, Equatable {
     var bookingId: String?
     let dogIds: [String]
     let walkerInfo: WalkerInfo
-    var currentLocation: LocationUpdate?
-    var routePoints: [LocationUpdate]
+    var currentLocation: LiveLocationUpdate?
+    var routePoints: [LiveLocationUpdate]
     var stats: LiveWalkStats
     var photos: [WalkPhotoUpdate]
     var activityEvents: [WalkActivityEvent]

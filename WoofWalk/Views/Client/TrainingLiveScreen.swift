@@ -210,7 +210,7 @@ struct TrainingLiveScreen: View {
         )
     }
 
-    private func exerciseCard(_ exercise: TrainingExercise) -> some View {
+    private func exerciseCard(_ exercise: LiveTrainingExercise) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(exercise.name)

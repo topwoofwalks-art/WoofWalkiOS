@@ -3,15 +3,18 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
-// MARK: - Training Models
+// MARK: - Training Models (live-tracking variants, distinct from Models/TrainingModels.swift)
 
-struct TrainingSkill: Identifiable {
+/// Lightweight skill summary used by the client-facing live tracking screen.
+/// The trainer-side authoring types live in `Models/TrainingModels.swift`.
+struct LiveTrainingSkill: Identifiable {
     let id: String
     let name: String
     let icon: String
 }
 
-struct TrainingExercise: Identifiable {
+/// Lightweight exercise summary used by the client-facing live tracking screen.
+struct LiveTrainingExercise: Identifiable {
     let id: String
     let name: String
     let attempts: Int
@@ -57,7 +60,8 @@ struct BehaviourObservation: Identifiable {
     }
 }
 
-struct HomeworkItem: Identifiable {
+/// Lightweight homework item used by the client-facing live tracking screen.
+struct LiveHomeworkItem: Identifiable {
     let id: String
     let title: String
     let description: String
@@ -90,10 +94,10 @@ class TrainingLiveViewModel: ObservableObject {
     @Published var dogName: String = ""
     @Published var status: String = "in_progress"
     @Published var sessionType: String = "" // "obedience", "agility", "behaviour", "puppy"
-    @Published var skills: [TrainingSkill] = []
-    @Published var exercises: [TrainingExercise] = []
+    @Published var skills: [LiveTrainingSkill] = []
+    @Published var exercises: [LiveTrainingExercise] = []
     @Published var observations: [BehaviourObservation] = []
-    @Published var homework: [HomeworkItem] = []
+    @Published var homework: [LiveHomeworkItem] = []
     @Published var photos: [TrainingPhoto] = []
     @Published var summary: TrainingSummary?
     @Published var trainerPhone: String?
@@ -207,7 +211,7 @@ class TrainingLiveViewModel: ObservableObject {
                 let id = dict["id"] as? String ?? UUID().uuidString
                 let name = dict["name"] as? String ?? ""
                 let icon = dict["icon"] as? String ?? "star.fill"
-                return TrainingSkill(id: id, name: name, icon: icon)
+                return LiveTrainingSkill(id: id, name: name, icon: icon)
             }
         }
 
@@ -221,7 +225,7 @@ class TrainingLiveViewModel: ObservableObject {
                 let beforeLevel = dict["beforeLevel"] as? Int ?? 1
                 let afterLevel = dict["afterLevel"] as? Int ?? 1
                 let notes = dict["notes"] as? String ?? ""
-                return TrainingExercise(
+                return LiveTrainingExercise(
                     id: id, name: name, attempts: attempts, successes: successes,
                     beforeLevel: beforeLevel, afterLevel: afterLevel, notes: notes
                 )
@@ -247,7 +251,7 @@ class TrainingLiveViewModel: ObservableObject {
                 let description = dict["description"] as? String ?? ""
                 let frequency = dict["frequency"] as? String ?? "daily"
                 let duration = dict["durationMinutes"] as? Int ?? 10
-                return HomeworkItem(id: id, title: title, description: description, frequency: frequency, durationMinutes: duration)
+                return LiveHomeworkItem(id: id, title: title, description: description, frequency: frequency, durationMinutes: duration)
             }
         }
 

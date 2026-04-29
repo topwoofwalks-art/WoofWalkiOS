@@ -71,7 +71,7 @@ class LiveTrackingRepository {
     // MARK: - Get Current Walker Location
 
     /// Get the current walker location for a walk.
-    func getCurrentWalkerLocation(walkId: String) async throws -> LocationUpdate? {
+    func getCurrentWalkerLocation(walkId: String) async throws -> LiveLocationUpdate? {
         let snapshot = try await db.collection(Self.collectionWalkSessions)
             .document(walkId)
             .getDocument()
@@ -81,13 +81,13 @@ class LiveTrackingRepository {
             return nil
         }
 
-        return Self.parseLocationUpdate(locationMap)
+        return Self.parseLiveLocationUpdate(locationMap)
     }
 
     // MARK: - Get Walk Route Polyline
 
     /// Get the route polyline (all tracked points) for a walk.
-    func getWalkRoutePolyline(walkId: String) async throws -> [LocationUpdate] {
+    func getWalkRoutePolyline(walkId: String) async throws -> [LiveLocationUpdate] {
         let snapshot = try await db.collection(Self.collectionWalkSessions)
             .document(walkId)
             .getDocument()
@@ -97,7 +97,7 @@ class LiveTrackingRepository {
             return []
         }
 
-        return routePoints.compactMap { Self.parseLocationUpdate($0) }
+        return routePoints.compactMap { Self.parseLiveLocationUpdate($0) }
     }
 
     // MARK: - Get Live Walk Stats
@@ -257,9 +257,9 @@ class LiveTrackingRepository {
             return nil
         }
 
-        let currentLocation = (data["currentLocation"] as? [String: Any]).flatMap { parseLocationUpdate($0) }
+        let currentLocation = (data["currentLocation"] as? [String: Any]).flatMap { parseLiveLocationUpdate($0) }
 
-        let routePoints = (data["routePoints"] as? [[String: Any]])?.compactMap { parseLocationUpdate($0) } ?? []
+        let routePoints = (data["routePoints"] as? [[String: Any]])?.compactMap { parseLiveLocationUpdate($0) } ?? []
 
         let statsMap = data["stats"] as? [String: Any]
         let stats = statsMap.map { parseLiveWalkStats($0) } ?? LiveWalkStats()
@@ -297,7 +297,7 @@ class LiveTrackingRepository {
     }
 
     /// Parse location update from Firestore map.
-    private static func parseLocationUpdate(_ map: [String: Any]) -> LocationUpdate? {
+    private static func parseLiveLocationUpdate(_ map: [String: Any]) -> LiveLocationUpdate? {
         guard let lat = (map["latitude"] as? NSNumber)?.doubleValue,
               let lng = (map["longitude"] as? NSNumber)?.doubleValue else {
             return nil
@@ -308,7 +308,7 @@ class LiveTrackingRepository {
         let heading = (map["heading"] as? NSNumber)?.floatValue
         let speed = (map["speed"] as? NSNumber)?.floatValue
 
-        return LocationUpdate(
+        return LiveLocationUpdate(
             latitude: lat,
             longitude: lng,
             timestamp: timestamp,

@@ -38,6 +38,26 @@ enum TrainingSkill: String, Codable, CaseIterable {
         }
     }
 
+    /// SF Symbol icon name for this skill.
+    var icon: String {
+        switch self {
+        case .sit: return "figure.seated"
+        case .stay: return "hand.raised.fill"
+        case .recall: return "megaphone.fill"
+        case .looseLead: return "link"
+        case .leaveIt: return "xmark.circle.fill"
+        case .down: return "arrow.down.circle.fill"
+        case .heel: return "figure.walk"
+        case .wait: return "pause.circle.fill"
+        case .settle: return "bed.double.fill"
+        case .crateTraining: return "house.fill"
+        case .socialisation: return "person.3.fill"
+        case .reactivity: return "bolt.fill"
+        case .separationAnxiety: return "heart.slash.fill"
+        case .custom: return "star.fill"
+        }
+    }
+
     static func from(string: String?) -> TrainingSkill {
         guard let string = string else { return .custom }
         return TrainingSkill(rawValue: string) ?? .custom
@@ -185,38 +205,23 @@ enum TrainingSessionStatus: String, Codable {
 // MARK: - Exercise Entry
 
 /// An individual exercise tracked during a training session.
+/// Fields use typed enums; Codable round-trips them as their String rawValues.
 struct ExerciseEntry: Identifiable, Codable, Equatable {
     let id: String
-    var skill: String
+    var skill: TrainingSkill
     var customSkillName: String
     var totalAttempts: Int
     var successfulAttempts: Int
-    var rating: String
+    var rating: ExerciseRating
     var notes: String
-    var skillLevelBefore: String
-    var skillLevelAfter: String
-
-    var trainingSkill: TrainingSkill {
-        TrainingSkill.from(string: skill)
-    }
-
-    var exerciseRating: ExerciseRating {
-        ExerciseRating.from(string: rating)
-    }
-
-    var beforeLevel: SkillLevel {
-        SkillLevel.from(string: skillLevelBefore)
-    }
-
-    var afterLevel: SkillLevel {
-        SkillLevel.from(string: skillLevelAfter)
-    }
+    var skillLevelBefore: SkillLevel
+    var skillLevelAfter: SkillLevel
 
     var skillDisplayName: String {
-        if trainingSkill == .custom {
+        if skill == .custom {
             return customSkillName
         }
-        return trainingSkill.displayName
+        return skill.displayName
     }
 
     var successRate: Float {
@@ -229,33 +234,33 @@ struct ExerciseEntry: Identifiable, Codable, Equatable {
     }
 
     var hasProgressed: Bool {
-        afterLevel.ordinalValue > beforeLevel.ordinalValue
+        skillLevelAfter.ordinalValue > skillLevelBefore.ordinalValue
     }
 
     func toMap() -> [String: Any?] {
         return [
             "id": id,
-            "skill": skill,
+            "skill": skill.rawValue,
             "customSkillName": customSkillName,
             "totalAttempts": totalAttempts,
             "successfulAttempts": successfulAttempts,
-            "rating": rating,
+            "rating": rating.rawValue,
             "notes": notes,
-            "skillLevelBefore": skillLevelBefore,
-            "skillLevelAfter": skillLevelAfter
+            "skillLevelBefore": skillLevelBefore.rawValue,
+            "skillLevelAfter": skillLevelAfter.rawValue
         ]
     }
 
     init(
         id: String = UUID().uuidString,
-        skill: String = TrainingSkill.custom.rawValue,
+        skill: TrainingSkill = .custom,
         customSkillName: String = "",
         totalAttempts: Int = 0,
         successfulAttempts: Int = 0,
-        rating: String = ExerciseRating.good.rawValue,
+        rating: ExerciseRating = .good,
         notes: String = "",
-        skillLevelBefore: String = SkillLevel.none.rawValue,
-        skillLevelAfter: String = SkillLevel.none.rawValue
+        skillLevelBefore: SkillLevel = .none,
+        skillLevelAfter: SkillLevel = .none
     ) {
         self.id = id
         self.skill = skill
@@ -303,32 +308,25 @@ struct HomeworkItem: Identifiable, Codable, Equatable {
 // MARK: - Behaviour Observations
 
 /// Behaviour observations recorded during a training session.
+/// Fields use typed enums; Codable round-trips them as their String rawValues.
 struct BehaviourObservations: Codable, Equatable {
-    var focusLevel: String
-    var energyLevel: String
+    var focusLevel: FocusLevel
+    var energyLevel: EnergyLevel
     var reactivityNotes: String
     var confidenceNotes: String
 
-    var focus: FocusLevel {
-        FocusLevel.from(string: focusLevel)
-    }
-
-    var energy: EnergyLevel {
-        EnergyLevel.from(string: energyLevel)
-    }
-
     func toMap() -> [String: Any] {
         return [
-            "focusLevel": focusLevel,
-            "energyLevel": energyLevel,
+            "focusLevel": focusLevel.rawValue,
+            "energyLevel": energyLevel.rawValue,
             "reactivityNotes": reactivityNotes,
             "confidenceNotes": confidenceNotes
         ]
     }
 
     init(
-        focusLevel: String = FocusLevel.moderate.rawValue,
-        energyLevel: String = EnergyLevel.moderate.rawValue,
+        focusLevel: FocusLevel = .moderate,
+        energyLevel: EnergyLevel = .moderate,
         reactivityNotes: String = "",
         confidenceNotes: String = ""
     ) {
@@ -357,7 +355,7 @@ struct TrainingSession: Identifiable, Codable, Equatable {
     var startedAt: Int64?
     var completedAt: Int64?
     var duration: Int64
-    var lessonPlan: [String]
+    var lessonPlan: [TrainingSkill]
     var exercises: [ExerciseEntry]
     var behaviourObservations: BehaviourObservations
     var homework: [HomeworkItem]
@@ -367,10 +365,6 @@ struct TrainingSession: Identifiable, Codable, Equatable {
     var reportSentToClient: Bool
     var createdAt: Int64
     var updatedAt: Int64
-
-    var lessonPlanSkills: [TrainingSkill] {
-        lessonPlan.map { TrainingSkill.from(string: $0) }
-    }
 
     func toMap() -> [String: Any?] {
         return [
@@ -387,7 +381,7 @@ struct TrainingSession: Identifiable, Codable, Equatable {
             "startedAt": startedAt,
             "completedAt": completedAt,
             "duration": duration,
-            "lessonPlan": lessonPlan,
+            "lessonPlan": lessonPlan.map { $0.rawValue },
             "exercises": exercises.map { $0.toMap() },
             "behaviourObservations": behaviourObservations.toMap(),
             "homework": homework.map { $0.toMap() },
@@ -415,7 +409,7 @@ struct TrainingSession: Identifiable, Codable, Equatable {
         startedAt: Int64? = nil,
         completedAt: Int64? = nil,
         duration: Int64 = 0,
-        lessonPlan: [String] = [],
+        lessonPlan: [TrainingSkill] = [],
         exercises: [ExerciseEntry] = [],
         behaviourObservations: BehaviourObservations = BehaviourObservations(),
         homework: [HomeworkItem] = [],

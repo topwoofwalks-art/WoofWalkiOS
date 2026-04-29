@@ -231,7 +231,6 @@
 		'A1000001000000000000535' = {isa = PBXBuildFile; fileRef = A1000001000000000000534; };
 		'A1000001000000000000537' = {isa = PBXBuildFile; fileRef = A1000001000000000000536; };
 		'A1000001000000000000539' = {isa = PBXBuildFile; fileRef = A1000001000000000000538; };
-		'A1000001000000000000541' = {isa = PBXBuildFile; fileRef = A1000001000000000000540; };
 		'A1000001000000000000543' = {isa = PBXBuildFile; fileRef = A1000001000000000000542; };
 		'A1000001000000000000545' = {isa = PBXBuildFile; fileRef = A1000001000000000000544; };
 		'A1000001000000000000547' = {isa = PBXBuildFile; fileRef = A1000001000000000000546; };
@@ -410,6 +409,8 @@
 		'A1000001000000000001268' = {isa = PBXBuildFile; fileRef = A1000001000000000001267; };
 		'A1000001000000000001270' = {isa = PBXBuildFile; fileRef = A1000001000000000001269; };
 		'A1000001000000000001272' = {isa = PBXBuildFile; fileRef = A1000001000000000001271; };
+		'A1000001000000000009991' = {isa = PBXBuildFile; fileRef = A1000001000000000009990; };
+		'A1000001000000000009993' = {isa = PBXBuildFile; fileRef = A1000001000000000009992; };
 		'A1000001000000000001274' = {isa = PBXBuildFile; fileRef = A1000001000000000001273; };
 		'A1000001000000000001276' = {isa = PBXBuildFile; fileRef = A1000001000000000001275; };
 		'A1000001000000000001278' = {isa = PBXBuildFile; fileRef = A1000001000000000001277; };
@@ -694,7 +695,6 @@
 		'A1000001000000000000534' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoiFilterSheet.swift; sourceTree = "<group>"; };
 		'A1000001000000000000536' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubDetailSheet.swift; sourceTree = "<group>"; };
 		'A1000001000000000000538' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddPoiButtons.swift; sourceTree = "<group>"; };
-		'A1000001000000000000540' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderViews.swift; sourceTree = "<group>"; };
 		'A1000001000000000000542' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogDetailView.swift; sourceTree = "<group>"; };
 		'A1000001000000000000544' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogFormView.swift; sourceTree = "<group>"; };
 		'A1000001000000000000546' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogProfileSheet.swift; sourceTree = "<group>"; };
@@ -873,6 +873,8 @@
 		A1000001000000000001267 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DiscountManagerViewModel.swift; path = WoofWalk/ViewModels/DiscountManagerViewModel.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001269 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GroomingLiveViewModel.swift; path = WoofWalk/ViewModels/GroomingLiveViewModel.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001271 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveTrackingViewModel.swift; path = WoofWalk/ViewModels/LiveTrackingViewModel.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009990 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "LiveTracking+UIExtensions.swift"; path = "WoofWalk/ViewModels/LiveTracking+UIExtensions.swift"; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009992 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Daycare+UIExtensions.swift"; path = "WoofWalk/ViewModels/Daycare+UIExtensions.swift"; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001273 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TrainingLiveViewModel.swift; path = WoofWalk/ViewModels/TrainingLiveViewModel.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001275 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TrainingSessionViewModel.swift; path = WoofWalk/ViewModels/TrainingSessionViewModel.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001277 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileSetupView.swift; path = WoofWalk/Views/Auth/ProfileSetupView.swift; sourceTree = SOURCE_ROOT; };
@@ -1003,6 +1005,8 @@
 				A1000001000000000001267,
 				A1000001000000000001269,
 				A1000001000000000001271,
+				A1000001000000000009990,
+				A1000001000000000009992,
 				A1000001000000000001273,
 				A1000001000000000001275,
 				A1000001000000000001277,
@@ -1114,7 +1118,6 @@
 				A1000001000000000000631,
 				A1000001000000000000632,
 				A1000001000000000000633,
-				A1000001000000000000634,
 				A1000001000000000000635,
 				A1000001000000000000636,
 				A1000001000000000000637,
@@ -1675,14 +1678,6 @@
 			path = POI;
 			sourceTree = "<group>";
 		};
-		'A1000001000000000000634' = {
-			isa = PBXGroup;
-			children = (
-				A1000001000000000000540,
-			);
-			path = Placeholder;
-			sourceTree = "<group>";
-		};
 		'A1000001000000000000635' = {
 			isa = PBXGroup;
 			children = (
@@ -2227,7 +2222,6 @@
 				A1000001000000000000535,
 				A1000001000000000000537,
 				A1000001000000000000539,
-				A1000001000000000000541,
 				A1000001000000000000543,
 				A1000001000000000000545,
 				A1000001000000000000547,
@@ -2414,6 +2408,8 @@
 				A1000001000000000001268,
 				A1000001000000000001270,
 				A1000001000000000001272,
+				A1000001000000000009991,
+				A1000001000000000009993,
 				A1000001000000000001274,
 				A1000001000000000001276,
 				A1000001000000000001278,

@@ -162,23 +162,20 @@ struct DaycareEvent: Identifiable, Codable, Equatable {
     var dogId: String?
     var dogName: String?
     let timestamp: Int64
-    let type: String
+    let type: DaycareUpdateType
     var note: String?
     var photoUri: String?
-    var temperament: String?
+    var temperament: DogTemperament?
     var napDurationMinutes: Int?
-
-    var updateType: DaycareUpdateType {
-        DaycareUpdateType.from(string: type)
-    }
-
-    var dogTemperament: DogTemperament? {
-        guard let temperament = temperament else { return nil }
-        return DogTemperament(rawValue: temperament)
-    }
 
     var date: Date {
         Date(timeIntervalSince1970: TimeInterval(timestamp) / 1000.0)
+    }
+
+    var formattedTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
     }
 
     init(
@@ -187,10 +184,10 @@ struct DaycareEvent: Identifiable, Codable, Equatable {
         dogId: String? = nil,
         dogName: String? = nil,
         timestamp: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
-        type: String,
+        type: DaycareUpdateType,
         note: String? = nil,
         photoUri: String? = nil,
-        temperament: String? = nil,
+        temperament: DogTemperament? = nil,
         napDurationMinutes: Int? = nil
     ) {
         self.id = id
@@ -204,6 +201,20 @@ struct DaycareEvent: Identifiable, Codable, Equatable {
         self.temperament = temperament
         self.napDurationMinutes = napDurationMinutes
     }
+
+    func toMap() -> [String: Any?] {
+        [
+            "sessionId": sessionId,
+            "dogId": dogId,
+            "dogName": dogName,
+            "timestamp": timestamp,
+            "type": type.rawValue,
+            "note": note,
+            "photoUri": photoUri,
+            "temperament": temperament?.rawValue,
+            "napDurationMinutes": napDurationMinutes
+        ]
+    }
 }
 
 // MARK: - Daycare Incident
@@ -214,23 +225,21 @@ struct DaycareIncident: Identifiable, Codable, Equatable {
     let sessionId: String
     var dogId: String?
     var dogName: String?
-    let type: String
-    let severity: String
+    let type: DaycareIncidentType
+    let severity: DaycareIncidentSeverity
     let description: String
     var actionTaken: String?
     let timestamp: Int64
     var photoUri: String?
 
-    var incidentType: DaycareIncidentType {
-        DaycareIncidentType(rawValue: type) ?? .other
-    }
-
-    var incidentSeverity: DaycareIncidentSeverity {
-        DaycareIncidentSeverity(rawValue: severity) ?? .low
-    }
-
     var date: Date {
         Date(timeIntervalSince1970: TimeInterval(timestamp) / 1000.0)
+    }
+
+    var formattedTime: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
     }
 
     init(
@@ -238,8 +247,8 @@ struct DaycareIncident: Identifiable, Codable, Equatable {
         sessionId: String,
         dogId: String? = nil,
         dogName: String? = nil,
-        type: String,
-        severity: String,
+        type: DaycareIncidentType,
+        severity: DaycareIncidentSeverity,
         description: String,
         actionTaken: String? = nil,
         timestamp: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
@@ -256,6 +265,20 @@ struct DaycareIncident: Identifiable, Codable, Equatable {
         self.timestamp = timestamp
         self.photoUri = photoUri
     }
+
+    func toMap() -> [String: Any?] {
+        [
+            "sessionId": sessionId,
+            "dogId": dogId,
+            "dogName": dogName,
+            "type": type.rawValue,
+            "severity": severity.rawValue,
+            "description": description,
+            "actionTaken": actionTaken,
+            "timestamp": timestamp,
+            "photoUri": photoUri
+        ]
+    }
 }
 
 // MARK: - Daycare Dog
@@ -271,14 +294,10 @@ struct DaycareDog: Identifiable, Codable, Equatable {
     var specialInstructions: String?
     var feedingInstructions: String?
     var medicationInstructions: String?
-    var currentTemperament: String
+    var currentTemperament: DogTemperament
     var isNapping: Bool
     var napStartTime: Int64?
     var eventCount: Int
-
-    var temperament: DogTemperament {
-        DogTemperament(rawValue: currentTemperament) ?? .happy
-    }
 
     init(
         id: String,
@@ -290,7 +309,7 @@ struct DaycareDog: Identifiable, Codable, Equatable {
         specialInstructions: String? = nil,
         feedingInstructions: String? = nil,
         medicationInstructions: String? = nil,
-        currentTemperament: String = DogTemperament.happy.rawValue,
+        currentTemperament: DogTemperament = .happy,
         isNapping: Bool = false,
         napStartTime: Int64? = nil,
         eventCount: Int = 0

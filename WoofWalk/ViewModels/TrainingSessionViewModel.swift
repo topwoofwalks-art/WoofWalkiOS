@@ -2,272 +2,11 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
-// MARK: - Enums
-
-enum SkillLevel: String, CaseIterable {
-    case none = "NONE"
-    case beginner = "BEGINNER"
-    case intermediate = "INTERMEDIATE"
-    case advanced = "ADVANCED"
-    case mastered = "MASTERED"
-
-    var displayName: String {
-        switch self {
-        case .none: return "None"
-        case .beginner: return "Beginner"
-        case .intermediate: return "Intermediate"
-        case .advanced: return "Advanced"
-        case .mastered: return "Mastered"
-        }
-    }
-
-    var ordinalValue: Int {
-        switch self {
-        case .none: return 0
-        case .beginner: return 1
-        case .intermediate: return 2
-        case .advanced: return 3
-        case .mastered: return 4
-        }
-    }
-
-    static func from(_ value: String?) -> SkillLevel {
-        guard let v = value else { return .none }
-        return SkillLevel(rawValue: v) ?? .none
-    }
-}
-
-enum FocusLevel: String, CaseIterable {
-    case easilyDistracted = "EASILY_DISTRACTED"
-    case moderate = "MODERATE"
-    case excellent = "EXCELLENT"
-
-    var displayName: String {
-        switch self {
-        case .easilyDistracted: return "Easily distracted"
-        case .moderate: return "Moderate"
-        case .excellent: return "Excellent"
-        }
-    }
-
-    static func from(_ value: String?) -> FocusLevel {
-        guard let v = value else { return .moderate }
-        return FocusLevel(rawValue: v) ?? .moderate
-    }
-}
-
-enum EnergyLevel: String, CaseIterable {
-    case low = "LOW"
-    case moderate = "MODERATE"
-    case high = "HIGH"
-    case hyperactive = "HYPERACTIVE"
-
-    var displayName: String {
-        switch self {
-        case .low: return "Low"
-        case .moderate: return "Moderate"
-        case .high: return "High"
-        case .hyperactive: return "Hyperactive"
-        }
-    }
-
-    static func from(_ value: String?) -> EnergyLevel {
-        guard let v = value else { return .moderate }
-        return EnergyLevel(rawValue: v) ?? .moderate
-    }
-}
-
-enum ExerciseRating: String, CaseIterable {
-    case poor = "POOR"
-    case fair = "FAIR"
-    case good = "GOOD"
-    case excellent = "EXCELLENT"
-
-    var displayName: String {
-        switch self {
-        case .poor: return "Poor"
-        case .fair: return "Fair"
-        case .good: return "Good"
-        case .excellent: return "Excellent"
-        }
-    }
-
-    var stars: Int {
-        switch self {
-        case .poor: return 1
-        case .fair: return 2
-        case .good: return 3
-        case .excellent: return 4
-        }
-    }
-
-    static func from(_ value: String?) -> ExerciseRating {
-        guard let v = value else { return .good }
-        return ExerciseRating(rawValue: v) ?? .good
-    }
-
-    static func fromStars(_ stars: Int) -> ExerciseRating {
-        switch stars {
-        case ...1: return .poor
-        case 2: return .fair
-        case 3: return .good
-        default: return .excellent
-        }
-    }
-}
-
-enum TrainingSessionStatus: String {
-    case scheduled = "SCHEDULED"
-    case inProgress = "IN_PROGRESS"
-    case completed = "COMPLETED"
-    case cancelled = "CANCELLED"
-
-    static func from(_ value: String?) -> TrainingSessionStatus {
-        guard let v = value else { return .scheduled }
-        return TrainingSessionStatus(rawValue: v) ?? .scheduled
-    }
-}
-
-enum TrainingSkill: String, CaseIterable {
-    case sit = "SIT"
-    case stay = "STAY"
-    case recall = "RECALL"
-    case looseLead = "LOOSE_LEAD"
-    case leaveIt = "LEAVE_IT"
-    case down = "DOWN"
-    case heel = "HEEL"
-    case wait = "WAIT"
-    case settle = "SETTLE"
-    case crateTraining = "CRATE_TRAINING"
-    case socialisation = "SOCIALISATION"
-    case reactivity = "REACTIVITY"
-    case separationAnxiety = "SEPARATION_ANXIETY"
-    case custom = "CUSTOM"
-
-    var displayName: String {
-        rawValue.replacingOccurrences(of: "_", with: " ").capitalized
-    }
-
-    var icon: String {
-        switch self {
-        case .sit: return "figure.seated"
-        case .stay: return "hand.raised.fill"
-        case .recall: return "megaphone.fill"
-        case .looseLead: return "link"
-        case .leaveIt: return "xmark.circle.fill"
-        case .down: return "arrow.down.circle.fill"
-        case .heel: return "figure.walk"
-        case .wait: return "pause.circle.fill"
-        case .settle: return "bed.double.fill"
-        case .crateTraining: return "house.fill"
-        case .socialisation: return "person.3.fill"
-        case .reactivity: return "bolt.fill"
-        case .separationAnxiety: return "heart.slash.fill"
-        case .custom: return "star.fill"
-        }
-    }
-
-    static func from(_ value: String?) -> TrainingSkill {
-        guard let v = value else { return .custom }
-        return TrainingSkill(rawValue: v) ?? .custom
-    }
-}
-
-// MARK: - Data Models
-
-struct ExerciseEntry: Identifiable {
-    let id: String
-    var skill: TrainingSkill
-    var customSkillName: String
-    var totalAttempts: Int
-    var successfulAttempts: Int
-    var rating: ExerciseRating
-    var notes: String
-    var skillLevelBefore: SkillLevel
-    var skillLevelAfter: SkillLevel
-
-    init(
-        id: String = UUID().uuidString,
-        skill: TrainingSkill = .custom,
-        customSkillName: String = "",
-        totalAttempts: Int = 0,
-        successfulAttempts: Int = 0,
-        rating: ExerciseRating = .good,
-        notes: String = "",
-        skillLevelBefore: SkillLevel = .none,
-        skillLevelAfter: SkillLevel = .none
-    ) {
-        self.id = id
-        self.skill = skill
-        self.customSkillName = customSkillName
-        self.totalAttempts = totalAttempts
-        self.successfulAttempts = successfulAttempts
-        self.rating = rating
-        self.notes = notes
-        self.skillLevelBefore = skillLevelBefore
-        self.skillLevelAfter = skillLevelAfter
-    }
-
-    var skillDisplayName: String {
-        skill == .custom ? customSkillName : skill.displayName
-    }
-
-    var successRate: Double {
-        totalAttempts > 0 ? Double(successfulAttempts) / Double(totalAttempts) : 0
-    }
-
-    var successRatePercent: Int { Int(successRate * 100) }
-
-    var hasProgressed: Bool { skillLevelAfter.ordinalValue > skillLevelBefore.ordinalValue }
-
-    func toMap() -> [String: Any] {
-        [
-            "id": id,
-            "skill": skill.rawValue,
-            "customSkillName": customSkillName,
-            "totalAttempts": totalAttempts,
-            "successfulAttempts": successfulAttempts,
-            "rating": rating.rawValue,
-            "notes": notes,
-            "skillLevelBefore": skillLevelBefore.rawValue,
-            "skillLevelAfter": skillLevelAfter.rawValue
-        ]
-    }
-}
-
-struct HomeworkItem: Identifiable {
-    let id: String
-    var exercise: String
-    var frequency: String
-    var tips: String
-
-    init(id: String = UUID().uuidString, exercise: String = "", frequency: String = "", tips: String = "") {
-        self.id = id
-        self.exercise = exercise
-        self.frequency = frequency
-        self.tips = tips
-    }
-
-    func toMap() -> [String: Any] {
-        ["id": id, "exercise": exercise, "frequency": frequency, "tips": tips]
-    }
-}
-
-struct BehaviourObservations {
-    var focusLevel: FocusLevel = .moderate
-    var energyLevel: EnergyLevel = .moderate
-    var reactivityNotes: String = ""
-    var confidenceNotes: String = ""
-
-    func toMap() -> [String: Any] {
-        [
-            "focusLevel": focusLevel.rawValue,
-            "energyLevel": energyLevel.rawValue,
-            "reactivityNotes": reactivityNotes,
-            "confidenceNotes": confidenceNotes
-        ]
-    }
-}
+// All enum and data-model types (SkillLevel, FocusLevel, EnergyLevel, ExerciseRating,
+// TrainingSessionStatus, TrainingSkill, ExerciseEntry, HomeworkItem,
+// BehaviourObservations) live canonically in `Models/TrainingModels.swift`.
+// Only `TrainingSessionData` (the local mutable runtime form) and the
+// view model class are defined here.
 
 struct TrainingSessionData {
     let id: String
@@ -392,27 +131,27 @@ class TrainingSessionViewModel: ObservableObject {
 
     private func parseSession(docId: String, data: [String: Any]) -> TrainingSessionData {
         let lessonPlanRaw = data["lessonPlan"] as? [String] ?? []
-        let lessonPlan = lessonPlanRaw.map { TrainingSkill.from($0) }
+        let lessonPlan = lessonPlanRaw.map { TrainingSkill.from(string: $0) }
 
         let exercisesData = data["exercises"] as? [[String: Any]] ?? []
         let exercises = exercisesData.map { m in
             ExerciseEntry(
                 id: m["id"] as? String ?? UUID().uuidString,
-                skill: TrainingSkill.from(m["skill"] as? String),
+                skill: TrainingSkill.from(string: m["skill"] as? String),
                 customSkillName: m["customSkillName"] as? String ?? "",
                 totalAttempts: m["totalAttempts"] as? Int ?? 0,
                 successfulAttempts: m["successfulAttempts"] as? Int ?? 0,
-                rating: ExerciseRating.from(m["rating"] as? String),
+                rating: ExerciseRating.from(string: m["rating"] as? String),
                 notes: m["notes"] as? String ?? "",
-                skillLevelBefore: SkillLevel.from(m["skillLevelBefore"] as? String),
-                skillLevelAfter: SkillLevel.from(m["skillLevelAfter"] as? String)
+                skillLevelBefore: SkillLevel.from(string: m["skillLevelBefore"] as? String),
+                skillLevelAfter: SkillLevel.from(string: m["skillLevelAfter"] as? String)
             )
         }
 
         let obsData = data["behaviourObservations"] as? [String: Any] ?? [:]
         let observations = BehaviourObservations(
-            focusLevel: FocusLevel.from(obsData["focusLevel"] as? String),
-            energyLevel: EnergyLevel.from(obsData["energyLevel"] as? String),
+            focusLevel: FocusLevel.from(string: obsData["focusLevel"] as? String),
+            energyLevel: EnergyLevel.from(string: obsData["energyLevel"] as? String),
             reactivityNotes: obsData["reactivityNotes"] as? String ?? "",
             confidenceNotes: obsData["confidenceNotes"] as? String ?? ""
         )
@@ -437,7 +176,7 @@ class TrainingSessionViewModel: ObservableObject {
             dogName: data["dogName"] as? String ?? "",
             breed: data["breed"] as? String ?? "",
             trainingFocus: data["trainingFocus"] as? String ?? "",
-            status: TrainingSessionStatus.from(data["status"] as? String),
+            status: TrainingSessionStatus.from(string: data["status"] as? String),
             scheduledAt: data["scheduledAt"] as? Int64 ?? 0,
             startedAt: data["startedAt"] as? Int64,
             completedAt: data["completedAt"] as? Int64,
