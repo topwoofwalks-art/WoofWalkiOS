@@ -21,28 +21,30 @@ extension DogProfile {
             return formatter.date(from: iso).map { Int64($0.timeIntervalSince1970 * 1000) }
         }
 
+        // Argument order matches the UnifiedDog initialiser exactly —
+        // Swift requires keyword arguments to follow declaration order.
         return UnifiedDog(
             id: id,
             name: name,
             breed: breed.isEmpty ? nil : breed,
-            photoUrl: photoUrl,
-            temperament: temperament.isEmpty ? nil : temperament,
-            nervousDog: nervousDog,
-            warningNote: warningNote,
             birthdate: birthdateMillis,
             sex: sex,
-            neutered: neutered ?? false,
             color: color,
+            photoUrl: photoUrl,
             weight: weight,
             size: size,
             microchipId: microchipId,
+            temperament: temperament.isEmpty ? nil : temperament,
+            nervousDog: nervousDog,
             behavioralNotes: behavioralNotes,
+            warningNote: warningNote,
             allergies: allergies,
             medications: medications,
             medicalConditions: medicalConditions,
             specialNeeds: specialNeeds,
             dietaryRestrictions: dietaryRestrictions,
-            selectedGroomerId: selectedGroomerId
+            selectedGroomerId: selectedGroomerId,
+            neutered: neutered ?? false
         )
     }
 }
