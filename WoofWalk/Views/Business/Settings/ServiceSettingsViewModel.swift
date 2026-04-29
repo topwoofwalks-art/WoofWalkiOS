@@ -137,11 +137,11 @@ final class ServiceListingsRepository {
         for (key, value) in fields {
             base[key] = value
         }
-        // `addDocument(data:)` is synchronous on Firestore iOS SDK — it
-        // returns a DocumentReference and writes asynchronously in the
-        // background. We don't need to await the network round-trip; the
-        // returned id is valid immediately.
-        let ref = collection.addDocument(data: base)
+        // Newer Firestore SDK exposes `addDocument(data:)` as a
+        // throwing async (alongside the legacy completion-handler
+        // variant). Awaiting it gives us the DocumentReference once
+        // the local write is committed.
+        let ref = try await collection.addDocument(data: base)
         return ref.documentID
     }
 }

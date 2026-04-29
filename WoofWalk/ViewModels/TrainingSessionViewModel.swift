@@ -196,8 +196,8 @@ class TrainingSessionViewModel: ObservableObject {
 
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                guard let self = self,
+            Task { @MainActor [weak self] in
+                guard let self,
                       let startedAt = self.session?.startedAt,
                       self.session?.status == .inProgress else { return }
                 self.elapsedTime = Int64(Date().timeIntervalSince1970 * 1000) - startedAt

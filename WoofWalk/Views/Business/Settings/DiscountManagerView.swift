@@ -307,7 +307,7 @@ private struct DiscountEditorSheet: View {
                 Text("Fixed Amount").tag(false)
             }
             .pickerStyle(.segmented)
-            .onChange(of: usePercent) { _, isPercent in
+            .onChange(of: usePercent) { isPercent in
                 if isPercent {
                     draft.amountOff = 0
                 } else {

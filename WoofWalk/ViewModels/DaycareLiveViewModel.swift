@@ -329,7 +329,7 @@ class DaycareLiveViewModel: ObservableObject {
     private func startNapTimer() {
         napTimer?.invalidate()
         napTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 guard let self, let start = self.napStartTime else { return }
                 self.napDurationMinutes = Int(Date().timeIntervalSince(start) / 60)
             }

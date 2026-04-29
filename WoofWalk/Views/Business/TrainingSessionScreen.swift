@@ -789,9 +789,11 @@ struct TrainingSessionScreen: View {
     }
 
     private func avgSuccessRate(_ session: TrainingSessionData) -> Int {
-        let rates = session.exercises.map { $0.successRate }
+        let rates: [Double] = session.exercises.map { $0.successRate }
         guard !rates.isEmpty else { return 0 }
-        return Int((rates.reduce(0, +) / Double(rates.count)) * 100)
+        let sum: Double = rates.reduce(0.0, +)
+        let mean: Double = sum / Double(rates.count)
+        return Int(mean * 100)
     }
 
     // MARK: - Add Exercise Sheet

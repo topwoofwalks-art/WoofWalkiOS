@@ -377,7 +377,7 @@ class DaycareConsoleViewModel: ObservableObject {
     private func startElapsedTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
                 self?.objectWillChange.send()
             }
         }

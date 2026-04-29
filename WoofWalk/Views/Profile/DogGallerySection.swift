@@ -23,12 +23,14 @@ struct DogGallerySection: View {
 
     private let viewModel: DogProfileViewModel
 
+    @MainActor
     init(dogId: String, photoUrls: Binding<[String]>, isOwner: Bool = true) {
         self.dogId = dogId
         self._photoUrls = photoUrls
         self.isOwner = isOwner
         // Build a VM scoped to the dog being viewed so `uploadGalleryPhoto`
-        // knows which dog the upload belongs to.
+        // knows which dog the upload belongs to. DogProfileViewModel is
+        // @MainActor-isolated, so the init has to match.
         self.viewModel = DogProfileViewModel(
             dog: UnifiedDog(id: dogId)
         )
@@ -73,7 +75,7 @@ struct DogGallerySection: View {
         .background(Color(.systemBackground))
         .cornerRadius(16)
         .shadow(radius: 2)
-        .onChange(of: selectedItem) { _, newItem in
+        .onChange(of: selectedItem) { newItem in
             guard let newItem = newItem else { return }
             Task { await handleUpload(item: newItem) }
         }
