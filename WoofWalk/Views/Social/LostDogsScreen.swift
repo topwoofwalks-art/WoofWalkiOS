@@ -4,27 +4,62 @@ import FirebaseFirestore
 struct LostDogsScreen: View {
     @State private var lostDogs: [LostDogItem] = []
     @State private var isLoading = true
+    @State private var showReportSheet = false
+    @State private var listener: ListenerRegistration?
 
     var body: some View {
-        Group {
-            if isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if lostDogs.isEmpty {
-                emptyState
-            } else {
-                List(lostDogs) { dog in
-                    LostDogRow(dog: dog)
+        ZStack(alignment: .bottomTrailing) {
+            Group {
+                if isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if lostDogs.isEmpty {
+                    emptyState
+                } else {
+                    List(lostDogs) { dog in
+                        LostDogRow(dog: dog)
+                    }
+                    .listStyle(.plain)
                 }
-                .listStyle(.plain)
             }
+
+            // Floating "Report" button — primary CTA matching the
+            // Android equivalent. Always reachable, even on the empty
+            // state so users can report a stray they've found without
+            // having to wait for a list to populate.
+            Button {
+                showReportSheet = true
+            } label: {
+                Label("Report", systemImage: "exclamationmark.bubble.fill")
+                    .font(.headline)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color(red: 0/255, green: 160/255, blue: 176/255))
+                    .foregroundColor(.white)
+                    .clipShape(Capsule())
+                    .shadow(radius: 4, y: 2)
+            }
+            .padding(20)
         }
-        .onAppear { loadLostDogs() }
+        .sheet(isPresented: $showReportSheet) {
+            LostDogReportScreen()
+        }
+        .onAppear {
+            if listener == nil { startListener() }
+        }
+        .onDisappear {
+            listener?.remove()
+            listener = nil
+        }
     }
 
-    private func loadLostDogs() {
+    private func startListener() {
         let db = Firestore.firestore()
-        db.collection("lostDogs")
+        // Canonical collection name is `lost_dog_alerts` (matches
+        // Android's LostDogRepository + firestore.rules:3908). The
+        // earlier `lostDogs` collection name on iOS was a bug that
+        // meant cross-platform alerts never showed.
+        listener = db.collection("lost_dog_alerts")
             .whereField("status", isEqualTo: "LOST")
             .order(by: "reportedAt", descending: true)
             .limit(to: 50)
@@ -41,7 +76,11 @@ struct LostDogsScreen: View {
                         id: doc.documentID,
                         name: name,
                         breed: data["dogBreed"] as? String ?? "Unknown",
-                        lastSeenLocation: data["lastSeenLocation"] as? String ?? "",
+                        // Android writes locationDescription; legacy
+                        // docs may carry lastSeenLocation. Fall back
+                        // through both.
+                        lastSeenLocation: (data["locationDescription"] as? String)
+                            ?? (data["lastSeenLocation"] as? String) ?? "",
                         reportedAt: (data["reportedAt"] as? Timestamp)?.dateValue() ?? Date(),
                         photoUrl: data["dogPhotoUrl"] as? String,
                         distance: nil
@@ -64,7 +103,7 @@ struct LostDogsScreen: View {
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
 
-            Text("Thankfully, no dogs have been reported lost in your area. If you spot a lost dog, you can report it here.")
+            Text("Thankfully, no dogs have been reported lost in your area. If you spot a lost dog, tap Report below.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

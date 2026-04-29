@@ -573,6 +573,34 @@ struct BusinessSettingsScreen: View {
                 Text("Catalogue")
             }
 
+            // Charity donations — booking-fee % to a partner charity.
+            // Mirrors the portal CharityTab. The `orgId` here uses the
+            // current user's uid, matching the sole-trader assumption
+            // already in ServiceSettingsView; multi-owner orgs will
+            // need to thread the real org id through here later.
+            Section {
+                if let uid = Auth.auth().currentUser?.uid {
+                    NavigationLink {
+                        BusinessCharityDonationView(orgId: uid)
+                    } label: {
+                        HStack {
+                            Image(systemName: "heart.circle.fill")
+                                .foregroundColor(.green)
+                                .frame(width: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Charity Donations")
+                                    .foregroundColor(.primary)
+                                Text("Auto-donate a percentage of each booking")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            } header: {
+                Text("Giving")
+            }
+
             // Business Profile
             Section("Business Profile") {
                 HStack {
