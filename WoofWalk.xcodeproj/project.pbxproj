@@ -373,6 +373,11 @@
 		'A1000001000000000001194' = {isa = PBXBuildFile; fileRef = A1000001000000000001193; };
 		'A1000001000000000001196' = {isa = PBXBuildFile; fileRef = A1000001000000000001195; };
 		'A1000001000000000001198' = {isa = PBXBuildFile; fileRef = A1000001000000000001197; };
+		'A1000001000000000001200' = {isa = PBXBuildFile; fileRef = A1000001000000000001199; };
+		'A1000001000000000001202' = {isa = PBXBuildFile; fileRef = A1000001000000000001201; };
+		'A1000001000000000001204' = {isa = PBXBuildFile; fileRef = A1000001000000000001203; };
+		'A1000001000000000001206' = {isa = PBXBuildFile; fileRef = A1000001000000000001205; };
+		'A1000001000000000001208' = {isa = PBXBuildFile; fileRef = A1000001000000000001207; };
 		'A1000001000000000001147' = {isa = PBXBuildFile; fileRef = A1000001000000000001146; };
 		'A1000001000000000001149' = {isa = PBXBuildFile; fileRef = A1000001000000000001148; };
 		'A1000001000000000001151' = {isa = PBXBuildFile; fileRef = A1000001000000000001150; };
@@ -778,6 +783,11 @@
 		A1000001000000000001193 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessCharityDonationView.swift; path = WoofWalk/Views/Business/Settings/BusinessCharityDonationView.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001195 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhoneWatchSessionManager.swift; path = WoofWalk/Services/PhoneWatchSessionManager.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001197 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EmergencyContactsView.swift; path = WoofWalk/Views/Settings/EmergencyContactsView.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001199 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DogProfilePublic.swift; path = WoofWalk/Models/DogProfilePublic.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001201 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CashTopupRepository.swift; path = WoofWalk/Repositories/CashTopupRepository.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001203 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CashTopupRequestView.swift; path = WoofWalk/Views/Client/CashTopupRequestView.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001205 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CurrencyFormatter.swift; path = WoofWalk/Utils/CurrencyFormatter.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001207 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ImageSanitizer.swift; path = WoofWalk/Utilities/ImageSanitizer.swift; sourceTree = SOURCE_ROOT; };
 		'A1000001000000000001146' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LostDogsScreen.swift; sourceTree = "<group>"; };
 		'A1000001000000000001148' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialHubScreenV2.swift; sourceTree = "<group>"; };
 		'A1000001000000000001150' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModeSwitcher.swift; sourceTree = "<group>"; };
@@ -850,6 +860,11 @@
 				A1000001000000000001193,
 				A1000001000000000001195,
 				A1000001000000000001197,
+				A1000001000000000001199,
+				A1000001000000000001201,
+				A1000001000000000001203,
+				A1000001000000000001205,
+				A1000001000000000001207,
 			);
 			sourceTree = "<group>";
 		};
@@ -2203,6 +2218,11 @@
 				A1000001000000000001194,
 				A1000001000000000001196,
 				A1000001000000000001198,
+				A1000001000000000001200,
+				A1000001000000000001202,
+				A1000001000000000001204,
+				A1000001000000000001206,
+				A1000001000000000001208,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

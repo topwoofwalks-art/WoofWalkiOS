@@ -46,8 +46,10 @@ class ProviderRepository {
 
         // WOOF_RANK scoring — distance decay × relevance × Bayesian quality
         // × (base trust × tenure). Mirror of Android ProviderRepository.kt.
-        let query = DiscoveryServiceType(rawValue: firestoreServiceName)
-        let ranked = BusinessRanker.rank(providers, queryService: query)
+        // (`queryService` distinct from the outer `query: Query` Firestore
+        // builder reused above.)
+        let queryService = DiscoveryServiceType(rawValue: firestoreServiceName)
+        let ranked = BusinessRanker.rank(providers, queryService: queryService)
         return Array(ranked.prefix(30))
     }
 
