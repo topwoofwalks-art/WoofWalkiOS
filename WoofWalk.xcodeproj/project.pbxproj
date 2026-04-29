@@ -378,6 +378,8 @@
 		'A1000001000000000001204' = {isa = PBXBuildFile; fileRef = A1000001000000000001203; };
 		'A1000001000000000001206' = {isa = PBXBuildFile; fileRef = A1000001000000000001205; };
 		'A1000001000000000001208' = {isa = PBXBuildFile; fileRef = A1000001000000000001207; };
+		'A1000001000000000001210' = {isa = PBXBuildFile; fileRef = A1000001000000000001209; };
+		'A1000001000000000001212' = {isa = PBXBuildFile; fileRef = A1000001000000000001211; };
 		'A1000001000000000001147' = {isa = PBXBuildFile; fileRef = A1000001000000000001146; };
 		'A1000001000000000001149' = {isa = PBXBuildFile; fileRef = A1000001000000000001148; };
 		'A1000001000000000001151' = {isa = PBXBuildFile; fileRef = A1000001000000000001150; };
@@ -788,6 +790,8 @@
 		A1000001000000000001203 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CashTopupRequestView.swift; path = WoofWalk/Views/Client/CashTopupRequestView.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001205 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CurrencyFormatter.swift; path = WoofWalk/Utils/CurrencyFormatter.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001207 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ImageSanitizer.swift; path = WoofWalk/Utilities/ImageSanitizer.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001209 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ServiceSettingsView.swift; path = WoofWalk/Views/Business/Settings/ServiceSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001211 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveTrackingScreen.swift; path = WoofWalk/Views/Client/LiveTrackingScreen.swift; sourceTree = SOURCE_ROOT; };
 		'A1000001000000000001146' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LostDogsScreen.swift; sourceTree = "<group>"; };
 		'A1000001000000000001148' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialHubScreenV2.swift; sourceTree = "<group>"; };
 		'A1000001000000000001150' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModeSwitcher.swift; sourceTree = "<group>"; };
@@ -865,6 +869,8 @@
 				A1000001000000000001203,
 				A1000001000000000001205,
 				A1000001000000000001207,
+				A1000001000000000001209,
+				A1000001000000000001211,
 			);
 			sourceTree = "<group>";
 		};
@@ -2223,6 +2229,8 @@
 				A1000001000000000001204,
 				A1000001000000000001206,
 				A1000001000000000001208,
+				A1000001000000000001210,
+				A1000001000000000001212,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
