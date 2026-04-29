@@ -19,6 +19,13 @@ struct ContentView: View {
                 MessagesView()
                     .environmentObject(sessionManager)
             }
+
+            // SOS — always available, never gated by a setting.
+            // Wearer-side panic button. Hold-to-send to phone, which
+            // writes /sos_alerts and dispatches FCM to emergency
+            // contacts via onSosAlertCreate CF.
+            SosView()
+                .environmentObject(sessionManager)
         }
         .tabViewStyle(.page)
     }

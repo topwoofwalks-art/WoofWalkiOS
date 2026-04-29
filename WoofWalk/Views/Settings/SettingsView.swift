@@ -184,6 +184,9 @@ struct SettingsView: View {
             NavigationLink(destination: CharitySettingsView()) {
                 Label("Charity Walks", systemImage: "heart.circle")
             }
+            NavigationLink(destination: EmergencyContactsView()) {
+                Label("Emergency Contacts", systemImage: "exclamationmark.shield")
+            }
             NavigationLink(destination: NotificationCenterScreen()) {
                 Label("Notifications", systemImage: "bell")
             }

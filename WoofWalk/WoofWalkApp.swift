@@ -24,6 +24,13 @@ struct WoofWalkApp: App {
         StripeAPI.defaultPublishableKey = "pk_live_51Sg8grCHt9yHTLb1wpKwVN5LyUR93kgUYJmjxs5NrD4rHXGyFuAnyskiQYCRZKQNJVALvnnHeZol3Xv8gaIIF0aD00NoVlE74t"
 
         NotificationService.shared.configure()
+
+        // Phone-side WatchConnectivity bridge — receives SOS / DMS-OK
+        // / car-save / quick-reply messages from the Watch app and
+        // writes them to Firestore. Must be activated early so any
+        // pending message queued on the Watch (during a window when
+        // the phone wasn't running) flushes through.
+        PhoneWatchSessionManager.shared.activate()
     }
 
     private var isTestMode: Bool {
