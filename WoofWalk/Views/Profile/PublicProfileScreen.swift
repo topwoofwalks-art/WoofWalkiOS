@@ -28,7 +28,7 @@ struct PublicProfileScreen: View {
                     statsRow(user: user)
                     friendRequestButton()
                     followButton()
-                    dogsSection(dogs: user.dogs)
+                    dogsSection(dogs: user.dogs.map(DogProfile.init(from:)))
                     recentWalksSection()
                 }
                 .padding()
