@@ -39,49 +39,58 @@ struct WoofWalkApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if isTestMode {
-                    // CI/test mode: skip onboarding and auth, go straight to app
-                    // Auth is handled by ScreenshotAutomation.attemptSignIn()
-                    MainTabView()
-                } else if !hasCompletedOnboarding {
-                    OnboardingView(onComplete: {
-                        hasCompletedOnboarding = true
-                    })
-                } else if authViewModel.authState == .authenticated && authViewModel.needsProfileSetup {
-                    NavigationView {
-                        ProfileSetupView(
-                            viewModel: authViewModel,
-                            onComplete: {
-                                authViewModel.needsProfileSetup = false
+            rootView
+                .onChange(of: authViewModel.authState) { newState in
+                    if case .authenticated = newState {
+                        // Pre-fill display name from the auth provider
+                        if let user = authViewModel.currentUser {
+                            if authViewModel.profileSetupUiState.displayName.isEmpty,
+                               let name = user.displayName, !name.isEmpty {
+                                authViewModel.updateProfileDisplayName(name)
                             }
-                        )
-                    }
-                } else if authViewModel.authState == .authenticated {
-                    MainTabView()
-                } else {
-                    AuthRootView(authViewModel: authViewModel)
-                }
-            }
-            .onChange(of: authViewModel.authState) { newState in
-                if case .authenticated = newState {
-                    // Pre-fill display name from the auth provider
-                    if let user = authViewModel.currentUser {
-                        if authViewModel.profileSetupUiState.displayName.isEmpty,
-                           let name = user.displayName, !name.isEmpty {
-                            authViewModel.updateProfileDisplayName(name)
                         }
+                        authViewModel.checkProfileExists()
                     }
-                    authViewModel.checkProfileExists()
                 }
-            }
-            .task {
-                await NotificationService.shared.requestPermission()
-            }
-            .task {
-                await screenshotAutomation.runAutomation()
-            }
+                .task {
+                    await NotificationService.shared.requestPermission()
+                }
+                .task {
+                    await screenshotAutomation.runAutomation()
+                }
         }
+    }
+
+    /// Pulled out of `body` because the 5-branch if/else chain was
+    /// hitting SwiftUI's ViewBuilder type-inference ceiling and
+    /// throwing "no exact matches in reference to static method
+    /// 'buildExpression'". Using AnyView short-circuits the
+    /// type-inference work — the runtime cost is negligible since
+    /// this only fires on auth-state transitions.
+    private var rootView: AnyView {
+        if isTestMode {
+            // CI/test mode: skip onboarding and auth, go straight to app.
+            return AnyView(MainTabView())
+        }
+        if !hasCompletedOnboarding {
+            return AnyView(OnboardingView(onComplete: {
+                hasCompletedOnboarding = true
+            }))
+        }
+        if authViewModel.authState == .authenticated && authViewModel.needsProfileSetup {
+            return AnyView(NavigationView {
+                ProfileSetupView(
+                    viewModel: authViewModel,
+                    onComplete: {
+                        authViewModel.needsProfileSetup = false
+                    }
+                )
+            })
+        }
+        if authViewModel.authState == .authenticated {
+            return AnyView(MainTabView())
+        }
+        return AnyView(AuthRootView(authViewModel: authViewModel))
     }
 }
 
