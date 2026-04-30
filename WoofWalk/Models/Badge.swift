@@ -51,6 +51,11 @@ enum CriteriaType {
     case distanceTotal
     case poisCreated
     case votesGiven
+    case photosUploaded
+    case hazardsReported
+    case earlyBirdWalks
+    case nightOwlWalks
+    case uniqueParksVisited
     case timeOfDay
     case special
 }
@@ -80,6 +85,8 @@ enum BadgeRarity {
     }
 }
 
+/// Canonical badge definitions — IDs must match the server-side
+/// `BADGES` constant in `functions/src/gamification/badges.ts`.
 struct BadgeDefinitions {
     static let allBadges: [Badge] = [
         Badge(
@@ -94,7 +101,7 @@ struct BadgeDefinitions {
         Badge(
             id: BadgeIds.walk5km,
             name: "5K Walker",
-            description: "Walk a total of 5 kilometers",
+            description: "Walk a total of 5 kilometres",
             iconName: "figure.walk.circle",
             unlockCriteria: BadgeCriteria(type: .distanceTotal, targetValue: 5000),
             rarity: .common,
@@ -103,7 +110,7 @@ struct BadgeDefinitions {
         Badge(
             id: BadgeIds.walk10km,
             name: "10K Champion",
-            description: "Walk a total of 10 kilometers",
+            description: "Walk a total of 10 kilometres",
             iconName: "medal",
             unlockCriteria: BadgeCriteria(type: .distanceTotal, targetValue: 10000),
             rarity: .rare,
@@ -112,7 +119,7 @@ struct BadgeDefinitions {
         Badge(
             id: BadgeIds.walkMarathon,
             name: "Marathon Walker",
-            description: "Walk a total of 42.2 kilometers",
+            description: "Walk a total of 42.2 kilometres",
             iconName: "trophy",
             unlockCriteria: BadgeCriteria(type: .distanceTotal, targetValue: 42195),
             rarity: .epic,
@@ -128,17 +135,44 @@ struct BadgeDefinitions {
             category: .walks
         ),
         Badge(
-            id: BadgeIds.firstPoi,
+            id: BadgeIds.earlyBird,
+            name: "Early Bird",
+            description: "Complete 10 walks before 7am",
+            iconName: "sunrise",
+            unlockCriteria: BadgeCriteria(type: .earlyBirdWalks, targetValue: 10),
+            rarity: .rare,
+            category: .special
+        ),
+        Badge(
+            id: BadgeIds.nightOwl,
+            name: "Night Owl",
+            description: "Complete 10 walks after 9pm",
+            iconName: "moon.stars",
+            unlockCriteria: BadgeCriteria(type: .nightOwlWalks, targetValue: 10),
+            rarity: .rare,
+            category: .special
+        ),
+        Badge(
+            id: BadgeIds.explorer,
             name: "Explorer",
-            description: "Create your first point of interest",
+            description: "Visit 10 unique parks",
             iconName: "mappin.circle",
+            unlockCriteria: BadgeCriteria(type: .uniqueParksVisited, targetValue: 10),
+            rarity: .rare,
+            category: .walks
+        ),
+        Badge(
+            id: BadgeIds.firstPoi,
+            name: "Map Maker",
+            description: "Create your first point of interest",
+            iconName: "mappin.and.ellipse",
             unlockCriteria: BadgeCriteria(type: .poisCreated, targetValue: 1),
             rarity: .common,
             category: .contributions
         ),
         Badge(
-            id: BadgeIds.poiCreator10,
-            name: "Map Maker",
+            id: BadgeIds.contributor,
+            name: "Contributor",
             description: "Create 10 points of interest",
             iconName: "map",
             unlockCriteria: BadgeCriteria(type: .poisCreated, targetValue: 10),
@@ -155,31 +189,31 @@ struct BadgeDefinitions {
             category: .contributions
         ),
         Badge(
-            id: BadgeIds.helpfulVoter,
+            id: BadgeIds.photoMaster,
+            name: "Photo Master",
+            description: "Upload 50 walk photos",
+            iconName: "camera.fill",
+            unlockCriteria: BadgeCriteria(type: .photosUploaded, targetValue: 50),
+            rarity: .rare,
+            category: .contributions
+        ),
+        Badge(
+            id: BadgeIds.guardian,
+            name: "Guardian",
+            description: "Report 5 hazards to keep dogs safe",
+            iconName: "exclamationmark.shield.fill",
+            unlockCriteria: BadgeCriteria(type: .hazardsReported, targetValue: 5),
+            rarity: .rare,
+            category: .contributions
+        ),
+        Badge(
+            id: BadgeIds.social,
             name: "Community Helper",
             description: "Vote on 25 points of interest",
             iconName: "hand.thumbsup",
             unlockCriteria: BadgeCriteria(type: .votesGiven, targetValue: 25),
             rarity: .rare,
             category: .social
-        ),
-        Badge(
-            id: BadgeIds.earlyAdopter,
-            name: "Early Adopter",
-            description: "Join WoofWalk in the first month",
-            iconName: "flame",
-            unlockCriteria: BadgeCriteria(type: .special, targetValue: 1),
-            rarity: .legendary,
-            category: .special
-        ),
-        Badge(
-            id: BadgeIds.communityHero,
-            name: "Community Hero",
-            description: "Make 100 contributions to the community",
-            iconName: "heart.circle.fill",
-            unlockCriteria: BadgeCriteria(type: .special, targetValue: 100),
-            rarity: .legendary,
-            category: .special
         )
     ]
 

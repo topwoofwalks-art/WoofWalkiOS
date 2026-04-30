@@ -17,6 +17,13 @@ struct UserProfile: Identifiable, Codable {
     var regionCode: String
     var totalWalks: Int
     var totalDistanceMeters: Double
+    var poisCreated: Int
+    var votesGiven: Int
+    var photosUploaded: Int
+    var hazardsReported: Int
+    var earlyBirdWalks: Int
+    var nightOwlWalks: Int
+    var uniqueParksVisited: Int
     var bio: String
     var displayName: String?
     var role: String?
@@ -43,6 +50,13 @@ struct UserProfile: Identifiable, Codable {
          regionCode: String = "",
          totalWalks: Int = 0,
          totalDistanceMeters: Double = 0.0,
+         poisCreated: Int = 0,
+         votesGiven: Int = 0,
+         photosUploaded: Int = 0,
+         hazardsReported: Int = 0,
+         earlyBirdWalks: Int = 0,
+         nightOwlWalks: Int = 0,
+         uniqueParksVisited: Int = 0,
          bio: String = "",
          displayName: String? = nil,
          role: String? = nil,
@@ -68,6 +82,13 @@ struct UserProfile: Identifiable, Codable {
         self.regionCode = regionCode
         self.totalWalks = totalWalks
         self.totalDistanceMeters = totalDistanceMeters
+        self.poisCreated = poisCreated
+        self.votesGiven = votesGiven
+        self.photosUploaded = photosUploaded
+        self.hazardsReported = hazardsReported
+        self.earlyBirdWalks = earlyBirdWalks
+        self.nightOwlWalks = nightOwlWalks
+        self.uniqueParksVisited = uniqueParksVisited
         self.bio = bio
         self.displayName = displayName
         self.role = role

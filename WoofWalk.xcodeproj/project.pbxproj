@@ -34,7 +34,6 @@
 		'A1000001000000000000139' = {isa = PBXBuildFile; fileRef = A1000001000000000000138; };
 		'A1000001000000000000141' = {isa = PBXBuildFile; fileRef = A1000001000000000000140; };
 		'A1000001000000000000147' = {isa = PBXBuildFile; fileRef = A1000001000000000000146; };
-		'A1000001000000000000149' = {isa = PBXBuildFile; fileRef = A1000001000000000000148; };
 		'A1000001000000000000151' = {isa = PBXBuildFile; fileRef = A1000001000000000000150; };
 		'A1000001000000000000153' = {isa = PBXBuildFile; fileRef = A1000001000000000000152; };
 		'A1000001000000000000155' = {isa = PBXBuildFile; fileRef = A1000001000000000000154; };
@@ -498,7 +497,6 @@
 		'A1000001000000000000138' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightLogEntity.swift; sourceTree = "<group>"; };
 		'A1000001000000000000140' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedPoiRepository.swift; sourceTree = "<group>"; };
 		'A1000001000000000000146' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooBagDropRepository.swift; sourceTree = "<group>"; };
-		'A1000001000000000000148' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsRepository.swift; sourceTree = "<group>"; };
 		'A1000001000000000000150' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncQueueRepository.swift; sourceTree = "<group>"; };
 		'A1000001000000000000152' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalUserRepository.swift; sourceTree = "<group>"; };
 		'A1000001000000000000154' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkRepository.swift; sourceTree = "<group>"; };
@@ -1293,7 +1291,6 @@
 			children = (
 				A1000001000000000000140,
 				A1000001000000000000146,
-				A1000001000000000000148,
 				A1000001000000000000150,
 				A1000001000000000000152,
 				A1000001000000000000154,
@@ -2008,7 +2005,6 @@
 				A1000001000000000000139,
 				A1000001000000000000141,
 				A1000001000000000000147,
-				A1000001000000000000149,
 				A1000001000000000000151,
 				A1000001000000000000153,
 				A1000001000000000000155,

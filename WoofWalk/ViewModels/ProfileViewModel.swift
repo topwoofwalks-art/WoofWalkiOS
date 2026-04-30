@@ -111,35 +111,16 @@ class ProfileViewModel: ObservableObject {
     private func observeBadgeProgress() {
         userRepository.getUserProfile()
             .sink { _ in } receiveValue: { [weak self] user in
-                guard let self = self else { return }
-
-                Task {
-                    do {
-                        let totalWalks = try await self.statsRepository.getTotalWalkCount()
-                        let totalDistance = try await self.statsRepository.getTotalDistance()
-
-                        let stats = WalkStatsSummary(
-                            totalWalks: totalWalks,
-                            totalDistanceMeters: totalDistance,
-                            totalTimeMinutes: 0
-                        )
-
-                        self.badges = self.checkBadgeUnlocks(user: user, stats: stats)
-                    } catch {
-                        print("Error observing badge progress: \(error)")
-                    }
-                }
+                guard let self = self, let user = user else { return }
+                self.badges = self.checkBadgeUnlocks(user: user)
             }
             .store(in: &cancellables)
     }
 
-    private func checkBadgeUnlocks(user: UserProfile?, stats: WalkStatsSummary) -> [BadgeWithStatus] {
-        guard let user = user else { return [] }
-
+    private func checkBadgeUnlocks(user: UserProfile) -> [BadgeWithStatus] {
         return BadgeDefinitions.allBadges.map { badge in
             let isUnlocked = user.badges.contains(badge.id)
-            let progress = calculateBadgeProgress(badge: badge, user: user, stats: stats)
-
+            let progress = calculateBadgeProgress(badge: badge, user: user)
             return BadgeWithStatus(
                 badge: badge,
                 isUnlocked: isUnlocked,
@@ -150,19 +131,24 @@ class ProfileViewModel: ObservableObject {
         }
     }
 
-    private func calculateBadgeProgress(badge: Badge, user: UserProfile, stats: WalkStatsSummary) -> Float {
+    private func calculateBadgeProgress(badge: Badge, user: UserProfile) -> Float {
         if user.badges.contains(badge.id) { return 1.0 }
-
+        let target = badge.unlockCriteria.targetValue
+        guard target > 0 else { return 0.0 }
+        let current: Int
         switch badge.unlockCriteria.type {
-        case .walksCompleted:
-            let current = stats.totalWalks
-            return min(Float(current) / Float(badge.unlockCriteria.targetValue), 1.0)
-        case .distanceTotal:
-            let current = Int(stats.totalDistanceMeters)
-            return min(Float(current) / Float(badge.unlockCriteria.targetValue), 1.0)
-        case .poisCreated, .votesGiven, .timeOfDay, .special:
-            return 0.0
+        case .walksCompleted:       current = user.totalWalks
+        case .distanceTotal:        current = Int(user.totalDistanceMeters)
+        case .poisCreated:          current = user.poisCreated
+        case .votesGiven:           current = user.votesGiven
+        case .photosUploaded:       current = user.photosUploaded
+        case .hazardsReported:      current = user.hazardsReported
+        case .earlyBirdWalks:       current = user.earlyBirdWalks
+        case .nightOwlWalks:        current = user.nightOwlWalks
+        case .uniqueParksVisited:   current = user.uniqueParksVisited
+        case .timeOfDay, .special:  return 0.0
         }
+        return min(Float(current) / Float(target), 1.0)
     }
 
     func updateProfile(username: String? = nil, bio: String? = nil) {
@@ -246,8 +232,22 @@ class ProfileViewModel: ObservableObject {
         }
     }
 
+    /// Tiered level lookup — must match `calculateLevel()` in
+    /// `functions/src/gamification/levels.ts`.
     func calculateLevel(pawPoints: Int) -> Int {
-        return Int(floor(sqrt(Double(pawPoints) / 100.0)) + 1)
+        switch pawPoints {
+        case ..<100:   return 1
+        case ..<300:   return 2
+        case ..<600:   return 3
+        case ..<1000:  return 4
+        case ..<1500:  return 5
+        case ..<2100:  return 6
+        case ..<2800:  return 7
+        case ..<3600:  return 8
+        case ..<4500:  return 9
+        case ..<5500:  return 10
+        default:       return 10 + (pawPoints - 5500) / 1000
+        }
     }
 }
 

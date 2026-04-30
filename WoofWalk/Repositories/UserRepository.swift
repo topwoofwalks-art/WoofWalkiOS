@@ -76,75 +76,22 @@ class UserRepository: ObservableObject {
     // been migrated to call it directly. The legacy addDogProfile/
     // updateDogProfile/removeDogProfile shims were deleted in Stage 3.
 
+    // MARK: - Gamification writes (server-authority stubs)
+    // All counter increments, badge detection, level recompute, and
+    // streak updates are owned by Cloud Functions (onWalkComplete,
+    // contributionTriggers, reconcileStats). Client-side calls here
+    // are no-ops so existing call sites compile without changes.
+
     func awardPawPoints(points: Int, reason: String) async throws {
-        guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
-        }
-
-        try await db.collection("users").document(userId).updateData([
-            "pawPoints": FieldValue.increment(Int64(points))
-        ])
-
-        try await checkAndUpdateLevel(userId: userId)
-        print("Awarded \(points) paw points for: \(reason)")
+        print("[gamification] awardPawPoints stub: \(points)pt for \(reason) — server CF owns this")
     }
 
     func updateWalkStats(distanceMeters: Double) async throws {
-        guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
-        }
-
-        try await db.collection("users").document(userId).updateData([
-            "totalWalks": FieldValue.increment(Int64(1)),
-            "totalDistanceMeters": FieldValue.increment(Int64(distanceMeters))
-        ])
-    }
-
-    private func checkAndUpdateLevel(userId: String) async throws {
-        let userDoc = try await db.collection("users").document(userId).getDocument()
-        let user = try userDoc.data(as: UserProfile.self)
-        let newLevel = calculateLevel(pawPoints: user.pawPoints)
-
-        if newLevel > user.level {
-            try await db.collection("users").document(userId).updateData([
-                "level": newLevel
-            ])
-            print("User leveled up to \(newLevel)")
-        }
-    }
-
-    private func calculateLevel(pawPoints: Int) -> Int {
-        switch pawPoints {
-        case ..<100: return 1
-        case 100..<300: return 2
-        case 300..<600: return 3
-        case 600..<1000: return 4
-        case 1000..<1500: return 5
-        case 1500..<2100: return 6
-        case 2100..<2800: return 7
-        case 2800..<3600: return 8
-        case 3600..<4500: return 9
-        case 4500..<5500: return 10
-        default: return 10 + (pawPoints - 5500) / 1000
-        }
+        print("[gamification] updateWalkStats stub: \(distanceMeters)m — server CF owns this")
     }
 
     func awardBadge(badgeId: String) async throws {
-        guard let userId = auth.currentUser?.uid else {
-            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
-        }
-
-        let userDoc = try await db.collection("users").document(userId).getDocument()
-        let user = try userDoc.data(as: UserProfile.self)
-
-        if user.badges.contains(badgeId) {
-            print("Badge already awarded: \(badgeId)")
-            return
-        }
-
-        try await db.collection("users").document(userId).updateData([
-            "badges": FieldValue.arrayUnion([badgeId])
-        ])
+        print("[gamification] awardBadge stub: \(badgeId) — server CF owns this")
     }
 
     func getLeaderboard(regionCode: String? = nil, limit: Int = 100) async throws -> [UserProfile] {
@@ -479,18 +426,23 @@ extension Array {
     }
 }
 
+/// Wire-format badge IDs — must match `BADGES[].id` in
+/// `functions/src/gamification/badges.ts`.
 enum BadgeIds {
-    static let firstWalk = "first_walk"
-    static let walk5km = "walk_5km"
-    static let walk10km = "walk_10km"
-    static let walkMarathon = "walk_marathon"
-    static let walk100Total = "walk_100_total"
-    static let firstPoi = "first_poi"
-    static let poiCreator10 = "poi_creator_10"
-    static let poiCreator50 = "poi_creator_50"
-    static let helpfulVoter = "helpful_voter"
-    static let earlyAdopter = "early_adopter"
-    static let communityHero = "community_hero"
+    static let firstWalk      = "first_walk"
+    static let walk5km        = "walk_5km"
+    static let walk10km       = "walk_10km"
+    static let walkMarathon   = "walk_marathon"
+    static let walk100Total   = "walk_100_total"
+    static let earlyBird      = "early_bird"
+    static let nightOwl       = "night_owl"
+    static let explorer       = "explorer"
+    static let firstPoi       = "first_poi"
+    static let contributor    = "contributor"
+    static let poiCreator50   = "poi_creator_50"
+    static let photoMaster    = "photo_master"
+    static let guardian       = "guardian"
+    static let social         = "social"
 }
 
 enum PointRewards {
