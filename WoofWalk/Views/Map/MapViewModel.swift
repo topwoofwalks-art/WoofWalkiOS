@@ -467,12 +467,15 @@ class MapViewModel: ObservableObject {
         cameraMode = .free
         followAutoReturnTimer?.invalidate()
         followAutoReturnTimer = Timer.scheduledTimer(withTimeInterval: followAutoReturnDelay, repeats: false) { [weak self] _ in
+            // Rebind weak-self before hopping to the MainActor — Swift 5.7+
+            // concurrency checker rejects re-capturing `self` from a
+            // non-isolated Timer closure inside the Task body.
+            guard let strongSelf = self else { return }
             Task { @MainActor in
-                guard let self else { return }
-                if self.cameraMode == .free {
-                    self.cameraMode = .follow
+                if strongSelf.cameraMode == .free {
+                    strongSelf.cameraMode = .follow
                 }
-                self.followAutoReturnTimer = nil
+                strongSelf.followAutoReturnTimer = nil
             }
         }
     }
