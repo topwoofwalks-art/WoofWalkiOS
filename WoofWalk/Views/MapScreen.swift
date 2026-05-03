@@ -104,6 +104,23 @@ struct MapScreen: View {
                     Spacer()
                 }
             }
+
+            // RAG GPS health pill — top-right while a walk is active.
+            // Tap opens the diagnostic sheet (last fix age, accuracy, pipeline counters).
+            if walkTrackingViewModel.isWalkActive {
+                VStack {
+                    HStack {
+                        Spacer()
+                        GPSStatusIndicator(
+                            walkTracking: WalkTrackingService.shared,
+                            motionService: MotionActivityService.shared
+                        )
+                        .padding(.top, 60)
+                        .padding(.trailing, 12)
+                    }
+                    Spacer()
+                }
+            }
         }
         .modifier(MapSheetModifiers(
             showSearchBar: $showSearchBar,

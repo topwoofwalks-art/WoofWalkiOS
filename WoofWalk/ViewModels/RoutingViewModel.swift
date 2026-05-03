@@ -20,6 +20,30 @@ enum RouteComplexity {
     case outAndBack
 }
 
+/// Two ways to walk to a tapped destination — mirrors Android's
+/// `RoutingViewModel.RoutingMode`.
+///
+/// - `snapToRoads`: OSRM foot routing — follows footpaths, paths,
+///   bridleways, pedestrianised streets. Returns a polyline + steps.
+///   Default for built-up areas.
+/// - `crowFlies`: Straight haversine line from origin to destination.
+///   No turn-by-turn, no road-snapping. Right for fields, beaches, open
+///   countryside where path data doesn't exist.
+enum RoutingMode {
+    case snapToRoads
+    case crowFlies
+}
+
+/// Result of snapping a tap to the nearest walkable surface.
+/// - `point`: the snapped coordinate (or original tap on failure)
+/// - `distanceMeters`: how far the tap was moved
+/// - `failed`: true when both Overpass and OSRM Nearest came up empty
+struct SnapResult {
+    let point: CLLocationCoordinate2D
+    let distanceMeters: Double
+    let failed: Bool
+}
+
 // MARK: - OSRM API Models
 struct OsrmRouteResponse: Codable {
     let code: String
@@ -68,6 +92,12 @@ struct RoutePreview {
     let routeType: RouteType
     let pathPreference: PathPreference
     let poiList: [String]
+    /// How far the destination was nudged to land on a walkable path. Surface
+    /// in the UI when > 50 m. Mirrors Android.
+    let snapDistanceMeters: Double
+    /// True when both Overpass and OSRM Nearest failed — original tap kept.
+    /// UI should auto-suggest crow-flies in this case.
+    let snapFailed: Bool
 
     init(destination: CLLocationCoordinate2D,
          destinationName: String,
@@ -80,7 +110,9 @@ struct RoutePreview {
          recalculatingMessage: String? = nil,
          routeType: RouteType = .pointToPoint,
          pathPreference: PathPreference = .footpathPriority,
-         poiList: [String] = []) {
+         poiList: [String] = [],
+         snapDistanceMeters: Double = 0.0,
+         snapFailed: Bool = false) {
         self.destination = destination
         self.destinationName = destinationName
         self.straightLineDistance = straightLineDistance
@@ -93,6 +125,8 @@ struct RoutePreview {
         self.routeType = routeType
         self.pathPreference = pathPreference
         self.poiList = poiList
+        self.snapDistanceMeters = snapDistanceMeters
+        self.snapFailed = snapFailed
     }
 }
 
@@ -150,6 +184,35 @@ class RoutingViewModel: ObservableObject {
     private var debounceTask: Task<Void, Never>?
     private let routeCache = RouteCache()
 
+    /// Personalised median walking speed in km/h, derived from the
+    /// walker's history (active-time-only — see
+    /// `WalkRepository.getMedianActiveWalkSpeedKmh()`). Default 4.5 km/h
+    /// (~1.25 m/s) matches the average UK adult walking pace and keeps
+    /// "Walk Here" ETAs honest until we have enough history. Mirrors
+    /// Android `RoutingViewModel.setWalkingSpeedKmh` + the 4.5 km/h
+    /// fallback used by `calculateETA`.
+    @Published private(set) var walkingSpeedKmh: Double = 4.5
+
+    func setWalkingSpeedKmh(_ kmh: Double) {
+        // Clamp to a sane band so a corrupt history doesn't return ETAs of
+        // 9 hours for a 1 km walk (or 30 seconds for the same).
+        let clamped = max(2.0, min(8.0, kmh))
+        if clamped != walkingSpeedKmh {
+            walkingSpeedKmh = clamped
+            print("[RoutingVM] walkingSpeedKmh updated to \(String(format: "%.2f", clamped)) km/h")
+        }
+    }
+
+    /// Active routing mode for the next/current Walk Here preview. The OSRM
+    /// fetch always runs (so toggling between modes is instant — no refetch),
+    /// but the UI and the eventual walk start branch on this value. Mirrors
+    /// Android `RoutingViewModel.routingMode`.
+    @Published var routingMode: RoutingMode = .snapToRoads
+
+    func setRoutingMode(_ mode: RoutingMode) {
+        routingMode = mode
+    }
+
     // MARK: - Public API
     func onMapTap(origin: CLLocationCoordinate2D, destination: CLLocationCoordinate2D, destinationName: String = "Selected Location") {
         print("[RoutingVM] onMapTap: origin=\(origin), destination=\(destination)")
@@ -160,24 +223,27 @@ class RoutingViewModel: ObservableObject {
 
             guard !Task.isCancelled else { return }
 
-            do {
-                let straightLineDistance = calculateHaversineDistance(from: origin, to: destination)
-                print("[RoutingVM] Calculated straight-line distance: \(Int(straightLineDistance))m")
+            // Snap destination to nearest walkable surface. Result includes
+            // how far we moved + whether snap failed entirely so the UI can
+            // surface it (mirrors Android).
+            let snap = await snapToNearestWalkable(location: destination)
+            let snappedDestination = snap.point
 
-                let initialPreview = RoutePreview(
-                    destination: destination,
-                    destinationName: destinationName,
-                    straightLineDistance: straightLineDistance,
-                    isLoading: true
-                )
+            let straightLineDistance = calculateHaversineDistance(from: origin, to: snappedDestination)
+            print("[RoutingVM] straight-line=\(Int(straightLineDistance))m, snap moved \(Int(snap.distanceMeters))m, failed=\(snap.failed)")
 
-                routingState = .previewReady(initialPreview)
+            let initialPreview = RoutePreview(
+                destination: snappedDestination,
+                destinationName: destinationName,
+                straightLineDistance: straightLineDistance,
+                isLoading: true,
+                snapDistanceMeters: snap.distanceMeters,
+                snapFailed: snap.failed
+            )
 
-                await fetchDirections(origin: origin, destination: destination, initialPreview: initialPreview)
-            } catch {
-                print("[RoutingVM] Error creating route preview: \(error)")
-                routingState = .error(error.localizedDescription)
-            }
+            routingState = .previewReady(initialPreview)
+
+            await fetchDirections(origin: origin, destination: snappedDestination, initialPreview: initialPreview)
         }
     }
 
@@ -270,14 +336,14 @@ class RoutingViewModel: ObservableObject {
 
                 smoothUturns(points: &waypoints)
 
-                // Snap all waypoints to nearest walkable road
+                // Snap all waypoints to nearest walkable road. On snap-fail
+                // we keep the original waypoint so the loop still has the
+                // intended geometry — better a slightly off-path waypoint
+                // than dropping a leg entirely.
                 var snappedWaypoints = [CLLocationCoordinate2D]()
                 for wp in waypoints {
-                    if let snapped = await snapToNearestWalkable(location: wp) {
-                        snappedWaypoints.append(snapped)
-                    } else {
-                        snappedWaypoints.append(wp)
-                    }
+                    let snap = await snapToNearestWalkable(location: wp)
+                    snappedWaypoints.append(snap.failed ? wp : snap.point)
                 }
                 waypoints = snappedWaypoints
                 print("[RoutingVM] Snapped \(snappedWaypoints.count) waypoints to walkable roads")
@@ -990,7 +1056,11 @@ class RoutingViewModel: ObservableObject {
     /// Snap a location to the nearest footpath, path, or bridleway using Overpass API.
     /// Prefers off-road walking routes over roads. Falls back to OSRM Nearest (foot profile)
     /// if no path/footway/bridleway is found within search radius.
-    func snapToNearestWalkable(location: CLLocationCoordinate2D) async -> CLLocationCoordinate2D? {
+    /// Returns a `SnapResult` describing where the tap landed after
+    /// snapping. `failed` is set when both Overpass and OSRM Nearest came
+    /// up empty — the original tap is kept and the UI should suggest
+    /// crow-flies. Mirrors Android `RoutingViewModel.snapToNearestWalkable`.
+    func snapToNearestWalkable(location: CLLocationCoordinate2D) async -> SnapResult {
         let searchRadius = 200  // metres
 
         // First try: find nearest footpath/path/bridleway via Overpass
@@ -1045,7 +1115,7 @@ class RoutingViewModel: ObservableObject {
                 if let snap = bestSnap, bestDistance < Double(searchRadius) {
                     let pathType = response.elements?.first?.tags?["highway"] ?? "path"
                     print("[RoutingVM] Snapped to \(pathType): \(Int(bestDistance))m away")
-                    return snap
+                    return SnapResult(point: snap, distanceMeters: bestDistance, failed: false)
                 }
             }
         } catch {
@@ -1058,20 +1128,25 @@ class RoutingViewModel: ObservableObject {
             var urlComponents = URLComponents(string: "\(osrmBaseURL)/nearest/v1/foot/\(coordinates)")!
             urlComponents.queryItems = [URLQueryItem(name: "number", value: "1")]
 
-            guard let url = urlComponents.url else { return nil }
+            guard let url = urlComponents.url else {
+                return SnapResult(point: location, distanceMeters: 0.0, failed: true)
+            }
 
             let (data, _) = try await URLSession.shared.data(from: url)
             let response = try JSONDecoder().decode(OsrmNearestResponse.self, from: data)
 
             if response.code == "Ok", let waypoint = response.waypoints?.first {
                 let snapped = CLLocationCoordinate2D(latitude: waypoint.location[1], longitude: waypoint.location[0])
-                print("[RoutingVM] Snapped to OSRM nearest (fallback): \(waypoint.name) (\(Int(calculateHaversineDistance(from: location, to: snapped)))m away)")
-                return snapped
+                let snapDistance = calculateHaversineDistance(from: location, to: snapped)
+                print("[RoutingVM] Snapped to OSRM nearest (fallback): \(waypoint.name) (\(Int(snapDistance))m away)")
+                return SnapResult(point: snapped, distanceMeters: snapDistance, failed: false)
             }
-            return nil
+            // Both Overpass + OSRM found nothing. Keep the user's tap; UI
+            // will nudge them toward crow-flies.
+            return SnapResult(point: location, distanceMeters: 0.0, failed: true)
         } catch {
             print("[RoutingVM] Snap to walkable failed: \(error)")
-            return nil
+            return SnapResult(point: location, distanceMeters: 0.0, failed: true)
         }
     }
 
@@ -1207,8 +1282,13 @@ class RoutingViewModel: ObservableObject {
     }
 
     private func calculateETA(_ distanceMeters: Double) -> String {
-        let walkingSpeedMps = 1.4
-        let durationSeconds = Int(distanceMeters / walkingSpeedMps)
+        // Use the personalised walking speed in km/h (default 4.5 km/h ≈
+        // 1.25 m/s) instead of the old hardcoded 1.4 m/s (5 km/h). The
+        // old value over-promised by ~12% on most walkers' actual pace
+        // and made "Walk Here" ETAs feel optimistic. Mirrors Android
+        // `RoutingViewModel.calculateETA` after the 1.25 m/s update.
+        let walkingSpeedMps = walkingSpeedKmh / 3.6
+        let durationSeconds = Int(distanceMeters / max(walkingSpeedMps, 0.1))
 
         if durationSeconds < 60 {
             return "< 1 min"
@@ -1234,7 +1314,9 @@ class RoutingViewModel: ObservableObject {
             isLoading: false,
             routeType: preview.routeType,
             pathPreference: preview.pathPreference,
-            poiList: preview.poiList
+            poiList: preview.poiList,
+            snapDistanceMeters: preview.snapDistanceMeters,
+            snapFailed: preview.snapFailed
         ))
     }
 }

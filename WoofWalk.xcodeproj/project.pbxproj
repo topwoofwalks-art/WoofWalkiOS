@@ -466,6 +466,13 @@
 		'B2000001000000000000008' = {isa = PBXBuildFile; fileRef = B2000001000000000000108; };
 		'B2000001000000000000009' = {isa = PBXBuildFile; fileRef = B2000001000000000000109; };
 		'B2000001000000000000010' = {isa = PBXBuildFile; fileRef = B2000001000000000000110; };
+		'A1000001000000000001321' = {isa = PBXBuildFile; fileRef = A1000001000000000001320; };
+		'A1000001000000000001323' = {isa = PBXBuildFile; fileRef = A1000001000000000001322; };
+		'A1000001000000000001325' = {isa = PBXBuildFile; fileRef = A1000001000000000001324; };
+		'A1000001000000000001327' = {isa = PBXBuildFile; fileRef = A1000001000000000001326; };
+		'A1000001000000000001329' = {isa = PBXBuildFile; fileRef = A1000001000000000001328; };
+		'A1000001000000000001331' = {isa = PBXBuildFile; fileRef = A1000001000000000001330; };
+		'A1000001000000000001333' = {isa = PBXBuildFile; fileRef = A1000001000000000001332; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -932,6 +939,13 @@
 		'B2000001000000000000109' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
 		'B2000001000000000000110' = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E9654B08AF39768BB87A78A4 /* BusinessRanker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessRanker.swift; path = WoofWalk/Ranking/BusinessRanker.swift; sourceTree = SOURCE_ROOT; };
+		'A1000001000000000001320' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSStatusIndicator.swift; sourceTree = "<group>"; };
+		'A1000001000000000001322' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkStatsDisplaySettingsView.swift; sourceTree = "<group>"; };
+		'A1000001000000000001324' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyWatch.swift; sourceTree = "<group>"; };
+		'A1000001000000000001326' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyWatchRepository.swift; sourceTree = "<group>"; };
+		'A1000001000000000001328' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMeSheet.swift; sourceTree = "<group>"; };
+		'A1000001000000000001330' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMeSendingSplash.swift; sourceTree = "<group>"; };
+		'A1000001000000000001332' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInPromptOverlay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1093,6 +1107,7 @@
 				A1000001000000000000244,
 				A1000001000000000000246,
 				A1000001000000000001156,
+				A1000001000000000001324,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1198,6 +1213,7 @@
 				A1000001000000000000272,
 				A1000001000000000001178,
 				A1000001000000000001180,
+				A1000001000000000001326,
 			);
 			path = Repositories;
 			sourceTree = "<group>";
@@ -1705,6 +1721,7 @@
 				A1000001000000000000900,
 				A1000001000000000000820,
 				A1000001000000000000956,
+				A1000001000000000001322,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1764,6 +1781,10 @@
 				A1000001000000000000952,
 				A1000001000000000000996,
 				A1000001000000000000998,
+				A1000001000000000001320,
+				A1000001000000000001328,
+				A1000001000000000001330,
+				A1000001000000000001332,
 			);
 			path = Walk;
 			sourceTree = "<group>";
@@ -2427,6 +2448,13 @@
 				A1000001000000000001310,
 				A1000001000000000001312,
 				A1000001000000000001314,
+				A1000001000000000001321,
+				A1000001000000000001323,
+				A1000001000000000001325,
+				A1000001000000000001327,
+				A1000001000000000001329,
+				A1000001000000000001331,
+				A1000001000000000001333,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

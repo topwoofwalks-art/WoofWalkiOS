@@ -4,6 +4,7 @@ struct MainTabView: View {
     @StateObject private var navigator = AppNavigator.shared
     @StateObject private var badgeService = BadgeAwardingService.shared
     @StateObject private var walkTracking = WalkTrackingService.shared
+    @StateObject private var motionService = MotionActivityService.shared
     @StateObject private var updateChecker = AppUpdateChecker.shared
 
     var body: some View {
@@ -26,7 +27,10 @@ struct MainTabView: View {
                     distance: walkTracking.trackingState.distanceMeters,
                     duration: TimeInterval(walkTracking.trackingState.durationSeconds),
                     isPaused: walkTracking.trackingState.isPaused,
-                    onTap: { navigator.selectedTab = .map }
+                    onTap: { navigator.selectedTab = .map },
+                    humanSteps: motionService.motionAuthorisationStatus == .authorized
+                        ? motionService.stepCount
+                        : nil
                 )
             }
 

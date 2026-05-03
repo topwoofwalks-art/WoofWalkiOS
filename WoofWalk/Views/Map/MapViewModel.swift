@@ -45,6 +45,16 @@ class MapViewModel: ObservableObject {
     private var walkTimer: Timer?
     private let poiService = PoiServiceRepository.shared
 
+    /// Idle timer that re-engages `.follow` after the user stops gesturing
+    /// during an active walk. Mirrors Android's "auto-return to FOLLOW
+    /// after 6 s of no gesture" UX added in v7.5.x — keeps the camera on
+    /// the walker when they tap-to-pan to inspect something nearby.
+    ///
+    /// Only armed when a walk is active; disarmed otherwise so map-screen
+    /// interactions outside a walk don't yank the camera around.
+    private var followAutoReturnTimer: Timer?
+    private let followAutoReturnDelay: TimeInterval = 6.0
+
     enum CameraMode {
         case free
         case follow
@@ -443,6 +453,35 @@ class MapViewModel: ObservableObject {
         case .tilt:
             cameraMode = .follow
         }
+        // Explicit mode changes via the FAB clear any pending auto-return
+        // — the user just told us what they want.
+        followAutoReturnTimer?.invalidate()
+        followAutoReturnTimer = nil
+    }
+
+    /// Called from the map gesture handler when the user pans / zooms
+    /// during an active walk. Drops the camera into `.free` and arms a
+    /// 6-s timer that re-engages `.follow` if no further gesture lands.
+    /// Mirrors Android's auto-return-to-FOLLOW behaviour during walks.
+    func handleUserMapGestureDuringWalk() {
+        cameraMode = .free
+        followAutoReturnTimer?.invalidate()
+        followAutoReturnTimer = Timer.scheduledTimer(withTimeInterval: followAutoReturnDelay, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                if self.cameraMode == .free {
+                    self.cameraMode = .follow
+                }
+                self.followAutoReturnTimer = nil
+            }
+        }
+    }
+
+    /// Cancel any pending auto-return — call when the walk ends or the
+    /// MapView is detached.
+    func cancelFollowAutoReturn() {
+        followAutoReturnTimer?.invalidate()
+        followAutoReturnTimer = nil
     }
 
     func searchLocation(_ query: String) {

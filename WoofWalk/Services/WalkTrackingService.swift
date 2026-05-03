@@ -19,7 +19,20 @@ struct WalkTrackingState {
     var caloriesBurned: Int = 0
     var currentBearing: CLLocationDirection = 0
     var elevationGainMeters: Double = 0.0
+    /// Stable session ID for the active walk. Used as the SharedPrefs /
+    /// UserDefaults key for any per-walk persistence (Watch Me token,
+    /// stationary-confirm timer, etc) so a foreground app re-launch
+    /// mid-walk can rehydrate state without losing context.
+    var sessionId: String?
 }
+
+/// Maximum age (seconds) of a `CLLocation` we'll accept into the GPS
+/// pipeline. Mirrors Android `MAX_FIX_AGE_NANOS = 30_000_000_000L` —
+/// stale fixes cause distance creep when the OS hands back a cached
+/// position from before the walk started. CoreLocation usually delivers
+/// fresh fixes, but iOS WILL surface stale ones during cold-warmup of
+/// the GPS chip or after a `pausesLocationUpdatesAutomatically` resume.
+private let maxFixAgeSeconds: TimeInterval = 30.0
 
 @MainActor
 class WalkTrackingService: ObservableObject {
@@ -46,6 +59,74 @@ class WalkTrackingService: ObservableObject {
     /// Whether the current pause was triggered automatically by motion detection.
     private var isAutoPaused: Bool = false
 
+    /// Wall-clock timestamp the current pause began. Used by the resume watcher
+    /// to compare against `motionService.lastStepIncrementAt`.
+    private var pauseStartedAt: Date?
+
+    /// Independent timer that polls pedometer state every 5 s while paused.
+    /// Triggers auto-resume if a step lands AFTER `pauseStartedAt`. Critical
+    /// for screen-off / Doze cases where GPS fixes stop arriving.
+    private var resumeWatcherTimer: Timer?
+
+    // MARK: - GPS Pipeline Counters
+
+    /// Total location updates received from CoreLocation.
+    @Published private(set) var pipelineFixesReceived: Int = 0
+    /// Fixes rejected by `GPSFilterPipeline` (bad accuracy / glitch / time gate).
+    @Published private(set) var pipelineFixesRejectedFilter: Int = 0
+    /// Fixes rejected by the step-validation gate (GPS moved > 5 m but no steps).
+    @Published private(set) var pipelineFixesRejectedStepGate: Int = 0
+    /// Fixes rejected by the stationary-drift guard.
+    @Published private(set) var pipelineFixesRejectedStationaryGuard: Int = 0
+    /// Fixes that survived all gates and updated tracking state.
+    @Published private(set) var pipelineFixesAccepted: Int = 0
+    /// Wall-clock timestamp of the most recent accepted fix (for RAG indicator age).
+    @Published private(set) var lastAcceptedFixAt: Date?
+
+    /// Stationary anchor used by the drift-guard. Set once we have a confident
+    /// "user is standing still" signal; cleared as soon as motion resumes.
+    private var stationaryAnchor: CLLocationCoordinate2D?
+
+    // MARK: - Watch Me / SafetyWatch State
+
+    /// Active safety watch for the current walk, or `nil` if Watch Me is off.
+    @Published private(set) var safetyWatch: SafetyWatch?
+
+    /// True while the `startSafetyWatch` CF round-trip is in flight.
+    @Published private(set) var isStartingSafetyWatch: Bool = false
+
+    /// One-shot signal: walker just successfully started Watch Me. UI
+    /// uses this to mount `WatchMeSendingSplash`. Cleared via
+    /// `consumeSafetyShareEvent()`.
+    @Published var safetyShareEvent: SafetyShareEvent?
+
+    /// One-shot error banner for failed `startSafetyWatch` CF calls. The
+    /// share intent has already fired by the time we know the CF failed,
+    /// so the walker needs explicit feedback that their link won't work.
+    @Published var safetyWatchStartError: String?
+
+    /// Per-action in-flight flag exposed for UI debounces. Buttons that
+    /// trigger CF round-trips (I'M OK, PANIC, Arrived, Cancel) read this
+    /// to disable themselves while a call is in flight.
+    @Published private(set) var safetyActionInFlight: Bool = false
+
+    /// One-shot toast text for failed safety actions. UI consumes via
+    /// `consumeSafetyActionError()`.
+    @Published var safetyActionError: String?
+
+    /// Show the full-screen check-in prompt. Driven by the stationary
+    /// watcher: if the walker hasn't moved >15 m for 5 minutes during an
+    /// active SafetyWatch, this flips on with audio + haptic.
+    @Published var checkInPromptVisible: Bool = false
+
+    private let safetyWatchRepository = SafetyWatchRepository.shared
+    private var lastSafetyWatchPushTime: Date?
+
+    /// Last filtered GPS fix that moved >15 m from the previous accepted
+    /// position. Drives the 5-min stationary check-in trigger.
+    private var lastSignificantMovementAt: Date?
+    private var lastSignificantLat: Double = .nan
+    private var lastSignificantLng: Double = .nan
 
     private init(locationService: LocationService = .shared, motionService: MotionActivityService = .shared) {
         self.locationService = locationService
@@ -63,16 +144,31 @@ class WalkTrackingService: ObservableObject {
     }
 
     private func setupMotionSubscription() {
-        // Watch for stationary → auto-pause
+        // Watch for stationary → auto-pause + drift-guard anchor
         motionService.$isStationary
             .removeDuplicates()
             .sink { [weak self] stationary in
                 guard let self else { return }
                 if stationary {
+                    // Anchor the drift-guard at the last accepted GPS fix
+                    if let last = self.lastLocation {
+                        self.stationaryAnchor = last.coordinate
+                    }
                     self.handleMotionStationary()
                 } else {
+                    self.stationaryAnchor = nil
                     self.handleMotionResumed()
                 }
+            }
+            .store(in: &cancellables)
+
+        // Watch for pedometer ticks while paused → auto-resume.
+        // Combine path: any new step-increment timestamp triggers a re-eval.
+        motionService.$lastStepIncrementAt
+            .compactMap { $0 }
+            .sink { [weak self] stepAt in
+                guard let self else { return }
+                self.evaluatePedometerResume(stepAt: stepAt)
             }
             .store(in: &cancellables)
     }
@@ -84,24 +180,108 @@ class WalkTrackingService: ObservableObject {
 
         isAutoPaused = true
         trackingState.isPaused = true
+        pauseStartedAt = Date()
+        // Persist the pause-start timestamp so an app re-launch during the
+        // 170-s confirmation window doesn't lose the timer. Mirrors
+        // Android `WalkTrackingService.lastStationaryCheckTime` persistence.
+        if let sid = trackingState.sessionId {
+            UserDefaults.standard.set(pauseStartedAt!.timeIntervalSince1970,
+                                      forKey: "walkTracking.\(sid).pauseStartedAt")
+        }
         timer?.invalidate()
+        startResumeWatcher()
         showNotification(title: "Walk Auto-Paused", body: "You seem to be standing still")
         print("[AutoPause] Motion-based auto-pause triggered (stationary for \(motionService.stationaryThreshold)s)")
     }
 
     private func handleMotionResumed() {
+        // Activity detector said "moving again" — that alone is enough to resume.
+        triggerResume(reason: "activity-detector")
+    }
+
+    /// Broadened resume gate: resume on ANY of
+    ///   - speed > 0.5 m/s
+    ///   - drift > 10 m from stationary anchor
+    ///   - pedometer ticked since pause began
+    /// Mirrors Android's broadened `evaluateResume` logic.
+    private func evaluateBroadenedResume(currentSpeed: Double, currentCoord: CLLocationCoordinate2D) {
         guard trackingState.isTracking, trackingState.isPaused, isAutoPaused else { return }
 
+        // 1. Speed gate
+        if currentSpeed > 0.5 {
+            triggerResume(reason: "speed>0.5 (\(String(format: "%.2f", currentSpeed)) m/s)")
+            return
+        }
+
+        // 2. Drift-from-anchor gate
+        if let anchor = stationaryAnchor {
+            let drift = GPSFilterPipeline.haversineDistance(
+                lat1: anchor.latitude, lng1: anchor.longitude,
+                lat2: currentCoord.latitude, lng2: currentCoord.longitude
+            )
+            if drift > 10.0 {
+                triggerResume(reason: "drift \(String(format: "%.1f", drift))m > 10m")
+                return
+            }
+        }
+
+        // 3. Pedometer-since-pause gate
+        if let pauseAt = pauseStartedAt,
+           let stepAt = motionService.lastStepIncrementAt,
+           stepAt > pauseAt {
+            triggerResume(reason: "pedometer-tick after pause")
+            return
+        }
+    }
+
+    /// Called by the resume watcher (5 s timer) and the pedometer Combine sink.
+    private func evaluatePedometerResume(stepAt: Date) {
+        guard trackingState.isTracking, trackingState.isPaused, isAutoPaused else { return }
+        guard let pauseAt = pauseStartedAt else { return }
+        if stepAt > pauseAt {
+            triggerResume(reason: "pedometer-tick (poll)")
+        }
+    }
+
+    private func triggerResume(reason: String) {
+        guard trackingState.isTracking, trackingState.isPaused, isAutoPaused else { return }
         isAutoPaused = false
         trackingState.isPaused = false
+        pauseStartedAt = nil
+        if let sid = trackingState.sessionId {
+            UserDefaults.standard.removeObject(forKey: "walkTracking.\(sid).pauseStartedAt")
+        }
+        stopResumeWatcher()
         startTimer()
         showNotification(title: "Walk Resumed", body: "Movement detected, tracking resumed")
-        print("[AutoPause] Motion-based auto-resume triggered")
+        print("[AutoPause] Auto-resume triggered (\(reason))")
+    }
+
+    /// 5-second poll timer that fires while paused. Independent of GPS / activity
+    /// updates so it survives screen-off + Doze-like power states where neither
+    /// signal is delivered.
+    private func startResumeWatcher() {
+        resumeWatcherTimer?.invalidate()
+        resumeWatcherTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                guard let pauseAt = self.pauseStartedAt,
+                      let stepAt = self.motionService.lastStepIncrementAt else { return }
+                if stepAt > pauseAt {
+                    self.triggerResume(reason: "pedometer-tick (5s poll)")
+                }
+            }
+        }
+    }
+
+    private func stopResumeWatcher() {
+        resumeWatcherTimer?.invalidate()
+        resumeWatcherTimer = nil
     }
 
     // MARK: - Tracking Control
 
-    func startTracking() {
+    func startTracking(sessionId: String? = nil) {
         guard !trackingState.isTracking else {
             print("Already tracking")
             return
@@ -119,9 +299,33 @@ class WalkTrackingService: ObservableObject {
         lastLocation = nil
         lastLocationTime = nil
 
+        let sid = sessionId ?? UUID().uuidString
+
         filterPipeline.start()
-        motionService.start()
+        motionService.start(sessionId: sid)
         isAutoPaused = false
+        pauseStartedAt = nil
+        stationaryAnchor = nil
+        stopResumeWatcher()
+        lastSignificantMovementAt = nil
+        lastSignificantLat = .nan
+        lastSignificantLng = .nan
+
+        // Restore any persisted stationary-confirm timer so an app
+        // re-launch mid-walk doesn't reset the auto-pause clock.
+        // Mirrors Android `lastStationaryCheckTime` SharedPrefs persistence.
+        let persistedKey = "walkTracking.\(sid).pauseStartedAt"
+        if let raw = UserDefaults.standard.object(forKey: persistedKey) as? Double {
+            pauseStartedAt = Date(timeIntervalSince1970: raw)
+        }
+
+        // Reset GPS pipeline counters
+        pipelineFixesReceived = 0
+        pipelineFixesRejectedFilter = 0
+        pipelineFixesRejectedStepGate = 0
+        pipelineFixesRejectedStationaryGuard = 0
+        pipelineFixesAccepted = 0
+        lastAcceptedFixAt = nil
 
         locationService.startUpdatingLocation(
             accuracy: kCLLocationAccuracyBest,
@@ -138,7 +342,8 @@ class WalkTrackingService: ObservableObject {
             distanceMeters: 0,
             durationSeconds: 0,
             currentPaceKmh: 0,
-            polyline: []
+            polyline: [],
+            sessionId: sid
         )
 
         requestNotificationPermission()
@@ -149,6 +354,8 @@ class WalkTrackingService: ObservableObject {
 
         isAutoPaused = false  // Manual pause overrides auto-pause state
         trackingState.isPaused = true
+        pauseStartedAt = nil   // Manual pause does not arm the resume watcher
+        stopResumeWatcher()
         timer?.invalidate()
         showNotification(title: "Walk Paused", body: "Tap to resume tracking")
         print("Walk tracking paused")
@@ -159,6 +366,8 @@ class WalkTrackingService: ObservableObject {
 
         isAutoPaused = false
         trackingState.isPaused = false
+        pauseStartedAt = nil
+        stopResumeWatcher()
         startTimer()
         print("Walk tracking resumed")
     }
@@ -166,12 +375,25 @@ class WalkTrackingService: ObservableObject {
     func stopTracking() -> LocalWalkRecord? {
         print("Stopping walk tracking")
 
+        // Clear any persisted per-walk state before we drop sessionId.
+        if let sid = trackingState.sessionId {
+            UserDefaults.standard.removeObject(forKey: "walkTracking.\(sid).pauseStartedAt")
+        }
+
         locationService.stopUpdatingLocation()
         locationService.stopUpdatingHeading()
         motionService.stop()
         filterPipeline.reset()
         timer?.invalidate()
+        stopResumeWatcher()
         isAutoPaused = false
+        pauseStartedAt = nil
+        stationaryAnchor = nil
+        lastSignificantMovementAt = nil
+        lastSignificantLat = .nan
+        lastSignificantLng = .nan
+        safetyWatch = nil
+        checkInPromptVisible = false
 
         let endTime = Date()
         guard let start = startTime else { return nil }
@@ -233,7 +455,29 @@ class WalkTrackingService: ObservableObject {
     // MARK: - Location Update Handler
 
     private func handleLocationUpdate(_ update: LocationUpdate) {
-        guard trackingState.isTracking, !trackingState.isPaused else { return }
+        guard trackingState.isTracking else { return }
+
+        pipelineFixesReceived += 1
+
+        // Stale-fix gate (mirrors Android `MAX_FIX_AGE_NANOS = 30s`).
+        // CoreLocation can hand back a cached fix from before the walk
+        // started, especially during cold-warmup of the GPS chip or after
+        // the OS resumed from pausesLocationUpdatesAutomatically. Reject
+        // anything older than 30 s to stop those phantom early fixes from
+        // teleporting our anchor across town.
+        let fixAge = Date().timeIntervalSince(update.timestamp)
+        if fixAge > maxFixAgeSeconds {
+            pipelineFixesRejectedFilter += 1
+            print("[GPSGuard] Rejected stale fix: \(String(format: "%.1f", fixAge))s old (limit \(maxFixAgeSeconds)s)")
+            return
+        }
+
+        // While paused, we still want to evaluate the broadened resume gate so
+        // movement can wake the walk back up via GPS-speed or drift-from-anchor.
+        if trackingState.isPaused {
+            evaluateBroadenedResume(currentSpeed: update.speed, currentCoord: update.coordinate)
+            return
+        }
 
         let rawLocation = CLLocation(
             coordinate: update.coordinate,
@@ -246,16 +490,74 @@ class WalkTrackingService: ObservableObject {
         )
 
         // Run through permissive GPS filter pipeline (Kalman smoothing only, post-process after walk)
-        guard let filtered = filterPipeline.process(rawLocation) else { return }
+        guard let filtered = filterPipeline.process(rawLocation) else {
+            pipelineFixesRejectedFilter += 1
+            return
+        }
 
         let distanceFromLast = filterPipeline.lastAcceptedDistance
+
+        // Stationary-drift guard:
+        // If the motion service is confident the user is stationary AND we have
+        // an anchor coordinate, reject any new fix that's > 0.5 m from the anchor.
+        // This is pure GPS drift while standing still — accepting it would
+        // accumulate 15-25 m of phantom movement over a few minutes.
+        if motionService.isStationary, let anchor = stationaryAnchor {
+            let drift = GPSFilterPipeline.haversineDistance(
+                lat1: anchor.latitude, lng1: anchor.longitude,
+                lat2: filtered.coordinate.latitude, lng2: filtered.coordinate.longitude
+            )
+            if drift > 0.5 {
+                pipelineFixesRejectedStationaryGuard += 1
+                print("[GPSGuard] Rejected stationary drift: \(String(format: "%.2f", drift))m from anchor")
+                return
+            }
+        }
+
+        // Pedometer-primary step-validation gate (tightened to mirror
+        // Android `WalkTrackingService` line ~1145):
+        //
+        // If GPS reports > 0.5 m of movement AND >1 s has passed since the
+        // last accepted fix, query the pedometer for steps in the last
+        // 1.5 s. Zero steps + non-trivial GPS displacement = drift; reject.
+        // If the pedometer is unavailable (-1), we fall back to the existing
+        // motionService.isStationary anchor guard above and accept the fix.
+        let timeSinceLastAccept: TimeInterval = lastLocationTime.map { Date().timeIntervalSince($0) } ?? .infinity
+        if distanceFromLast > 0.5, timeSinceLastAccept > 1.0,
+           motionService.motionAuthorisationStatus == .authorized {
+            let capturedFiltered = filtered
+            let capturedUpdate = update
+            let capturedDistance = distanceFromLast
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let steps = await self.motionService.recentSteps(inLast: 1.5)
+                if steps == 0 {
+                    self.pipelineFixesRejectedStepGate += 1
+                    print("[GPSGuard] Rejected fix: \(String(format: "%.2f", capturedDistance))m moved but 0 steps in 1.5s")
+                    return
+                }
+                self.acceptFilteredLocation(
+                    filtered: capturedFiltered,
+                    update: capturedUpdate,
+                    distanceFromLast: capturedDistance
+                )
+            }
+            return
+        }
+
         acceptFilteredLocation(filtered: filtered, update: update, distanceFromLast: distanceFromLast)
     }
 
     /// Accepts a filtered GPS location and updates all tracking state.
     /// Called from handleLocationUpdate directly, or after async step-count validation.
     private func acceptFilteredLocation(filtered: CLLocation, update: LocationUpdate, distanceFromLast: Double) {
+        // Re-check tracking state — async step validation might re-enter after
+        // the user manually paused or stopped the walk.
+        guard trackingState.isTracking, !trackingState.isPaused else { return }
+
         let currentTime = Date()
+        pipelineFixesAccepted += 1
+        lastAcceptedFixAt = currentTime
         trackingState.gpsAccuracy = update.accuracy
         trackingState.gpsQuality = update.gpsQuality
         trackingState.currentSpeedMps = update.speed
@@ -327,6 +629,13 @@ class WalkTrackingService: ObservableObject {
             showGPSWarning()
         }
 
+        // SafetyWatch hooks: push location every 10 s + track significant
+        // movement so the 5-min stationary check-in trigger has an anchor.
+        updateSafetyWatchLocation(lat: filtered.coordinate.latitude,
+                                  lng: filtered.coordinate.longitude)
+        evaluateSignificantMovement(lat: filtered.coordinate.latitude,
+                                    lng: filtered.coordinate.longitude)
+
         print("Location: distance=\(totalDistanceMeters)m, pace=\(currentPace), speed=\(update.speed)m/s, GPS=\(update.gpsQuality)")
     }
 
@@ -394,6 +703,298 @@ class WalkTrackingService: ObservableObject {
             title: "Walk Saved",
             body: String(format: "%.2f km in %dh %dm", distanceKm, hours, minutes)
         )
+    }
+
+    // MARK: - Watch Me / SafetyWatch lifecycle
+
+    /// One-shot share event consumed by `WatchMeSendingSplash`. Mirrors
+    /// Android `SafetyShareEvent`.
+    struct SafetyShareEvent: Equatable {
+        let url: String
+        let shareText: String
+        let guardianPhones: [String]
+        let sendMethod: WatchSendMethod
+    }
+
+    /// Starts a Watch Me session for the active walk. Pre-generates the
+    /// watch token client-side and fires the share intent IMMEDIATELY,
+    /// in parallel with the CF call that creates the `/safety_watches`
+    /// doc. The previous flow waited for the full CF round-trip
+    /// (600-900 ms typical) before WhatsApp / SMS opened — felt sluggish
+    /// on every Watch Me start. The portal page polls for the doc and
+    /// shows "Setting up..." for the few hundred ms before the CF write
+    /// lands. Worst case a guardian taps the link while the doc is still
+    /// being created and sees the polling spinner for one extra cycle.
+    ///
+    /// Mirrors Android `WalkTrackingViewModel.startSafetyWatch`.
+    func startSafetyWatch(
+        walkerFirstName: String,
+        guardianNames: [String],
+        guardianPhones: [String],
+        guardianUids: [String],
+        walkerNote: String,
+        expectedReturnAt: Int64,
+        sendMethod: WatchSendMethod = .none
+    ) {
+        guard let sessionId = trackingState.sessionId else {
+            print("[SafetyWatch] Cannot start safety watch: no active walk")
+            return
+        }
+
+        // 32-char hex UUID — matches the CF's stored format
+        // (functions/src/notifications/watchMe.ts strips hyphens after
+        // generating). The CF accepts our token after a UUID-shape
+        // sanity check (`TOKEN_RE`).
+        let clientToken = UUID().uuidString
+            .replacingOccurrences(of: "-", with: "")
+            .lowercased()
+        let url = safetyWatchRepository.watchUrl(token: clientToken)
+        let shareText = buildSafetyShareText(
+            walkerFirstName: walkerFirstName,
+            walkerNote: walkerNote,
+            expectedReturnAt: expectedReturnAt,
+            url: url
+        )
+
+        // Fire share intent first — user perceives WhatsApp opening
+        // immediately rather than after the CF round-trip.
+        safetyShareEvent = SafetyShareEvent(
+            url: url,
+            shareText: shareText,
+            guardianPhones: guardianPhones,
+            sendMethod: sendMethod
+        )
+
+        Task { @MainActor in
+            isStartingSafetyWatch = true
+            do {
+                let watch = try await safetyWatchRepository.startWatch(
+                    sessionId: sessionId,
+                    walkerFirstName: walkerFirstName,
+                    walkerNote: walkerNote,
+                    guardianNames: guardianNames,
+                    guardianPhones: guardianPhones,
+                    guardianUids: guardianUids,
+                    expectedReturnAt: expectedReturnAt,
+                    clientToken: clientToken
+                )
+                safetyWatch = watch
+                print("[SafetyWatch] Started for session \(sessionId) (token=\(clientToken))")
+            } catch {
+                print("[SafetyWatch] Failed to start safety watch — share intent already fired with token=\(clientToken): \(error)")
+                // The share has already left the building; surface the
+                // error so the walker knows the link they sent won't
+                // resolve to a live watch.
+                safetyWatchStartError = "Couldn't set up Watch Me. Your guardian got the link but won't see live updates. Tap to retry."
+            }
+            isStartingSafetyWatch = false
+        }
+    }
+
+    /// Walker tapped the green I'M OK button.
+    func checkInSafety() {
+        guard let watch = safetyWatch else { return }
+        if safetyActionInFlight { return }  // debounce rapid-tap
+
+        // Optimistic — UI flips instantly, CF call runs in background.
+        let previous = watch
+        var updated = watch
+        updated.lastCheckInAt = Int64(Date().timeIntervalSince1970 * 1000)
+        updated.status = SafetyWatchStatus.active.rawValue
+        safetyWatch = updated
+        checkInPromptVisible = false
+        lastSignificantMovementAt = Date()
+        safetyActionInFlight = true
+
+        Task { @MainActor in
+            do {
+                try await safetyWatchRepository.recordCheckIn(watchId: watch.id)
+            } catch {
+                print("[SafetyWatch] check-in CF failed: \(error)")
+                // Revert optimistic update + surface to user.
+                safetyWatch = previous
+                safetyActionError = "Couldn't send check-in. Try again."
+            }
+            safetyActionInFlight = false
+        }
+    }
+
+    /// Walker confirmed PANIC (long-press completed).
+    func triggerSafetyPanic() {
+        guard let watch = safetyWatch else { return }
+        if safetyActionInFlight { return }
+
+        let previous = watch
+        var updated = watch
+        updated.panicTriggeredAt = Int64(Date().timeIntervalSince1970 * 1000)
+        updated.status = SafetyWatchStatus.panic.rawValue
+        safetyWatch = updated
+        checkInPromptVisible = false
+        safetyActionInFlight = true
+
+        Task { @MainActor in
+            do {
+                try await safetyWatchRepository.triggerPanic(watchId: watch.id)
+                // CF success — guardian alarms are firing. Stay in PANIC state.
+            } catch {
+                print("[SafetyWatch] panic CF failed: \(error)")
+                // Revert + LOUD error surface — walker thought help was on
+                // the way; need to know it isn't. Don't keep the watch in
+                // a fake PANIC state because the guardian would never
+                // actually have been alerted.
+                safetyWatch = previous
+                safetyActionError = "ALERT FAILED — guardian was NOT notified. Check your connection and try again, or call 999."
+            }
+            safetyActionInFlight = false
+        }
+    }
+
+    /// Walker confirmed they arrived safely. Final state.
+    func endSafetyWatchArrived() {
+        guard let watch = safetyWatch else { return }
+        if safetyActionInFlight { return }
+        safetyActionInFlight = true
+
+        Task { @MainActor in
+            do {
+                try await safetyWatchRepository.markArrived(watchId: watch.id)
+                safetyWatch = nil
+            } catch {
+                print("[SafetyWatch] markArrived failed: \(error)")
+                safetyActionError = "Couldn't mark you as arrived. The watch will auto-expire soon."
+            }
+            safetyActionInFlight = false
+        }
+    }
+
+    func cancelSafetyWatch() {
+        guard let watch = safetyWatch else { return }
+        if safetyActionInFlight { return }
+        safetyActionInFlight = true
+
+        Task { @MainActor in
+            do {
+                try await safetyWatchRepository.cancelWatch(watchId: watch.id)
+                safetyWatch = nil
+            } catch {
+                print("[SafetyWatch] cancel failed: \(error)")
+                safetyActionError = "Couldn't cancel watch. It'll expire automatically."
+            }
+            safetyActionInFlight = false
+        }
+    }
+
+    func dismissCheckInPrompt() {
+        checkInPromptVisible = false
+        // Snooze for the next 5-min window — record the dismissal as a
+        // movement anchor so the next prompt isn't immediate.
+        lastSignificantMovementAt = Date()
+    }
+
+    func consumeSafetyShareEvent() { safetyShareEvent = nil }
+    func consumeSafetyActionError() { safetyActionError = nil }
+    func clearSafetyWatchStartError() { safetyWatchStartError = nil }
+
+    // MARK: - Watch Me internals
+
+    /// Push the latest GPS fix onto the watch doc. Throttled to 10 s but
+    /// always lets the FIRST push through so the guardian's portal page
+    /// exits "Waiting for first GPS fix from X" the moment we have a fix.
+    private func updateSafetyWatchLocation(lat: Double, lng: Double) {
+        guard let watch = safetyWatch else { return }
+        let now = Date()
+        if let last = lastSafetyWatchPushTime, now.timeIntervalSince(last) < 10.0 {
+            return
+        }
+        lastSafetyWatchPushTime = now
+
+        let routePoints: [[String: Double]] = trackPoints.map {
+            ["lat": $0.latitude, "lng": $0.longitude]
+        }
+        let distance = totalDistanceMeters
+        let durationSec = Int64(trackingState.durationSeconds)
+
+        Task { @MainActor in
+            do {
+                try await safetyWatchRepository.pushLocation(
+                    watchId: watch.id,
+                    lat: lat,
+                    lng: lng,
+                    distanceMeters: distance,
+                    durationSec: durationSec,
+                    routePoints: routePoints
+                )
+            } catch {
+                print("[SafetyWatch] push location failed: \(error)")
+            }
+        }
+    }
+
+    /// Track significant (>15 m) movement for the 5-min stationary
+    /// check-in trigger. If we go 5 minutes without 15 m of progress
+    /// during an active SafetyWatch, fire the check-in prompt.
+    private func evaluateSignificantMovement(lat: Double, lng: Double) {
+        let now = Date()
+
+        // Bootstrap on first accepted fix.
+        if lastSignificantMovementAt == nil || lastSignificantLat.isNaN {
+            lastSignificantMovementAt = now
+            lastSignificantLat = lat
+            lastSignificantLng = lng
+            return
+        }
+
+        let drift = GPSFilterPipeline.haversineDistance(
+            lat1: lastSignificantLat, lng1: lastSignificantLng,
+            lat2: lat, lng2: lng
+        )
+        if drift > 15.0 {
+            lastSignificantMovementAt = now
+            lastSignificantLat = lat
+            lastSignificantLng = lng
+            return
+        }
+
+        // No significant movement — check if 5 min have elapsed during an
+        // active SafetyWatch. Don't re-fire while the prompt is already up.
+        guard safetyWatch != nil, !checkInPromptVisible else { return }
+        if let lastMove = lastSignificantMovementAt,
+           now.timeIntervalSince(lastMove) > 300 {
+            checkInPromptVisible = true
+        }
+    }
+
+    /// Render the SMS / WhatsApp body with the walker's note + ETA + URL.
+    /// Mirrors Android `buildSafetyShareText`.
+    private func buildSafetyShareText(
+        walkerFirstName: String,
+        walkerNote: String,
+        expectedReturnAt: Int64,
+        url: String
+    ) -> String {
+        var lines: [String] = []
+        let nameToken = walkerFirstName.isEmpty ? "I" : walkerFirstName
+        lines.append("Hey — \(nameToken)'m heading out for a walk. Can you keep an eye on me?")
+
+        if !walkerNote.isEmpty {
+            lines.append("")
+            lines.append(walkerNote)
+        }
+
+        if expectedReturnAt > 0 {
+            let date = Date(timeIntervalSince1970: TimeInterval(expectedReturnAt) / 1000.0)
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            lines.append("")
+            lines.append("Expected back by \(formatter.string(from: date)).")
+        }
+
+        lines.append("")
+        lines.append("Live route + check-ins here:")
+        lines.append(url)
+        lines.append("")
+        lines.append("(Sent via WoofWalk Watch Me — if I don't check in or hit the alert button, please give me a call.)")
+        return lines.joined(separator: "\n")
     }
 }
 

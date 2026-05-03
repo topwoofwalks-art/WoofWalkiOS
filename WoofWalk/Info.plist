@@ -58,6 +58,8 @@
 	<string>WoofWalk needs photo library access to save walk photos</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>WoofWalk needs photo library access to save walk photos</string>
+	<key>NSMotionUsageDescription</key>
+	<string>WoofWalk reads the hardware step counter to count steps and validate GPS movement during walks. Without this, walk distance can drift when GPS is unreliable and walk stats won&apos;t show steps.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

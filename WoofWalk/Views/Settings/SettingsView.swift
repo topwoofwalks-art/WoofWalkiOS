@@ -116,6 +116,12 @@ struct SettingsView: View {
                 Label("Rain Mode", systemImage: "cloud.rain")
             }
 
+            NavigationLink {
+                WalkStatsDisplaySettingsView()
+            } label: {
+                Label("Walk Stats Display", systemImage: "speedometer")
+            }
+
             VStack(alignment: .leading, spacing: 4) {
                 Toggle("Voice Guidance", isOn: $voiceGuidanceEnabled)
                 Text("Spoken turn-by-turn directions during guided walks")

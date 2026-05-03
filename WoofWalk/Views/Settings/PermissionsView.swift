@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreLocation
+import CoreMotion
 import Photos
 import UserNotifications
 
@@ -9,6 +10,7 @@ struct PermissionsView: View {
     var body: some View {
         List {
             locationSection
+            motionSection
             photoSection
             notificationSection
         }
@@ -49,6 +51,39 @@ struct PermissionsView: View {
                 .foregroundColor(.secondary)
         } header: {
             Text("Location")
+        }
+    }
+
+    private var motionSection: some View {
+        Section {
+            HStack {
+                Image(systemName: "figure.walk.motion")
+                    .foregroundColor(.blue)
+                    .frame(width: 30)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Motion & Fitness")
+                        .font(.headline)
+                    Text(viewModel.motionStatus.description)
+                        .font(.caption)
+                        .foregroundColor(viewModel.motionStatus.color)
+                }
+
+                Spacer()
+
+                if !viewModel.motionStatus.isAuthorized {
+                    Button("Open Settings") {
+                        viewModel.openSettings()
+                    }
+                    .font(.caption)
+                }
+            }
+
+            Text("Motion access lets WoofWalk read the hardware step counter to count steps and validate GPS movement. Without it, walk distance can drift when GPS is unreliable and step counts won't appear.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        } header: {
+            Text("Motion & Fitness")
         }
     }
 
@@ -122,6 +157,7 @@ struct PermissionsView: View {
 @MainActor
 class PermissionsViewModel: ObservableObject {
     @Published var locationStatus: PermissionStatus = .notDetermined
+    @Published var motionStatus: PermissionStatus = .notDetermined
     @Published var photoStatus: PermissionStatus = .notDetermined
     @Published var notificationStatus: PermissionStatus = .notDetermined
 
@@ -129,8 +165,25 @@ class PermissionsViewModel: ObservableObject {
 
     func checkPermissions() {
         checkLocationPermission()
+        checkMotionPermission()
         checkPhotoPermission()
         checkNotificationPermission()
+    }
+
+    private func checkMotionPermission() {
+        let status = CMMotionActivityManager.authorizationStatus()
+        switch status {
+        case .authorized:
+            motionStatus = .authorized
+        case .denied:
+            motionStatus = .denied
+        case .restricted:
+            motionStatus = .restricted
+        case .notDetermined:
+            motionStatus = .notDetermined
+        @unknown default:
+            motionStatus = .notDetermined
+        }
     }
 
     private func checkLocationPermission() {
