@@ -37,7 +37,12 @@ class BadgeGalleryViewModel: ObservableObject {
             current = Double(userStats.poisCreated)
         case .votesGiven:
             current = Double(userStats.votesGiven)
-        case .timeOfDay, .special:
+        case .timeOfDay, .special,
+             .photosUploaded, .hazardsReported,
+             .earlyBirdWalks, .nightOwlWalks, .uniqueParksVisited:
+            // Server-authoritative criteria — userStats here doesn't carry
+            // these counters yet. Progress reads as 0 client-side; the
+            // server-side badge engine is the source of truth for unlock.
             return 0
         }
         let target = Double(badge.unlockCriteria.targetValue)
