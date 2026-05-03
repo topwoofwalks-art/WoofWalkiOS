@@ -473,6 +473,7 @@
 		'A1000001000000000001329' = {isa = PBXBuildFile; fileRef = A1000001000000000001328; };
 		'A1000001000000000001331' = {isa = PBXBuildFile; fileRef = A1000001000000000001330; };
 		'A1000001000000000001333' = {isa = PBXBuildFile; fileRef = A1000001000000000001332; };
+		'A1000001000000000001335' = {isa = PBXBuildFile; fileRef = A1000001000000000001334; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -946,6 +947,7 @@
 		'A1000001000000000001328' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMeSheet.swift; sourceTree = "<group>"; };
 		'A1000001000000000001330' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMeSendingSplash.swift; sourceTree = "<group>"; };
 		'A1000001000000000001332' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInPromptOverlay.swift; sourceTree = "<group>"; };
+		'A1000001000000000001334' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessLiveShareRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1214,6 +1216,7 @@
 				A1000001000000000001178,
 				A1000001000000000001180,
 				A1000001000000000001326,
+				A1000001000000000001334,
 			);
 			path = Repositories;
 			sourceTree = "<group>";
@@ -2455,6 +2458,7 @@
 				A1000001000000000001329,
 				A1000001000000000001331,
 				A1000001000000000001333,
+				A1000001000000000001335,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
