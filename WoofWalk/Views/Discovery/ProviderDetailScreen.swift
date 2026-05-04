@@ -5,6 +5,7 @@ struct ProviderDetailScreen: View {
     @StateObject private var viewModel: ProviderDetailViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showBookingSheet = false
+    @State private var showMeetGreetSheet = false
 
     init(providerId: String) {
         self.providerId = providerId
@@ -26,6 +27,14 @@ struct ProviderDetailScreen: View {
         .sheet(isPresented: $showBookingSheet) {
             NavigationStack {
                 BookingFlowScreen(preselectedProviderId: providerId)
+            }
+        }
+        .sheet(isPresented: $showMeetGreetSheet) {
+            NavigationStack {
+                MeetGreetRequestScreen(
+                    providerOrgId: providerId,
+                    providerName: viewModel.provider?.name
+                )
             }
         }
     }
@@ -70,8 +79,8 @@ struct ProviderDetailScreen: View {
                         contactSection(provider)
                     }
 
-                    // Book Now
-                    bookNowButton(provider)
+                    // Dual-CTA — Book Now + Meet & Greet
+                    dualCTASection(provider)
                         .padding(.top, 8)
                         .padding(.bottom, 24)
                 }
@@ -513,12 +522,68 @@ struct ProviderDetailScreen: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(
-                RoundedRectangle(cornerRadius: 14)
+                Capsule()
                     .fill(provider.acceptingNewClients ? Color.turquoise60 : Color.neutral60)
             )
-            .foregroundColor(.white)
+            .foregroundColor(.black)
         }
         .disabled(!provider.acceptingNewClients)
+    }
+
+    // MARK: - Dual-CTA (Book Now + Meet & Greet)
+
+    /// Side-by-side CTA pair. The Meet & Greet button is the lower-
+    /// commitment on-ramp; Book Now is the high-intent path. Tip
+    /// card below explains the choice.
+    private func dualCTASection(_ provider: ServiceProviderLite) -> some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 10) {
+                bookNowButton(provider)
+                meetGreetButton(provider)
+            }
+            meetGreetTipCard(provider)
+        }
+    }
+
+    private func meetGreetButton(_ provider: ServiceProviderLite) -> some View {
+        Button {
+            showMeetGreetSheet = true
+        } label: {
+            HStack {
+                Text("🐾")
+                Text("Meet & Greet")
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(
+                Capsule()
+                    .stroke(Color.turquoise60, lineWidth: 1.5)
+            )
+            .foregroundColor(.turquoise60)
+        }
+    }
+
+    private func meetGreetTipCard(_ provider: ServiceProviderLite) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "lightbulb.fill")
+                .foregroundColor(.turquoise60)
+                .font(.subheadline)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Not sure yet? Start with a Meet & Greet")
+                    .font(.caption.weight(.semibold))
+                Text("Chat with \(provider.name) before you commit.")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.turquoise60.opacity(0.10))
+        )
     }
 
     // MARK: - Error State

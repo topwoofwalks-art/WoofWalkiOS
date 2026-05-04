@@ -47,6 +47,10 @@ enum AppRoute: Hashable {
     case discovery
     case providerDetail(providerId: String)
 
+    // Meet & Greet
+    case meetGreetRequest(orgId: String)
+    case meetGreetThread(threadId: String)
+
     // Notifications
     case notifications
 
@@ -145,6 +149,8 @@ enum AppRoute: Hashable {
         case .levelUp: hasher.combine("levelUp")
         case .discovery: hasher.combine("discovery")
         case .providerDetail(let id): hasher.combine("providerDetail"); hasher.combine(id)
+        case .meetGreetRequest(let id): hasher.combine("meetGreetRequest"); hasher.combine(id)
+        case .meetGreetThread(let id): hasher.combine("meetGreetThread"); hasher.combine(id)
         case .notifications: hasher.combine("notifications")
         case .charitySettings: hasher.combine("charitySettings")
         case .chatList: hasher.combine("chatList")

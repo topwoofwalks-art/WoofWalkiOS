@@ -102,6 +102,10 @@ struct RouteDestination: View {
             DiscoveryScreen()
         case .providerDetail(let providerId):
             ProviderDetailScreen(providerId: providerId)
+        case .meetGreetRequest(let orgId):
+            MeetGreetRequestScreen(providerOrgId: orgId)
+        case .meetGreetThread(let threadId):
+            MeetGreetThreadScreen(threadId: threadId)
         case .notifications:
             NotificationCenterScreen()
         case .charitySettings:

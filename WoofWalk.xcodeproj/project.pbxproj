@@ -478,6 +478,11 @@
 		'A1000001000000000009103' = {isa = PBXBuildFile; fileRef = A1000001000000000009102; };
 		'A1000001000000000009105' = {isa = PBXBuildFile; fileRef = A1000001000000000009104; };
 		'A1000001000000000009107' = {isa = PBXBuildFile; fileRef = A1000001000000000009106; };
+		'A1000001000000000009201' = {isa = PBXBuildFile; fileRef = A1000001000000000009200; };
+		'A1000001000000000009203' = {isa = PBXBuildFile; fileRef = A1000001000000000009202; };
+		'A1000001000000000009205' = {isa = PBXBuildFile; fileRef = A1000001000000000009204; };
+		'A1000001000000000009207' = {isa = PBXBuildFile; fileRef = A1000001000000000009206; };
+		'A1000001000000000009209' = {isa = PBXBuildFile; fileRef = A1000001000000000009208; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -956,6 +961,11 @@
 		A1000001000000000009102 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessWalkSessionRepository.swift; path = WoofWalk/Repositories/BusinessWalkSessionRepository.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009104 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalkConsoleViewModel.swift; path = WoofWalk/ViewModels/WalkConsoleViewModel.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009106 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessTodaysWalksScreen.swift; path = WoofWalk/Views/Business/BusinessTodaysWalksScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009200 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetModels.swift; path = WoofWalk/Models/MeetGreetModels.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009202 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetRepository.swift; path = WoofWalk/Repositories/MeetGreetRepository.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009204 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetRequestScreen.swift; path = WoofWalk/Views/MeetGreet/MeetGreetRequestScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009206 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetThreadScreen.swift; path = WoofWalk/Views/MeetGreet/MeetGreetThreadScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009208 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetConfirmedCard.swift; path = WoofWalk/Views/MeetGreet/MeetGreetConfirmedCard.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1054,6 +1064,11 @@
 				A1000001000000000009102,
 				A1000001000000000009104,
 				A1000001000000000009106,
+				A1000001000000000009200,
+				A1000001000000000009202,
+				A1000001000000000009204,
+				A1000001000000000009206,
+				A1000001000000000009208,
 			);
 			sourceTree = "<group>";
 		};
@@ -2475,6 +2490,11 @@
 				A1000001000000000009103,
 				A1000001000000000009105,
 				A1000001000000000009107,
+				A1000001000000000009201,
+				A1000001000000000009203,
+				A1000001000000000009205,
+				A1000001000000000009207,
+				A1000001000000000009209,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
