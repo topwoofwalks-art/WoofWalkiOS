@@ -128,6 +128,10 @@ struct RouteDestination: View {
             BusinessSettingsScreen()
         case .businessWalkConsole(let bookingId):
             BusinessWalkConsoleScreen(bookingId: bookingId)
+        case .businessWalkConsoleFull(let bookingId, let dogIds, let bookingIds):
+            BusinessWalkConsoleScreen(bookingId: bookingId, dogIds: dogIds, bookingIds: bookingIds)
+        case .businessTodaysWalks:
+            BusinessTodaysWalksScreen(viewModel: BusinessViewModel())
         case .scanKey:
             ScanKeyScreen()
 

@@ -1,798 +1,1243 @@
 import SwiftUI
 import MapKit
 import CoreLocation
-import FirebaseFirestore
+import PhotosUI
+import UIKit
 
-// MARK: - Walk Console State
-
-private enum WalkConsolePhase {
-    case ready
-    case walking
-    case paused
-    case completed
-}
-
-// MARK: - Business Walk Console Screen
-
+/// Walk Console screen for business walkers — 1:1 port of Android
+/// `WalkConsoleScreen.kt`. Drives the entire walking-appointment UX:
+///   - Pre-walk client brief (address, phone, key code, instructions)
+///   - Map with planned route + live trail + POI markers
+///   - Live stats overlay + route adherence indicator
+///   - Dog check-in strip
+///   - Walk control buttons (Start / Pause / Resume / End)
+///   - Photo capture + Mark bin
+///   - Walker note inline editor with quick-template chips
+///   - Live-share sheet (Copy / Send / per-client WhatsApp + SMS rows)
+///   - Walker-safety Watch Me sheet
+///   - Incident log dialog
+///
+/// Backed by `WalkConsoleViewModel`. Single-booking entry: pass
+/// `bookingIds = [bookingId]`. Group-walk entry: pass the full list.
 struct BusinessWalkConsoleScreen: View {
     let bookingId: String
+    let dogIds: [String]
+    let bookingIds: [String]
 
-    @StateObject private var bookingRepo = BookingRepository()
-    @ObservedObject private var walkTracking = WalkTrackingService.shared
-
+    @StateObject private var viewModel = WalkConsoleViewModel()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 
-    @State private var booking: Booking?
-    @State private var phase: WalkConsolePhase = .ready
-    @State private var walkNote: String = ""
-    @State private var showAddNoteSheet = false
-    @State private var showCompleteConfirmation = false
-    @State private var showPhotoCapture = false
-    @State private var walkNotes: [String] = []
-    @State private var capturedPhotos: [UIImage] = []
-    @State private var completionRecord: LocalWalkRecord?
-    @State private var isLoadingBooking = true
-    @State private var errorMessage: String?
+    @State private var showPhotoPicker: Bool = false
+    @State private var showWalkerSafetySheet: Bool = false
+    @State private var showShareActivitySheet: Bool = false
+    @State private var shareActivityText: String = ""
+    @State private var summary: WalkConsoleSummary?
 
-    // MARK: - Theme
-
-    private let tealAccent = Color(red: 0.6, green: 0.9, blue: 0.9)
-    private let darkTeal = Color.turquoise30
-
-    private var cardBackground: Color {
-        colorScheme == .dark ? Color.neutral20 : Color(.systemGray6)
+    /// Convenience: single-booking entry-point. Defaults the booking-ids
+    /// list to `[bookingId]` for the navigation Route case.
+    init(bookingId: String, dogIds: [String] = [], bookingIds: [String]? = nil) {
+        self.bookingId = bookingId
+        self.dogIds = dogIds
+        self.bookingIds = bookingIds ?? [bookingId]
     }
-
-    private var surfaceBackground: Color {
-        colorScheme == .dark ? Color.neutral10 : Color(.systemBackground)
-    }
-
-    // MARK: - Body
 
     var body: some View {
-        ZStack {
-            surfaceBackground.ignoresSafeArea()
+        VStack(spacing: 0) {
+            mapSection
+                .frame(maxWidth: .infinity)
+                .frame(height: UIScreen.main.bounds.height * 0.42)
 
-            if isLoadingBooking {
-                ProgressView("Loading booking...")
-                    .foregroundColor(.white)
-            } else if let booking = booking {
-                VStack(spacing: 0) {
-                    bookingHeader(booking)
+            if viewModel.isTracking && !viewModel.dogProfiles.isEmpty {
+                dogCheckInStrip
+            }
 
-                    if phase == .completed, let record = completionRecord {
-                        completionSummary(booking: booking, record: record)
-                    } else {
-                        mapSection
-                        statsBar
-                        controlPanel(booking)
+            ScrollView {
+                VStack(spacing: 12) {
+                    if !viewModel.clientBriefs.isEmpty {
+                        clientBriefCard(compact: viewModel.isTracking)
+                    }
+
+                    walkControlButtons
+
+                    if viewModel.isTracking {
+                        photoAndBinRow
+                    }
+
+                    if viewModel.isTracking, viewModel.shareUrl != nil {
+                        walkerNoteRow
+                    }
+
+                    if !viewModel.photos.isEmpty {
+                        photoThumbnailRow
+                    }
+
+                    if !viewModel.incidents.isEmpty {
+                        incidentsSummaryCard
                     }
                 }
-            } else {
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: 48))
-                        .foregroundColor(.orange)
-                    Text(errorMessage ?? "Booking not found")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    Button("Go Back") { dismiss() }
-                        .buttonStyle(.borderedProminent)
-                        .tint(darkTeal)
-                }
+                .padding(16)
             }
         }
         .navigationTitle("Walk Console")
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await loadBooking()
-        }
-        .sheet(isPresented: $showAddNoteSheet) {
-            addNoteSheet
-        }
-        .sheet(isPresented: $showPhotoCapture) {
-            ImagePickerView(image: Binding(
-                get: { nil },
-                set: { img in
-                    if let img = img {
-                        capturedPhotos.append(img)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                }
+            }
+            if viewModel.isTracking {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        viewModel.startSharingWalk()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .disabled(viewModel.isCreatingShareLink)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showWalkerSafetySheet = true
+                    } label: {
+                        ZStack(alignment: .bottomTrailing) {
+                            Image(systemName: "shield")
+                            if viewModel.walkerSafetyWatchActive {
+                                Circle()
+                                    .fill(Color.green)
+                                    .frame(width: 8, height: 8)
+                                    .offset(x: 2, y: 2)
+                            }
+                        }
                     }
                 }
-            ), sourceType: .camera)
-        }
-        .alert("Complete Walk", isPresented: $showCompleteConfirmation) {
-            Button("Complete", role: .destructive) {
-                completeWalk()
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        viewModel.showIncidentLogDialog()
+                    } label: {
+                        Image(systemName: "exclamationmark.triangle")
+                    }
+                }
             }
-            Button("Cancel", role: .cancel) {}
+        }
+        .task {
+            viewModel.preloadDogProfiles(dogIds: dogIds)
+            viewModel.loadClientBriefs(bookingIds: bookingIds)
+        }
+        .sheet(isPresented: $showPhotoPicker) {
+            WalkConsolePhotoPicker { data in
+                if let data = data {
+                    viewModel.capturePhoto(imageData: data, caption: nil)
+                }
+                showPhotoPicker = false
+            }
+        }
+        .sheet(isPresented: $showWalkerSafetySheet) {
+            WalkerSafetySheet(
+                currentlyActive: viewModel.walkerSafetyWatchActive,
+                currentContact: viewModel.walkerSafetyContactName,
+                onStart: { name, phone, returnAt in
+                    viewModel.startWalkerSafetyWatch(
+                        contactName: name,
+                        contactPhone: phone,
+                        expectedReturnAt: returnAt
+                    ) { url in
+                        if let url = url {
+                            shareActivityText = "I'm out walking dogs — please look out for me. Watch live: \(url)"
+                            showShareActivitySheet = true
+                        }
+                    }
+                    showWalkerSafetySheet = false
+                },
+                onEnd: {
+                    viewModel.endWalkerSafetyWatch()
+                    showWalkerSafetySheet = false
+                },
+                onDismiss: { showWalkerSafetySheet = false }
+            )
+        }
+        .sheet(isPresented: $viewModel.showShareSheet) {
+            LiveShareBottomSheet(
+                shareUrl: viewModel.shareUrl ?? "",
+                bookingShareTargets: viewModel.bookingShareTargets,
+                onDismiss: { viewModel.dismissShareSheet() },
+                onShareSheetFor: { text in
+                    shareActivityText = text
+                    showShareActivitySheet = true
+                }
+            )
+        }
+        .sheet(isPresented: $showShareActivitySheet) {
+            ShareActivityView(text: shareActivityText)
+        }
+        .alert(
+            "End Walk?",
+            isPresented: $viewModel.showEndWalkDialog
+        ) {
+            Button("End Walk", role: .destructive) {
+                viewModel.endWalk { summary in
+                    self.summary = summary
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                viewModel.dismissEndWalkDialog()
+            }
         } message: {
             Text("Are you sure you want to end this walk? This action cannot be undone.")
         }
-    }
-
-    // MARK: - Load Booking
-
-    private func loadBooking() async {
-        isLoadingBooking = true
-        do {
-            let fetched = try await bookingRepo.fetchBooking(bookingId: bookingId)
-            booking = fetched
-        } catch {
-            errorMessage = "Failed to load booking: \(error.localizedDescription)"
-            print("[WalkConsole] Error loading booking: \(error)")
+        .sheet(isPresented: $viewModel.showIncidentDialog) {
+            IncidentLogDialog(
+                onSubmit: { type, notes, severity in
+                    viewModel.logIncident(type: type, notes: notes, severity: severity)
+                },
+                onDismiss: { viewModel.dismissIncidentDialog() }
+            )
         }
-        isLoadingBooking = false
-    }
-
-    // MARK: - Booking Header
-
-    private func bookingHeader(_ booking: Booking) -> some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 12) {
-                // Client avatar placeholder
-                Circle()
-                    .fill(darkTeal.opacity(0.3))
-                    .frame(width: 44, height: 44)
-                    .overlay(
-                        Text(String(booking.clientName.prefix(1)).uppercased())
-                            .font(.headline)
-                            .foregroundColor(.white)
-                    )
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(booking.clientName)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    HStack(spacing: 6) {
-                        Image(systemName: "pawprint.fill")
-                            .font(.caption)
-                            .foregroundColor(tealAccent)
-                        Text(booking.dogName)
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.8))
+        .sheet(item: Binding<DogCheckInTarget?>(
+            get: {
+                viewModel.pendingCheckInDogId.flatMap { id in
+                    let name = viewModel.dogProfiles.first(where: { $0.id == id })?.name ?? "Dog"
+                    return DogCheckInTarget(id: id, name: name)
+                }
+            },
+            set: { newValue in
+                if newValue == nil { viewModel.dismissCheckInDialog() }
+            }
+        )) { target in
+            DogCheckInDialog(
+                dogName: target.name,
+                onConfirm: { note in viewModel.confirmDogCheckIn(note: note) },
+                onDismiss: { viewModel.dismissCheckInDialog() }
+            )
+        }
+        .alert(
+            "Location Permission Required",
+            isPresented: $viewModel.showLocationPermissionDialog
+        ) {
+            Button("OK") { viewModel.showLocationPermissionDialog = false }
+        } message: {
+            Text("Location access is needed to track your walk and record the route.")
+        }
+        .overlay(alignment: .bottom) {
+            if let error = viewModel.error {
+                ErrorBanner(text: error)
+                    .padding(.bottom, 80)
+                    .task {
+                        try? await Task.sleep(nanoseconds: 3_000_000_000)
+                        viewModel.clearError()
                     }
-                }
-
-                Spacer()
-
-                // Service type badge
-                serviceTypeBadge(booking.serviceTypeEnum)
-            }
-
-            // Special instructions if any
-            if let instructions = booking.specialInstructions, !instructions.isEmpty {
-                HStack(spacing: 6) {
-                    Image(systemName: "info.circle")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                    Text(instructions)
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.7))
-                        .lineLimit(2)
-                }
-                .padding(8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.orange.opacity(0.15))
-                )
             }
         }
-        .padding(16)
-        .background(cardBackground)
-    }
-
-    private func serviceTypeBadge(_ type: BookingServiceType) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: type.icon)
-                .font(.caption)
-            Text(type.displayName)
-                .font(.caption.bold())
+        .navigationDestination(isPresented: Binding(
+            get: { summary != nil },
+            set: { if !$0 { summary = nil } }
+        )) {
+            if let summary = summary {
+                WalkSummaryScreen(summary: summary, onDone: {
+                    self.summary = nil
+                    dismiss()
+                })
+            }
         }
-        .foregroundColor(.white)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(
-            Capsule()
-                .fill(darkTeal)
-        )
     }
 
-    // MARK: - Map Section
+    // MARK: - Map
 
     private var mapSection: some View {
         ZStack(alignment: .topLeading) {
-            if #available(iOS 17.0, *) {
-                Map {
-                    // Current location marker
-                    if let location = walkTracking.trackingState.polyline.last {
-                        Annotation("You", coordinate: location) {
-                            Circle()
-                                .fill(tealAccent)
-                                .frame(width: 14, height: 14)
-                                .overlay(
-                                    Circle()
-                                        .stroke(.white, lineWidth: 2)
-                                )
-                                .shadow(radius: 4)
-                        }
-                    }
-
-                    // Route polyline
-                    if walkTracking.trackingState.polyline.count >= 2 {
-                        MapPolyline(coordinates: walkTracking.trackingState.polyline)
-                            .stroke(tealAccent, lineWidth: 4)
-                    }
-                }
-                .mapStyle(.standard(pointsOfInterest: .excludingAll))
-                .frame(maxWidth: .infinity)
-                .frame(height: 250)
-            } else {
-                Map(coordinateRegion: .constant(MKCoordinateRegion(
-                    center: walkTracking.trackingState.polyline.last ?? CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278),
-                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                )))
-                .frame(maxWidth: .infinity)
-                .frame(height: 250)
-            }
-
-            // GPS quality indicator
-            if walkTracking.trackingState.isTracking {
-                gpsQualityBadge
-                    .padding(12)
-            }
-        }
-    }
-
-    private var gpsQualityBadge: some View {
-        let quality = walkTracking.trackingState.gpsQuality
-        let color: Color = {
-            switch quality {
-            case .excellent, .good: return .green
-            case .fair: return .yellow
-            case .poor: return .red
-            case .unknown: return .gray
-            }
-        }()
-
-        return HStack(spacing: 4) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-            Text("GPS")
-                .font(.caption2.bold())
-                .foregroundColor(.white)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(
-            Capsule()
-                .fill(Color.black.opacity(0.6))
-        )
-    }
-
-    // MARK: - Stats Bar
-
-    private var statsBar: some View {
-        HStack(spacing: 0) {
-            statItem(
-                value: FormatUtils.formatDuration(walkTracking.trackingState.durationSeconds),
-                label: "Duration",
-                icon: "clock"
+            WalkConsoleMapView(
+                currentLocation: viewModel.currentLocation,
+                routePoints: viewModel.walkSession?.routePoints.map { $0.coordinate } ?? [],
+                plannedRoute: viewModel.plannedRoute
             )
 
-            Divider()
-                .frame(height: 32)
-                .background(Color.white.opacity(0.2))
-
-            statItem(
-                value: FormatUtils.formatDistance(walkTracking.trackingState.distanceMeters),
-                label: "Distance",
-                icon: "map"
-            )
-
-            Divider()
-                .frame(height: 32)
-                .background(Color.white.opacity(0.2))
-
-            statItem(
-                value: FormatUtils.formatSpeed(walkTracking.trackingState.currentPaceKmh),
-                label: "Pace",
-                icon: "speedometer"
-            )
-        }
-        .padding(.vertical, 12)
-        .background(cardBackground)
-    }
-
-    private func statItem(value: String, label: String, icon: String) -> some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.caption2)
-                    .foregroundColor(tealAccent)
-                Text(value)
-                    .font(.headline)
-                    .foregroundColor(.white)
-            }
-            Text(label)
-                .font(.caption2)
-                .foregroundColor(.white.opacity(0.6))
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Control Panel
-
-    private func controlPanel(_ booking: Booking) -> some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                // Primary action button
-                primaryActionButton
-
-                // Secondary actions (only during walk)
-                if phase == .walking || phase == .paused {
-                    secondaryActions
+            VStack(alignment: .leading, spacing: 8) {
+                if viewModel.isTracking {
+                    LiveStatsOverlay(stats: viewModel.liveStats)
                 }
-
-                // Walk notes display
-                if !walkNotes.isEmpty {
-                    notesSection
-                }
-
-                // Photos display
-                if !capturedPhotos.isEmpty {
-                    photosSection
-                }
-
-                Spacer(minLength: 20)
             }
             .padding(16)
-        }
-    }
 
-    private var primaryActionButton: some View {
-        Group {
-            switch phase {
-            case .ready:
-                Button(action: startWalk) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "play.fill")
-                            .font(.body)
-                        Text("Start Walk")
-                            .font(.body.bold())
+            if viewModel.isTracking, let adherence = viewModel.plannedRouteAdherence {
+                VStack {
+                    HStack {
+                        Spacer()
+                        RouteAdherenceIndicator(adherence: adherence)
                     }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(darkTeal)
-                    )
-                }
-
-            case .walking:
-                HStack(spacing: 12) {
-                    Button(action: pauseWalk) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "pause.fill")
-                            Text("Pause")
-                                .font(.body.bold())
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.orange)
-                        )
-                    }
-
-                    Button(action: { showCompleteConfirmation = true }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text("Complete")
-                                .font(.body.bold())
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.green)
-                        )
-                    }
-                }
-
-            case .paused:
-                HStack(spacing: 12) {
-                    Button(action: resumeWalk) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "play.fill")
-                            Text("Resume")
-                                .font(.body.bold())
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(darkTeal)
-                        )
-                    }
-
-                    Button(action: { showCompleteConfirmation = true }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text("Complete")
-                                .font(.body.bold())
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.green)
-                        )
-                    }
-                }
-
-            case .completed:
-                EmptyView()
-            }
-        }
-    }
-
-    private var secondaryActions: some View {
-        HStack(spacing: 12) {
-            Button(action: { showAddNoteSheet = true }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "note.text.badge.plus")
-                        .font(.subheadline)
-                    Text("Add Note")
-                        .font(.subheadline.bold())
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                )
-            }
-
-            Button(action: { showPhotoCapture = true }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "camera.fill")
-                        .font(.subheadline)
-                    Text("Photo (\(capturedPhotos.count))")
-                        .font(.subheadline.bold())
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                )
-            }
-        }
-    }
-
-    private var notesSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "note.text")
-                    .foregroundColor(tealAccent)
-                Text("Walk Notes")
-                    .font(.subheadline.bold())
-                    .foregroundColor(.white)
-            }
-
-            ForEach(Array(walkNotes.enumerated()), id: \.offset) { index, note in
-                HStack(alignment: .top, spacing: 8) {
-                    Text("\(index + 1).")
-                        .font(.caption)
-                        .foregroundColor(tealAccent)
-                    Text(note)
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.8))
                     Spacer()
                 }
+                .padding(16)
             }
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(cardBackground)
-        )
     }
 
-    private var photosSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+    // MARK: - Dog check-in strip
+
+    private var dogCheckInStrip: some View {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Image(systemName: "photo.on.rectangle")
-                    .foregroundColor(tealAccent)
-                Text("Walk Photos (\(capturedPhotos.count))")
+                Text("Dog Check-ins")
                     .font(.subheadline.bold())
-                    .foregroundColor(.white)
+                Spacer()
+                Button("Check All") {
+                    viewModel.checkInAllDogs()
+                }
+                .font(.subheadline)
             }
+            .padding(.horizontal, 12)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(Array(capturedPhotos.enumerated()), id: \.offset) { _, photo in
-                        Image(uiImage: photo)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 64, height: 64)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    ForEach(viewModel.dogProfiles) { dog in
+                        DogCheckInChip(
+                            dog: dog,
+                            isCheckedIn: viewModel.checkedInDogs.contains(dog.id),
+                            isLoading: viewModel.checkInInProgress.contains(dog.id),
+                            onTap: { viewModel.requestDogCheckIn(dogId: dog.id) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 12)
+            }
+        }
+        .padding(.vertical, 8)
+        .background(Color(.systemGray6))
+    }
+
+    // MARK: - Client brief
+
+    private func clientBriefCard(compact: Bool) -> some View {
+        let briefs = viewModel.clientBriefs
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "person.crop.circle")
+                    .foregroundColor(.accentColor)
+                Text(briefs.count == 1 ? "Visit details" : "\(briefs.count) clients")
+                    .font(.subheadline.bold())
+            }
+
+            ForEach(Array(briefs.enumerated()), id: \.element.bookingId) { idx, brief in
+                if idx > 0 {
+                    Divider()
+                }
+                if compact {
+                    HStack {
+                        Text(brief.clientName)
+                            .font(.body.weight(.semibold))
+                        Spacer()
+                        if let phone = brief.clientPhone {
+                            Button {
+                                openDial(phone)
+                            } label: {
+                                Label("Call", systemImage: "phone")
+                                    .font(.caption)
+                            }
+                        }
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(brief.clientName)
+                            .font(.body.weight(.semibold))
+                        if !brief.dogNames.isEmpty {
+                            Text(brief.dogNames.joined(separator: ", "))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        if let address = brief.address {
+                            Label(address, systemImage: "mappin.and.ellipse")
+                                .font(.caption)
+                        }
+                        if let key = brief.keyCode {
+                            Label("Key: \(key)", systemImage: "key.fill")
+                                .font(.caption)
+                                .monospaced()
+                        }
+                        if let instructions = brief.specialInstructions {
+                            Text("\u{201C}\(instructions)\u{201D}")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        if let phone = brief.clientPhone {
+                            Button {
+                                openDial(phone)
+                            } label: {
+                                Label("Call \(brief.clientName.components(separatedBy: " ").first ?? brief.clientName)", systemImage: "phone")
+                                    .font(.subheadline)
+                            }
+                        }
                     }
                 }
             }
         }
         .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(cardBackground)
-        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.systemGray6).opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    // MARK: - Add Note Sheet
+    // MARK: - Walk control buttons
 
-    private var addNoteSheet: some View {
+    private var walkControlButtons: some View {
+        HStack(spacing: 8) {
+            if !viewModel.isTracking {
+                Button {
+                    if bookingIds.count > 1 {
+                        viewModel.startGroupWalk(bookingIds: bookingIds, dogIds: dogIds)
+                    } else {
+                        viewModel.startWalk(bookingId: bookingId, dogIds: dogIds)
+                    }
+                } label: {
+                    Label("Start Walk", systemImage: "play.fill")
+                        .font(.body.bold())
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!viewModel.canStartWalk)
+            } else {
+                if viewModel.isPaused {
+                    Button {
+                        viewModel.resumeWalk()
+                    } label: {
+                        Label("Resume", systemImage: "play.fill")
+                            .font(.body.bold())
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else {
+                    Button {
+                        viewModel.pauseWalk()
+                    } label: {
+                        Label("Pause", systemImage: "pause.fill")
+                            .font(.body.bold())
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                Button {
+                    viewModel.showEndWalkConfirmation()
+                } label: {
+                    Label("End Walk", systemImage: "stop.fill")
+                        .font(.body.bold())
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+            }
+        }
+    }
+
+    // MARK: - Photo + bin row
+
+    private var photoAndBinRow: some View {
+        HStack(spacing: 8) {
+            Button {
+                showPhotoPicker = true
+            } label: {
+                Label("Photo (\(viewModel.photos.count))", systemImage: "camera")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.bordered)
+
+            Button {
+                viewModel.quickAddBin()
+            } label: {
+                Label("Mark bin", systemImage: "trash")
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.bordered)
+        }
+    }
+
+    // MARK: - Walker note row
+
+    @State private var noteEditing: Bool = false
+    @State private var noteDraft: String = ""
+
+    private var walkerNoteRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: "pencil.tip")
+                    .foregroundColor(.accentColor)
+                Text("Note for the client")
+                    .font(.subheadline.bold())
+                Spacer()
+                if !noteEditing {
+                    Button(viewModel.walkerNote?.isEmpty == false ? "Edit" : "Add") {
+                        noteDraft = viewModel.walkerNote ?? ""
+                        noteEditing = true
+                    }
+                    .font(.subheadline)
+                }
+            }
+
+            if noteEditing {
+                TextField(
+                    "e.g. Bella was a star at the park today",
+                    text: $noteDraft,
+                    axis: .vertical
+                )
+                .lineLimit(3, reservesSpace: true)
+                .textFieldStyle(.roundedBorder)
+                .onChange(of: noteDraft) { newValue in
+                    if newValue.count > 200 {
+                        noteDraft = String(newValue.prefix(200))
+                    }
+                }
+                Text("\(noteDraft.count)/200")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(WalkerNoteTemplate.allCases, id: \.self) { tmpl in
+                            Button {
+                                let phrase = tmpl.phrase
+                                let combined = noteDraft.isEmpty
+                                    ? phrase
+                                    : "\(noteDraft.trimmingCharacters(in: .whitespaces)). \(phrase)"
+                                noteDraft = String(combined.prefix(200))
+                            } label: {
+                                Text(tmpl.phrase)
+                                    .font(.caption)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color(.systemGray5))
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                HStack {
+                    Spacer()
+                    Button("Cancel") {
+                        noteEditing = false
+                        noteDraft = viewModel.walkerNote ?? ""
+                    }
+                    Button("Save") {
+                        viewModel.setWalkerNote(noteDraft)
+                        noteEditing = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            } else if let note = viewModel.walkerNote, !note.isEmpty {
+                Text("\u{201C}\(note)\u{201D}")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.systemGray6).opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Photo thumbnails
+
+    private var photoThumbnailRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(viewModel.photos) { photo in
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemGray5))
+                        .frame(width: 60, height: 60)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(.secondary)
+                        )
+                }
+            }
+        }
+    }
+
+    // MARK: - Incidents card
+
+    private var incidentsSummaryCard: some View {
+        HStack {
+            Image(systemName: "exclamationmark.triangle")
+                .foregroundColor(.red)
+            Text("\(viewModel.incidents.count) incident(s) logged")
+                .font(.body)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.red.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: - Helpers
+
+    private func openDial(_ phone: String) {
+        let cleaned = phone.replacingOccurrences(of: " ", with: "")
+        if let url = URL(string: "tel:\(cleaned)") {
+            UIApplication.shared.open(url)
+        }
+    }
+}
+
+// MARK: - Pending check-in target identifier
+
+private struct DogCheckInTarget: Identifiable {
+    let id: String
+    let name: String
+}
+
+// MARK: - Walker note quick templates
+
+private enum WalkerNoteTemplate: String, CaseIterable {
+    case havingGreatTime
+    case lotsOfEnergy
+    case metAnotherDog
+    case toiletStop
+    case onLead
+    case offLead
+    case headingBack
+    case almostHome
+
+    var phrase: String {
+        switch self {
+        case .havingGreatTime: return "Having a great time"
+        case .lotsOfEnergy: return "Lots of energy today"
+        case .metAnotherDog: return "Met another dog"
+        case .toiletStop: return "Toilet stop done"
+        case .onLead: return "On lead"
+        case .offLead: return "Off lead"
+        case .headingBack: return "Heading back"
+        case .almostHome: return "Almost home"
+        }
+    }
+}
+
+// MARK: - Map subview
+
+private struct WalkConsoleMapView: View {
+    let currentLocation: CLLocationCoordinate2D?
+    let routePoints: [CLLocationCoordinate2D]
+    let plannedRoute: [CLLocationCoordinate2D]
+
+    var body: some View {
+        Group {
+            if #available(iOS 17.0, *) {
+                ModernWalkConsoleMap(
+                    currentLocation: currentLocation,
+                    routePoints: routePoints,
+                    plannedRoute: plannedRoute
+                )
+            } else {
+                Map(coordinateRegion: .constant(MKCoordinateRegion(
+                    center: currentLocation ?? routePoints.first ?? plannedRoute.first
+                        ?? CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1278),
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )))
+            }
+        }
+    }
+}
+
+/// iOS 17+ MapKit polyline + annotation map. Hosted here as a separate
+/// availability-gated view so the iOS-16 fallback in WalkConsoleMapView
+/// doesn't pull `MapCameraPosition` (iOS 17+ only) into the type system.
+@available(iOS 17.0, *)
+private struct ModernWalkConsoleMap: View {
+    let currentLocation: CLLocationCoordinate2D?
+    let routePoints: [CLLocationCoordinate2D]
+    let plannedRoute: [CLLocationCoordinate2D]
+
+    @State private var cameraPosition: MapCameraPosition = .automatic
+
+    var body: some View {
+        Map(position: $cameraPosition) {
+            if plannedRoute.count >= 2 {
+                MapPolyline(coordinates: plannedRoute)
+                    .stroke(Color.blue.opacity(0.5), lineWidth: 6)
+            }
+            if routePoints.count >= 2 {
+                MapPolyline(coordinates: routePoints)
+                    .stroke(Color.green, lineWidth: 7)
+            }
+            if let coord = currentLocation {
+                Annotation("You", coordinate: coord) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 14, height: 14)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                        .shadow(radius: 4)
+                }
+            }
+        }
+        .onChange(of: currentLocation?.latitude) { _, _ in
+            if let coord = currentLocation {
+                cameraPosition = .region(MKCoordinateRegion(
+                    center: coord,
+                    span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+                ))
+            }
+        }
+    }
+}
+
+// MARK: - Live stats overlay
+
+private struct LiveStatsOverlay: View {
+    let stats: WalkConsoleLiveStats
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(stats.formattedDuration())
+                .font(.title2.bold())
+            HStack(spacing: 16) {
+                VStack(alignment: .leading) {
+                    Text(stats.formattedDistance())
+                        .font(.body)
+                    Text("Distance")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                VStack(alignment: .leading) {
+                    Text(stats.formattedPace())
+                        .font(.body)
+                    Text("Pace")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(12)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// MARK: - Route adherence indicator
+
+private struct RouteAdherenceIndicator: View {
+    let adherence: Double
+
+    private var color: Color {
+        if adherence >= 80 { return .green }
+        if adherence >= 50 { return .yellow }
+        return .red
+    }
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text("\(Int(adherence))%")
+                .font(.title3.bold())
+                .foregroundColor(.white)
+            Text("On Route")
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.85))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(color.opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+// MARK: - Dog check-in chip
+
+private struct DogCheckInChip: View {
+    let dog: WalkConsoleDog
+    let isCheckedIn: Bool
+    let isLoading: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button {
+            if !isCheckedIn && !isLoading { onTap() }
+        } label: {
+            HStack(spacing: 6) {
+                if isLoading {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                } else if isCheckedIn {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                }
+                Text(dog.name)
+                    .font(.subheadline)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(isCheckedIn ? Color.green.opacity(0.2) : Color(.systemGray5))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Live share bottom sheet
+
+private struct LiveShareBottomSheet: View {
+    let shareUrl: String
+    let bookingShareTargets: [BookingShareTarget]
+    let onDismiss: () -> Void
+    let onShareSheetFor: (String) -> Void
+
+    var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                Text("Add a note about this walk")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(bookingShareTargets.isEmpty ? "Share live walk" : "Send the live walk")
+                        .font(.title2.bold())
+
+                    Text(bookingShareTargets.isEmpty
+                         ? "Send this link to the owner so they can watch the walk in real time."
+                         : "Each client gets their own link with their dog highlighted on the page.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
-                TextEditor(text: $walkNote)
-                    .frame(minHeight: 120)
-                    .padding(8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
+                    if !bookingShareTargets.isEmpty {
+                        ForEach(bookingShareTargets) { target in
+                            BookingShareRow(
+                                target: target,
+                                onWhatsApp: { phone, msg in openWhatsApp(phone: phone, message: msg) },
+                                onSms: { phone, msg in openSms(phone: phone, message: msg) },
+                                onCopy: { copyToClipboard(target.perClientUrl) },
+                                onShareSheet: { onShareSheetFor("Follow your dog's walk live: \(target.perClientUrl)") }
+                            )
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(shareUrl)
+                                .font(.caption)
+                                .padding(12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color(.systemGray6))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            HStack(spacing: 8) {
+                                Button {
+                                    copyToClipboard(shareUrl)
+                                } label: {
+                                    Label("Copy", systemImage: "doc.on.doc")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.bordered)
 
-                Spacer()
+                                Button {
+                                    onShareSheetFor("Follow the walk live: \(shareUrl)")
+                                } label: {
+                                    Label("Send\u{2026}", systemImage: "square.and.arrow.up")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.borderedProminent)
+                            }
+                        }
+                    }
+                }
+                .padding(20)
             }
-            .padding(16)
-            .navigationTitle("Walk Note")
+            .navigationTitle("Share")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        walkNote = ""
-                        showAddNoteSheet = false
+                    Button("Done") { onDismiss() }
+                }
+            }
+        }
+    }
+
+    private func copyToClipboard(_ s: String) {
+        UIPasteboard.general.string = s
+    }
+
+    private func openWhatsApp(phone: String, message: String) {
+        let cleaned = phone.replacingOccurrences(of: "+", with: "")
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "-", with: "")
+        let encoded = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        if let url = URL(string: "https://wa.me/\(cleaned)?text=\(encoded)") {
+            UIApplication.shared.open(url)
+        }
+    }
+
+    private func openSms(phone: String, message: String) {
+        let encoded = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        if let url = URL(string: "sms:\(phone)&body=\(encoded)") {
+            UIApplication.shared.open(url)
+        }
+    }
+}
+
+// MARK: - Per-booking share row
+
+private struct BookingShareRow: View {
+    let target: BookingShareTarget
+    let onWhatsApp: (String, String) -> Void
+    let onSms: (String, String) -> Void
+    let onCopy: () -> Void
+    let onShareSheet: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.2))
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Text(String(target.clientName.prefix(1)).uppercased())
+                            .font(.subheadline.bold())
+                    )
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(target.clientName)
+                        .font(.subheadline.bold())
+                    if !target.dogNames.isEmpty {
+                        Text(target.dogNames.joined(separator: ", "))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else if target.clientPhone == nil {
+                        Text("No phone on file")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        if !walkNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            walkNotes.append(walkNote.trimmingCharacters(in: .whitespacesAndNewlines))
-                        }
-                        walkNote = ""
-                        showAddNoteSheet = false
+            }
+
+            HStack(spacing: 6) {
+                if let phone = target.clientPhone {
+                    let message = "Follow your dog's walk live: \(target.perClientUrl)"
+                    Button {
+                        onWhatsApp(phone, message)
+                    } label: {
+                        Text("WhatsApp")
+                            .frame(maxWidth: .infinity)
                     }
-                    .disabled(walkNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .buttonStyle(.borderedProminent)
+
+                    Button {
+                        onSms(phone, message)
+                    } label: {
+                        Text("SMS")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Button {
+                        onCopy()
+                    } label: {
+                        Text("Copy URL")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
+                        onShareSheet()
+                    } label: {
+                        Text("Send\u{2026}")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+        }
+        .padding(12)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// MARK: - Walker safety sheet
+
+private struct WalkerSafetySheet: View {
+    let currentlyActive: Bool
+    let currentContact: String?
+    let onStart: (String, String, Int64) -> Void
+    let onEnd: () -> Void
+    let onDismiss: () -> Void
+
+    @State private var name: String = ""
+    @State private var phone: String = ""
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Image(systemName: "shield")
+                            .foregroundColor(.accentColor)
+                        Text("Walker safety")
+                            .font(.title2.bold())
+                    }
+
+                    if currentlyActive {
+                        Text("\(currentContact ?? "Your emergency contact") is watching this walk. End when you're back.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        Button {
+                            onEnd()
+                        } label: {
+                            Text("I've finished — end safety watch")
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    } else {
+                        Text("Pick someone to look out for you. They'll get a private link to watch your live location until you end the walk.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        TextField("Their name", text: $name)
+                            .textFieldStyle(.roundedBorder)
+                            .onChange(of: name) { new in
+                                if new.count > 50 { name = String(new.prefix(50)) }
+                            }
+
+                        TextField("Their phone (incl. country code)", text: $phone)
+                            .textFieldStyle(.roundedBorder)
+                            .keyboardType(.phonePad)
+                            .onChange(of: phone) { new in
+                                if new.count > 20 { phone = String(new.prefix(20)) }
+                            }
+
+                        Button {
+                            let returnAt = Int64(Date().addingTimeInterval(60 * 60).timeIntervalSince1970 * 1000)
+                            onStart(name.trimmingCharacters(in: .whitespaces), phone.trimmingCharacters(in: .whitespaces), returnAt)
+                        } label: {
+                            Text("Send safety link")
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(phone.count < 7)
+                    }
+                }
+                .padding(20)
+            }
+            .navigationTitle("Walker safety")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { onDismiss() }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Incident log dialog
+
+private struct IncidentLogDialog: View {
+    let onSubmit: (WalkIncidentType, String, WalkIncidentSeverity) -> Void
+    let onDismiss: () -> Void
+
+    @State private var selectedType: WalkIncidentType = .other
+    @State private var selectedSeverity: WalkIncidentSeverity = .low
+    @State private var notes: String = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Incident type") {
+                    Picker("Type", selection: $selectedType) {
+                        ForEach(WalkIncidentType.allCases, id: \.self) { type in
+                            Text(type.displayName).tag(type)
+                        }
+                    }
+                }
+
+                Section("Severity") {
+                    Picker("Severity", selection: $selectedSeverity) {
+                        ForEach(WalkIncidentSeverity.allCases, id: \.self) { sev in
+                            Text(sev.displayName).tag(sev)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Section("Notes") {
+                    TextField("What happened?", text: $notes, axis: .vertical)
+                        .lineLimit(3, reservesSpace: true)
+                }
+            }
+            .navigationTitle("Log Incident")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { onDismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Log") {
+                        onSubmit(selectedType, notes, selectedSeverity)
+                    }
+                    .disabled(notes.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Dog check-in dialog
+
+private struct DogCheckInDialog: View {
+    let dogName: String
+    let onConfirm: (String?) -> Void
+    let onDismiss: () -> Void
+
+    @State private var note: String = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Add an optional note about the check-in.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    TextField("Note (optional)", text: $note)
+                }
+            }
+            .navigationTitle("Check In \(dogName)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { onDismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Check In") {
+                        let trimmed = note.trimmingCharacters(in: .whitespaces)
+                        onConfirm(trimmed.isEmpty ? nil : trimmed)
+                    }
                 }
             }
         }
         .presentationDetents([.medium])
     }
+}
 
-    // MARK: - Completion Summary
+// MARK: - Walk summary screen (post-walk)
 
-    private func completionSummary(booking: Booking, record: LocalWalkRecord) -> some View {
+private struct WalkSummaryScreen: View {
+    let summary: WalkConsoleSummary
+    let onDone: () -> Void
+
+    var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Success icon
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 56))
+                    .font(.system(size: 64))
                     .foregroundColor(.green)
-                    .padding(.top, 24)
+                    .padding(.top, 20)
+                Text("Walk Complete")
+                    .font(.title.bold())
 
-                Text("Walk Complete!")
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
-
-                // Stats summary cards
                 VStack(spacing: 12) {
-                    summaryRow(icon: "map", label: "Distance", value: record.formattedDistance)
-                    summaryRow(icon: "clock", label: "Duration", value: record.formattedDuration)
-                    summaryRow(icon: "speedometer", label: "Avg Speed", value: record.formattedSpeed)
-                    summaryRow(icon: "flame", label: "Calories", value: "\(record.caloriesBurned) kcal")
-                    summaryRow(icon: "arrow.up.right", label: "Elevation Gain",
-                              value: String(format: "%.0f m", record.elevationGainMeters))
-                    summaryRow(icon: "sterlingsign.circle", label: "Earnings",
-                              value: CurrencyFormatter.shared.formatPrice(booking.price))
+                    summaryRow(icon: "map", label: "Distance", value: FormatUtils.formatDistance(summary.distance))
+                    summaryRow(icon: "clock", label: "Duration", value: FormatUtils.formatDuration(summary.duration))
+                    summaryRow(icon: "camera", label: "Photos", value: "\(summary.photoCount)")
+                    summaryRow(icon: "exclamationmark.triangle", label: "Incidents", value: "\(summary.incidentCount)")
                 }
                 .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(cardBackground)
-                )
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
 
-                // Notes summary
-                if !walkNotes.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Notes (\(walkNotes.count))")
-                            .font(.subheadline.bold())
-                            .foregroundColor(.white)
-
-                        ForEach(Array(walkNotes.enumerated()), id: \.offset) { _, note in
-                            Text("- \(note)")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.7))
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(cardBackground)
-                    )
-                }
-
-                // Done button
-                Button(action: { dismiss() }) {
+                Button {
+                    onDone()
+                } label: {
                     Text("Done")
                         .font(.body.bold())
-                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(darkTeal)
-                        )
+                        .padding(.vertical, 14)
                 }
-                .padding(.top, 8)
+                .buttonStyle(.borderedProminent)
 
                 Spacer(minLength: 40)
             }
             .padding(.horizontal, 16)
         }
+        .navigationTitle("Walk Summary")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func summaryRow(icon: String, label: String, value: String) -> some View {
         HStack {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.subheadline)
-                    .foregroundColor(tealAccent)
-                    .frame(width: 24)
-                Text(label)
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.7))
-            }
+            Label(label, systemImage: icon)
             Spacer()
-            Text(value)
-                .font(.subheadline.bold())
-                .foregroundColor(.white)
-        }
-    }
-
-    // MARK: - Walk Actions
-
-    private func startWalk() {
-        walkTracking.startTracking()
-        phase = .walking
-
-        // Update booking status to IN_PROGRESS
-        guard let bookingId = booking?.id else { return }
-        Task {
-            do {
-                try await bookingRepo.updateBookingStatus(bookingId: bookingId, status: .inProgress)
-                print("[WalkConsole] Booking \(bookingId) set to IN_PROGRESS")
-            } catch {
-                print("[WalkConsole] Failed to update booking status: \(error)")
-            }
-        }
-    }
-
-    private func pauseWalk() {
-        walkTracking.pauseTracking()
-        phase = .paused
-    }
-
-    private func resumeWalk() {
-        walkTracking.resumeTracking()
-        phase = .walking
-    }
-
-    private func completeWalk() {
-        let record = walkTracking.stopTracking()
-        completionRecord = record
-        phase = .completed
-
-        // Update booking status to COMPLETED
-        guard let bookingId = booking?.id else { return }
-        Task {
-            do {
-                try await bookingRepo.updateBookingStatus(bookingId: bookingId, status: .completed)
-                print("[WalkConsole] Booking \(bookingId) set to COMPLETED")
-            } catch {
-                print("[WalkConsole] Failed to complete booking: \(error)")
-            }
-
-            // Save walk data to Firestore
-            if let record = record {
-                await saveWalkData(bookingId: bookingId, record: record)
-            }
-        }
-    }
-
-    private func saveWalkData(bookingId: String, record: LocalWalkRecord) async {
-        let db = Firestore.firestore()
-        let walkData: [String: Any] = [
-            "bookingId": bookingId,
-            "distanceMeters": record.distanceMeters,
-            "durationSec": record.durationSec,
-            "caloriesBurned": record.caloriesBurned,
-            "elevationGainMeters": record.elevationGainMeters,
-            "avgSpeedKmh": record.avgSpeedKmh,
-            "polyline": record.polyline,
-            "notes": walkNotes,
-            "photoCount": capturedPhotos.count,
-            "completedAt": Int64(Date().timeIntervalSince1970 * 1000),
-            "earnings": booking?.price ?? 0.0
-        ]
-
-        do {
-            try await db.collection("walkRecords").addDocument(data: walkData)
-            print("[WalkConsole] Walk data saved for booking \(bookingId)")
-        } catch {
-            print("[WalkConsole] Failed to save walk data: \(error)")
+            Text(value).bold()
         }
     }
 }
 
-// MARK: - Image Picker (Camera)
+// MARK: - Error banner
 
-private struct ImagePickerView: UIViewControllerRepresentable {
-    @Binding var image: UIImage?
-    let sourceType: UIImagePickerController.SourceType
-    @Environment(\.dismiss) private var dismiss
+private struct ErrorBanner: View {
+    let text: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: "exclamationmark.triangle")
+            Text(text)
+                .font(.subheadline)
+                .lineLimit(2)
+        }
+        .padding(12)
+        .background(Color.red)
+        .foregroundColor(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 16)
+    }
+}
+
+// MARK: - Photo picker
+
+private struct WalkConsolePhotoPicker: UIViewControllerRepresentable {
+    let onPicked: (Data?) -> Void
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.sourceType = sourceType
         picker.delegate = context.coordinator
+        picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
         return picker
     }
 
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
+    func makeCoordinator() -> Coordinator { Coordinator(onPicked: onPicked) }
 
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: ImagePickerView
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let onPicked: (Data?) -> Void
+        init(onPicked: @escaping (Data?) -> Void) { self.onPicked = onPicked }
 
-        init(_ parent: ImagePickerView) {
-            self.parent = parent
-        }
-
-        func imagePickerController(_ picker: UIImagePickerController,
-                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            if let img = info[.originalImage] as? UIImage {
-                parent.image = img
-            }
-            parent.dismiss()
+        func imagePickerController(
+            _ picker: UIImagePickerController,
+            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
+        ) {
+            let image = info[.originalImage] as? UIImage
+            let data = image?.jpegData(compressionQuality: 0.85)
+            picker.dismiss(animated: true) { self.onPicked(data) }
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
+            picker.dismiss(animated: true) { self.onPicked(nil) }
         }
     }
+}
+
+// MARK: - Share activity wrapper
+
+private struct ShareActivityView: UIViewControllerRepresentable {
+    let text: String
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [text], applicationActivities: nil)
+    }
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Preview
 
 #Preview {
     NavigationStack {
-        BusinessWalkConsoleScreen(bookingId: "preview-booking-id")
+        BusinessWalkConsoleScreen(bookingId: "preview", dogIds: ["d1", "d2"])
     }
-    .preferredColorScheme(.dark)
 }

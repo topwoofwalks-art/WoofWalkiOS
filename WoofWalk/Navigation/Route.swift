@@ -66,6 +66,8 @@ enum AppRoute: Hashable {
     case businessEarnings
     case businessSettings
     case businessWalkConsole(bookingId: String)
+    case businessWalkConsoleFull(bookingId: String, dogIds: [String], bookingIds: [String])
+    case businessTodaysWalks
     case scanKey
 
     // Client
@@ -155,6 +157,8 @@ enum AppRoute: Hashable {
         case .businessEarnings: hasher.combine("businessEarnings")
         case .businessSettings: hasher.combine("businessSettings")
         case .businessWalkConsole(let id): hasher.combine("businessWalkConsole"); hasher.combine(id)
+        case .businessWalkConsoleFull(let id, let dogs, let bks): hasher.combine("businessWalkConsoleFull"); hasher.combine(id); hasher.combine(dogs); hasher.combine(bks)
+        case .businessTodaysWalks: hasher.combine("businessTodaysWalks")
         case .scanKey: hasher.combine("scanKey")
         case .clientBookings: hasher.combine("clientBookings")
         case .clientBookingDetail(let id): hasher.combine("clientBookingDetail"); hasher.combine(id)

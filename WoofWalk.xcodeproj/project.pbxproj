@@ -474,6 +474,10 @@
 		'A1000001000000000001331' = {isa = PBXBuildFile; fileRef = A1000001000000000001330; };
 		'A1000001000000000001333' = {isa = PBXBuildFile; fileRef = A1000001000000000001332; };
 		'A1000001000000000001335' = {isa = PBXBuildFile; fileRef = A1000001000000000001334; };
+		'A1000001000000000009101' = {isa = PBXBuildFile; fileRef = A1000001000000000009100; };
+		'A1000001000000000009103' = {isa = PBXBuildFile; fileRef = A1000001000000000009102; };
+		'A1000001000000000009105' = {isa = PBXBuildFile; fileRef = A1000001000000000009104; };
+		'A1000001000000000009107' = {isa = PBXBuildFile; fileRef = A1000001000000000009106; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -948,6 +952,10 @@
 		'A1000001000000000001330' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMeSendingSplash.swift; sourceTree = "<group>"; };
 		'A1000001000000000001332' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInPromptOverlay.swift; sourceTree = "<group>"; };
 		'A1000001000000000001334' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessLiveShareRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000009100 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalkConsoleModels.swift; path = WoofWalk/Models/Business/WalkConsoleModels.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009102 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessWalkSessionRepository.swift; path = WoofWalk/Repositories/BusinessWalkSessionRepository.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009104 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalkConsoleViewModel.swift; path = WoofWalk/ViewModels/WalkConsoleViewModel.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009106 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessTodaysWalksScreen.swift; path = WoofWalk/Views/Business/BusinessTodaysWalksScreen.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1042,6 +1050,10 @@
 				A1000001000000000001309,
 				A1000001000000000001311,
 				A1000001000000000001313,
+				A1000001000000000009100,
+				A1000001000000000009102,
+				A1000001000000000009104,
+				A1000001000000000009106,
 			);
 			sourceTree = "<group>";
 		};
@@ -2459,6 +2471,10 @@
 				A1000001000000000001331,
 				A1000001000000000001333,
 				A1000001000000000001335,
+				A1000001000000000009101,
+				A1000001000000000009103,
+				A1000001000000000009105,
+				A1000001000000000009107,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
