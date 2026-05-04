@@ -30,6 +30,12 @@ struct ClientHomeScreen: View {
                         // Upcoming Bookings section
                         upcomingBookingsSection
 
+                        // Meet & Greet inbox entry — return path for
+                        // anyone who started a request and navigated
+                        // away. Lives between Bookings and Dogs so
+                        // it's discoverable without crowding the top.
+                        meetGreetInboxCard
+
                         // My Dogs section
                         myDogsSection
 
@@ -251,6 +257,49 @@ struct ClientHomeScreen: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(Color.neutral20)
         )
+    }
+
+    // MARK: - Meet & Greet inbox card
+
+    /// Entry point to the client-side Meet & Greet inbox. Without
+    /// this card, anyone who submits a request and navigates away
+    /// has no way back to the conversation. Pushed inside the home
+    /// NavigationStack via `.meetGreetClientInbox`.
+    private var meetGreetInboxCard: some View {
+        NavigationLink(value: AppRoute.meetGreetClientInbox) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.turquoise60.opacity(0.20))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "hand.wave.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.turquoise60)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Meet & Greets")
+                        .font(.subheadline.bold())
+                        .foregroundColor(.white)
+                    Text("Conversations with providers before you book")
+                        .font(.caption)
+                        .foregroundColor(.neutral60)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundColor(.neutral60)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.neutral20)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - My Dogs Section

@@ -24,6 +24,9 @@ struct ClientTabView: View {
             TabView(selection: $selectedTab) {
                 NavigationStack {
                     ClientHomeScreen()
+                        .navigationDestination(for: AppRoute.self) { route in
+                            RouteDestination(route: route)
+                        }
                 }
                 .tabItem {
                     Label(ClientTab.home.rawValue, systemImage: ClientTab.home.icon)

@@ -483,6 +483,7 @@
 		'A1000001000000000009205' = {isa = PBXBuildFile; fileRef = A1000001000000000009204; };
 		'A1000001000000000009207' = {isa = PBXBuildFile; fileRef = A1000001000000000009206; };
 		'A1000001000000000009209' = {isa = PBXBuildFile; fileRef = A1000001000000000009208; };
+		'A1000001000000000009211' = {isa = PBXBuildFile; fileRef = A1000001000000000009210; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -966,6 +967,7 @@
 		A1000001000000000009204 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetRequestScreen.swift; path = WoofWalk/Views/MeetGreet/MeetGreetRequestScreen.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009206 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetThreadScreen.swift; path = WoofWalk/Views/MeetGreet/MeetGreetThreadScreen.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009208 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetConfirmedCard.swift; path = WoofWalk/Views/MeetGreet/MeetGreetConfirmedCard.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009210 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetInboxScreen.swift; path = WoofWalk/Views/MeetGreet/MeetGreetInboxScreen.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1069,6 +1071,7 @@
 				A1000001000000000009204,
 				A1000001000000000009206,
 				A1000001000000000009208,
+				A1000001000000000009210,
 			);
 			sourceTree = "<group>";
 		};
@@ -2495,6 +2498,7 @@
 				A1000001000000000009205,
 				A1000001000000000009207,
 				A1000001000000000009209,
+				A1000001000000000009211,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

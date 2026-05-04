@@ -31,6 +31,7 @@ struct BusinessHomeScreen: View {
                     if !cashRequests.isEmpty {
                         cashRequestsCard
                     }
+                    meetGreetInboxRow
                     jobsCard
                     Spacer(minLength: 100)
                 }
@@ -240,6 +241,50 @@ struct BusinessHomeScreen: View {
             print("[BusinessHomeScreen] cash topup inbox load failed: \(error.localizedDescription)")
             self.cashRequests = []
         }
+    }
+
+    // MARK: - Meet & Greet inbox row
+
+    /// Entry point to the provider-side Meet & Greet inbox. The
+    /// underlying listener is keyed by `providerOrgId` and the
+    /// `MeetGreetInboxViewModel` resolves the org id from the user
+    /// doc (`organizationId`) with a fallback to the owner uid —
+    /// same convention used by `loadCashRequests` above.
+    private var meetGreetInboxRow: some View {
+        NavigationLink(value: AppRoute.meetGreetProviderInbox) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(tealAccent.opacity(0.25))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "hand.wave.fill")
+                        .font(.subheadline)
+                        .foregroundColor(tealAccent)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Meet & Greets")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Text("Pre-booking intros from new clients")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundColor(.white.opacity(0.5))
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(cardBackground)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Jobs Card

@@ -158,10 +158,8 @@ final class MeetGreetRepository {
             .eraseToAnyPublisher()
     }
 
-    /// Inbox query — every open thread the current user is part of,
-    /// either as the client or as a provider-org member. The
-    /// provider-side member case is filtered server-side via the
-    /// rules; here we return the union.
+    /// Client-side inbox — every thread where the current uid is the
+    /// requester. Used by `MeetGreetInboxScreen` in `.client` mode.
     func observeMyClientThreads() -> AnyPublisher<[MeetGreetThread], Error> {
         let subject = PassthroughSubject<[MeetGreetThread], Error>()
         guard let uid = auth.currentUser?.uid else {
@@ -171,6 +169,34 @@ final class MeetGreetRepository {
         let registration = db.collection("meet_greet_threads")
             .whereField("clientUid", isEqualTo: uid)
             .order(by: "lastMessageAt", descending: true)
+            .addSnapshotListener { snapshot, error in
+                if let error {
+                    subject.send(completion: .failure(error))
+                    return
+                }
+                let threads: [MeetGreetThread] = snapshot?.documents.compactMap { doc in
+                    try? doc.data(as: MeetGreetThread.self)
+                } ?? []
+                subject.send(threads)
+            }
+        return subject
+            .handleEvents(receiveCancel: { registration.remove() })
+            .eraseToAnyPublisher()
+    }
+
+    /// Provider-side inbox — every thread targeting the given
+    /// `providerOrgId`. Used by `MeetGreetInboxScreen` in `.provider`
+    /// mode. Mirrors the Android `observeProviderThreads(orgId)` path.
+    /// The Firestore rules verify the caller is an org member; the
+    /// `whereField` here scopes the query to this org so the rule's
+    /// `list` evaluator can prove the constraint without a per-doc
+    /// `get()`.
+    func observeProviderThreads(providerOrgId: String) -> AnyPublisher<[MeetGreetThread], Error> {
+        let subject = PassthroughSubject<[MeetGreetThread], Error>()
+        let registration = db.collection("meet_greet_threads")
+            .whereField("providerOrgId", isEqualTo: providerOrgId)
+            .order(by: "lastMessageAt", descending: true)
+            .limit(to: 50)
             .addSnapshotListener { snapshot, error in
                 if let error {
                     subject.send(completion: .failure(error))
