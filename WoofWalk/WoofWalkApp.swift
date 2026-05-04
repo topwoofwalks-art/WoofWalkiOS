@@ -52,12 +52,69 @@ struct WoofWalkApp: App {
                         authViewModel.checkProfileExists()
                     }
                 }
+                .onOpenURL { url in
+                    // Custom-scheme deeplinks (woofwalk://...). Routes
+                    // are dispatched on the main actor so Navigator
+                    // mutations land on the same hop as the SwiftUI
+                    // path/tab bindings. Unknown hosts are silently
+                    // ignored — never crash on an unrecognised
+                    // deeplink. Mirrors Android's intent-filter set in
+                    // AndroidManifest.xml lines 98-126.
+                    Task { @MainActor in
+                        WoofWalkApp.handleDeeplink(url: url)
+                    }
+                }
                 .task {
                     await NotificationService.shared.requestPermission()
                 }
                 .task {
                     await screenshotAutomation.runAutomation()
                 }
+        }
+    }
+
+    /// Pure router for `woofwalk://...` URLs. Exposed `static` so the
+    /// scheme registration test (when it lands) can exercise the same
+    /// logic without spinning up the App scene.
+    @MainActor
+    static func handleDeeplink(url: URL) {
+        guard url.scheme?.lowercased() == "woofwalk" else { return }
+        let host = url.host?.lowercased() ?? ""
+        let pathSegments = url.pathComponents.filter { $0 != "/" }
+        let nav = AppNavigator.shared
+
+        // Only the Map tab's NavigationStack has the
+        // `.navigationDestination(for: AppRoute.self)` modifier — the
+        // other tabs' stacks are detail-only. Force-switch to map so
+        // any AppRoute we push lands on a stack that can resolve it.
+        nav.switchTab(.map)
+
+        switch host {
+        case "walk":
+            // woofwalk://walk/{walkSessionId} — post-walk recap deeplink
+            // from the portal. Routes to the live-share screen which
+            // doubles as the recap view for completed walks.
+            if let walkId = pathSegments.first, !walkId.isEmpty {
+                nav.popToRoot()
+                nav.navigate(to: .liveShare(walkId: walkId))
+            }
+        case "accept-invite":
+            // woofwalk://accept-invite?token=<invitationId>
+            // We support both ?token= and ?invitationId= for
+            // forward-compat with the portal's older email format.
+            let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            let token = comps?.queryItems?.first(where: { $0.name == "token" })?.value
+                ?? comps?.queryItems?.first(where: { $0.name == "invitationId" })?.value
+                ?? ""
+            if !token.isEmpty {
+                nav.popToRoot()
+                nav.navigate(to: .acceptInvite(token: token))
+            }
+        default:
+            // Silently no-op on unknown hosts (e.g. Android-only ones
+            // like booking, chat, payment that we haven't ported yet).
+            // Crashing here would leave any cold-start deeplink dead.
+            break
         }
     }
 

@@ -549,6 +549,15 @@ struct BusinessSettingsScreen: View {
     @State private var autoConfirmBookings: Bool = false
     @State private var showCancellationPolicy: Bool = false
 
+    // Owner-controls — fetched once on appear so the danger-zone gate
+    // has the real org name (for the type-to-confirm field) and the
+    // `claimedFromBusinessId` flag (which determines whether the
+    // "unclaim" button is shown). Same convention as
+    // OrganizationTab.tsx line 344 in the portal.
+    @State private var orgId: String?
+    @State private var orgDisplayName: String = ""
+    @State private var orgIsClaim: Bool = false
+
     var body: some View {
         Form {
             // Service Catalogue — R6 entry point
@@ -712,6 +721,20 @@ struct BusinessSettingsScreen: View {
                     }
                 }
             }
+
+            // Owner-only delete + unclaim controls. Mirrors the
+            // portal's OrgDangerZone — appears only once we've fetched
+            // the org doc so we can show the correct name in the
+            // type-to-confirm field. CF enforces caller-must-be-owner
+            // server-side; we still show this only to authenticated
+            // business users via the regular settings gate.
+            if let orgId, !orgDisplayName.isEmpty {
+                OrgDangerZoneSection(
+                    orgId: orgId,
+                    orgName: orgDisplayName,
+                    isClaim: orgIsClaim
+                )
+            }
         }
         .navigationTitle("Business Settings")
         .navigationBarTitleDisplayMode(.large)
@@ -719,6 +742,37 @@ struct BusinessSettingsScreen: View {
             Button("OK") { }
         } message: {
             Text("24-hour cancellation policy. Clients who cancel within 24 hours will be charged 50% of the booking fee.")
+        }
+        .task {
+            await loadOrgInfo()
+        }
+    }
+
+    /// Fetch the org's display name + claimedFromBusinessId once so
+    /// the danger zone has the data it needs. Sole-trader convention
+    /// here matches the existing ServiceSettingsView / charity-tab
+    /// path (org id derived from `org_<uid>`).
+    private func loadOrgInfo() async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let computedOrgId = "org_\(uid)"
+        do {
+            let snap = try await Firestore.firestore()
+                .collection("organizations")
+                .document(computedOrgId)
+                .getDocument()
+            guard snap.exists else { return }
+            let data = snap.data() ?? [:]
+            await MainActor.run {
+                self.orgId = computedOrgId
+                self.orgDisplayName = (data["businessName"] as? String)
+                    ?? (data["name"] as? String)
+                    ?? "your business"
+                self.orgIsClaim = (data["claimedFromBusinessId"] as? String)?.isEmpty == false
+            }
+        } catch {
+            // Silent — danger zone will simply not appear if the org
+            // doc isn't readable. Same fallback as portal when
+            // `useSettings` fails to load.
         }
     }
 

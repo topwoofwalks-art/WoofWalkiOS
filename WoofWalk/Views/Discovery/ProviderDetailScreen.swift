@@ -6,6 +6,7 @@ struct ProviderDetailScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showBookingSheet = false
     @State private var showMeetGreetSheet = false
+    @State private var showRemoveListingSheet = false
 
     init(providerId: String) {
         self.providerId = providerId
@@ -36,6 +37,17 @@ struct ProviderDetailScreen: View {
                     providerName: viewModel.provider?.name
                 )
             }
+        }
+        .sheet(isPresented: $showRemoveListingSheet) {
+            // GDPR remove-listing flow. Only meaningful for unclaimed
+            // (scraped) listings — owners of claimed orgs use the
+            // Danger Zone in business settings instead. The sheet
+            // calls the Cloud Functions for both email-OTP and
+            // Firebase Phone Auth verification paths.
+            RemoveListingSheet(
+                unclaimedId: providerId,
+                businessName: viewModel.provider?.name
+            )
         }
     }
 
@@ -82,12 +94,45 @@ struct ProviderDetailScreen: View {
                     // Dual-CTA — Book Now + Meet & Greet
                     dualCTASection(provider)
                         .padding(.top, 8)
-                        .padding(.bottom, 24)
+
+                    // GDPR owner-removal link — only on unclaimed
+                    // (scraped) listings. Mirrors the portal's
+                    // RemoveListingDialog entry point. Quiet treatment
+                    // because it's not a primary action; just enough
+                    // affordance for a business owner who finds their
+                    // listing here without consent.
+                    if provider.isExternal {
+                        ownerRemoveListingFooter
+                            .padding(.top, 12)
+                    }
                 }
                 .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
         }
         .ignoresSafeArea(edges: .top)
+    }
+
+    // MARK: - Owner: remove this listing
+
+    private var ownerRemoveListingFooter: some View {
+        VStack(alignment: .center, spacing: 6) {
+            Divider()
+                .padding(.bottom, 4)
+            Text("Is this your business?")
+                .font(.caption)
+                .foregroundColor(.neutral70)
+            Button {
+                showRemoveListingSheet = true
+            } label: {
+                Text("Owner: remove this listing")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.turquoise60)
+                    .underline()
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Hero Section

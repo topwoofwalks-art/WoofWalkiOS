@@ -484,6 +484,10 @@
 		'A1000001000000000009207' = {isa = PBXBuildFile; fileRef = A1000001000000000009206; };
 		'A1000001000000000009209' = {isa = PBXBuildFile; fileRef = A1000001000000000009208; };
 		'A1000001000000000009211' = {isa = PBXBuildFile; fileRef = A1000001000000000009210; };
+		'A1000001000000000009301' = {isa = PBXBuildFile; fileRef = A1000001000000000009300; };
+		'A1000001000000000009303' = {isa = PBXBuildFile; fileRef = A1000001000000000009302; };
+		'A1000001000000000009305' = {isa = PBXBuildFile; fileRef = A1000001000000000009304; };
+		'A1000001000000000009307' = {isa = PBXBuildFile; fileRef = A1000001000000000009306; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -968,6 +972,10 @@
 		A1000001000000000009206 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetThreadScreen.swift; path = WoofWalk/Views/MeetGreet/MeetGreetThreadScreen.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009208 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetConfirmedCard.swift; path = WoofWalk/Views/MeetGreet/MeetGreetConfirmedCard.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009210 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MeetGreetInboxScreen.swift; path = WoofWalk/Views/MeetGreet/MeetGreetInboxScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009300 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AcceptInviteScreen.swift; path = WoofWalk/Views/Invite/AcceptInviteScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009302 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OrgDangerZoneSection.swift; path = WoofWalk/Views/Business/Settings/OrgDangerZoneSection.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009304 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MatchFoundSheet.swift; path = WoofWalk/Views/Business/Signup/MatchFoundSheet.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009306 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RemoveListingSheet.swift; path = WoofWalk/Views/Discovery/Unclaimed/RemoveListingSheet.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1072,6 +1080,10 @@
 				A1000001000000000009206,
 				A1000001000000000009208,
 				A1000001000000000009210,
+				A1000001000000000009300,
+				A1000001000000000009302,
+				A1000001000000000009304,
+				A1000001000000000009306,
 			);
 			sourceTree = "<group>";
 		};
@@ -2499,6 +2511,10 @@
 				A1000001000000000009207,
 				A1000001000000000009209,
 				A1000001000000000009211,
+				A1000001000000000009301,
+				A1000001000000000009303,
+				A1000001000000000009305,
+				A1000001000000000009307,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

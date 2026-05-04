@@ -213,6 +213,10 @@ struct RouteDestination: View {
             CashTopupRequestView(requestId: requestId)
         case .businessCashRequest(let requestId):
             CashTopupReplyView(requestId: requestId)
+
+        // Team invitation deeplink
+        case .acceptInvite(let token):
+            AcceptInviteScreen(token: token)
         }
     }
 }

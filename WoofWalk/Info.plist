@@ -78,6 +78,28 @@
 		<string>twitter</string>
 	</array>
 	<!--
+	  Custom URL scheme `woofwalk://` — matches Android's
+	  AndroidManifest.xml lines 98-126. Used by:
+	    * Post-walk recap "Open in app" deeplink from the portal
+	      (woofwalk://walk/{walkSessionId}).
+	    * Team invitation emails (woofwalk://accept-invite?token=<id>).
+	    * Future: live-tracking, payment, review, friend-invite hosts.
+	  WoofWalkApp's .onOpenURL handles the routing; unknown hosts are
+	  silently ignored so we never crash on a deeplink we don't yet
+	  recognise.
+	-->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.woofwalk</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>woofwalk</string>
+			</array>
+		</dict>
+	</array>
+	<!--
 	  WoofWalk is dark-first single-mode across iOS / Android / Web.
 	  Forcing UIUserInterfaceStyle = Dark prevents the system from
 	  flipping the app to light mode during the day, which would

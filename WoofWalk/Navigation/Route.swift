@@ -115,6 +115,9 @@ enum AppRoute: Hashable {
     case clientCashRequest(requestId: String)
     case businessCashRequest(requestId: String)
 
+    // Team invitation deeplink (woofwalk://accept-invite?token=...)
+    case acceptInvite(token: String)
+
     func hash(into hasher: inout Hasher) {
         switch self {
         case .map: hasher.combine("map")
@@ -199,6 +202,7 @@ enum AppRoute: Hashable {
         case .privacySettings: hasher.combine("privacySettings")
         case .clientCashRequest(let id): hasher.combine("clientCashRequest"); hasher.combine(id)
         case .businessCashRequest(let id): hasher.combine("businessCashRequest"); hasher.combine(id)
+        case .acceptInvite(let token): hasher.combine("acceptInvite"); hasher.combine(token)
         }
     }
 
