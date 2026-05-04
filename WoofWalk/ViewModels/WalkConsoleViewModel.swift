@@ -805,8 +805,9 @@ final class WalkConsoleViewModel: ObservableObject {
     private func startStatsTimer() {
         statsTimer?.invalidate()
         let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let strong = self else { return }
             Task { @MainActor in
-                self?.tickStats()
+                strong.tickStats()
             }
         }
         RunLoop.main.add(timer, forMode: .common)
