@@ -115,7 +115,10 @@ struct WoofWalkTheme {
 
 // MARK: - Environment Key
 struct ThemeKey: EnvironmentKey {
-    static let defaultValue: WoofWalkTheme = WoofWalkTheme(colorScheme: .light)
+    // WoofWalk is dark-first single-mode (mirrors Android + portal).
+    // Default value is `.dark` so any view that bypasses the
+    // `applyTheme()` wrapper still gets brand-correct colours.
+    static let defaultValue: WoofWalkTheme = WoofWalkTheme(colorScheme: .dark)
 }
 
 extension EnvironmentValues {
@@ -127,16 +130,21 @@ extension EnvironmentValues {
 
 // MARK: - Theme Modifier
 struct ThemedView<Content: View>: View {
-    @Environment(\.colorScheme) var systemColorScheme
     let content: Content
 
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
 
+    // Always pin to `.dark`. The Info.plist's UIUserInterfaceStyle =
+    // Dark forces the system into dark mode app-wide, so reading
+    // `\.colorScheme` would always return `.dark` anyway — but
+    // hardcoding here makes the intent explicit and prevents a
+    // single misbehaving subview from being able to drift the theme.
     var body: some View {
         content
-            .environment(\.woofWalkTheme, WoofWalkTheme(colorScheme: systemColorScheme))
+            .environment(\.woofWalkTheme, WoofWalkTheme(colorScheme: .dark))
+            .preferredColorScheme(.dark)
     }
 }
 

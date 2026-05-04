@@ -77,5 +77,14 @@
 		<string>fb</string>
 		<string>twitter</string>
 	</array>
+	<!--
+	  WoofWalk is dark-first single-mode across iOS / Android / Web.
+	  Forcing UIUserInterfaceStyle = Dark prevents the system from
+	  flipping the app to light mode during the day, which would
+	  break brand colour contrast (turquoise tokens are tuned for
+	  dark surfaces). Mirrors Android's locked dark theme.
+	-->
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
 </dict>
 </plist>
