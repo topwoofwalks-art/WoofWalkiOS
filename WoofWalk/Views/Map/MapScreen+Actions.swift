@@ -69,6 +69,10 @@ extension MapScreen {
         // Use max of both sources - walkTrackingVM accumulates from GPS, mapViewModel from polyline
         completedDistance = max(walkTrackingViewModel.walkDistance, mapViewModel.walkDistance)
         completedDuration = Int(walkTrackingViewModel.walkDuration)
+        // Reset charity state — populated below once recordCharityPoints
+        // returns. The recap sheet hides the card while these are 0/empty.
+        completedCharityPoints = 0
+        completedCharityName = ""
         walkTrackingViewModel.stopWalk()
         mapViewModel.stopWalkTracking()
         guidanceViewModel.stopGuidance()
@@ -85,13 +89,22 @@ extension MapScreen {
                 walkDistance: completedDistance
             )
 
-            // Record charity points if eligible (matches Android WalkTrackingViewModel.recordCharityPoints)
+            // Record charity points if eligible (matches Android
+            // WalkTrackingViewModel.recordCharityPoints) AND surface them
+            // to the recap. Pre-fix the recording fired but the UI never
+            // saw the result — user reported "Walk-for-Charity not built
+            // yet" because their walks raised silent points with no
+            // visible feedback.
             let charityPoints = await CharityRepository.shared.recordCharityPoints(
                 distanceMeters: completedDistance
             )
             if charityPoints > 0 {
                 let charityId = CharityRepository.shared.getSelectedCharityId()
                 let charityName = CharityRepository.shared.getCharityName(charityId)
+                await MainActor.run {
+                    completedCharityPoints = charityPoints
+                    completedCharityName = charityName
+                }
                 print("[MapScreen] Charity points awarded: \(charityPoints) for \(charityName)")
             }
 

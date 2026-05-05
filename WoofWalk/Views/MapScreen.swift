@@ -45,6 +45,8 @@ struct MapScreen: View {
     @State var routePreview: RoutePreview?
     @State var completedDistance: Double = 0
     @State var completedDuration: Int = 0
+    @State var completedCharityPoints: Int64 = 0
+    @State var completedCharityName: String = ""
     @StateObject var settingsViewModel = SettingsViewModel()
     @ObservedObject var buttonTestCoordinator = ButtonTestCoordinator.shared
     @StateObject var walkPathVM = WalkPathVM()
@@ -176,7 +178,9 @@ struct MapScreen: View {
         .modifier(MapFullScreenModifiers(
             showWalkSummary: $showWalkSummary,
             completedDistance: completedDistance,
-            completedDuration: completedDuration
+            completedDuration: completedDuration,
+            charityPoints: completedCharityPoints,
+            charityName: completedCharityName
         ))
         .sheet(isPresented: $showTrailConditionSheet) {
             TrailConditionSheet(

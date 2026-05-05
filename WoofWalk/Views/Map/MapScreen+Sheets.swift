@@ -254,6 +254,8 @@ struct MapFullScreenModifiers: ViewModifier {
 
     let completedDistance: Double
     let completedDuration: Int
+    let charityPoints: Int64
+    let charityName: String
 
     private var earnedPoints: Int {
         WalkPointsCalculator.calculatePoints(
@@ -280,6 +282,8 @@ struct MapFullScreenModifiers: ViewModifier {
                     milestones: [],
                     achievements: badgeService.pendingAchievements,
                     mapImage: nil,
+                    charityPoints: charityPoints,
+                    charityName: charityName,
                     onShare: { showWalkSummary = false },
                     onDone: { showWalkSummary = false }
                 )

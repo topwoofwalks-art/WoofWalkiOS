@@ -15,6 +15,12 @@ struct WalkCompletionScreen: View {
     let achievements: [WalkAchievement]
     let trackPoints: [CLLocationCoordinate2D]
     let mapImage: UIImage?
+    /// Walk-for-Charity contribution from this walk. 0 when charity
+    /// mode wasn't enabled or no charity was selected. Surfaced via a
+    /// dedicated card on the recap so users see the impact of every
+    /// walk they take with charity mode on.
+    let charityPoints: Int64
+    let charityName: String
     let onShare: () -> Void
     let onDone: () -> Void
 
@@ -36,6 +42,8 @@ struct WalkCompletionScreen: View {
         achievements: [WalkAchievement] = [],
         trackPoints: [CLLocationCoordinate2D] = [],
         mapImage: UIImage?,
+        charityPoints: Int64 = 0,
+        charityName: String = "",
         onShare: @escaping () -> Void,
         onDone: @escaping () -> Void
     ) {
@@ -52,6 +60,8 @@ struct WalkCompletionScreen: View {
         self.achievements = achievements
         self.trackPoints = trackPoints
         self.mapImage = mapImage
+        self.charityPoints = charityPoints
+        self.charityName = charityName
         self.onShare = onShare
         self.onDone = onDone
     }
@@ -79,6 +89,10 @@ struct WalkCompletionScreen: View {
                         achievementsSection
                     }
 
+                    if charityPoints > 0 {
+                        charityCard
+                    }
+
                     statsCard
                     milestonesList
                     actionButtons
@@ -89,6 +103,37 @@ struct WalkCompletionScreen: View {
         .onAppear {
             animatePoints()
         }
+    }
+
+    private var charityCard: some View {
+        HStack(spacing: 14) {
+            Text("💚")
+                .font(.system(size: 36))
+            VStack(alignment: .leading, spacing: 4) {
+                Text("You raised \(charityPoints) points")
+                    .font(.headline)
+                if !charityName.isEmpty {
+                    Text("for \(charityName)")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("for charity")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+            Spacer()
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.green.opacity(0.12))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.green.opacity(0.35), lineWidth: 1)
+        )
+        .padding(.horizontal)
     }
 
     // MARK: - Sub-views
