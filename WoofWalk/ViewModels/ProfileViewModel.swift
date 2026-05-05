@@ -14,7 +14,16 @@ enum ProfileUiState {
     case loading
     case success(ProfileData)
     case error(String)
-    case leaderboardLoaded([UserProfile])
+}
+
+// Separate leaderboard state — sharing ProfileUiState meant every
+// userProfile re-emit clobbered .leaderboardLoaded back to .success,
+// causing the leaderboard tab to flicker / spin. Mirrors the Android
+// fix in v7.9.111.
+enum LeaderboardUiState {
+    case loading
+    case loaded([UserProfile])
+    case error(String)
 }
 
 struct ProfileData {
@@ -36,6 +45,7 @@ struct BadgeWithStatus {
 @MainActor
 class ProfileViewModel: ObservableObject {
     @Published var uiState: ProfileUiState = .loading
+    @Published var leaderboardState: LeaderboardUiState = .loading
     @Published var badges: [BadgeWithStatus] = []
     @Published var userProfile: UserProfile?
     @Published var friends: [UserProfile] = []
@@ -57,34 +67,30 @@ class ProfileViewModel: ObservableObject {
     private func loadProfileData() {
         uiState = .loading
 
+        // Stats are read directly off the server-authoritative user doc
+        // (totalWalks / totalDistanceMeters / totalDurationSec) — we no
+        // longer roll our own sum across /walks because that drifts from
+        // the gamification CF's running totals. Mirrors Android v7.9.111.
         userRepository.getUserProfile()
-            .combineLatest(statsRepository.getAllCompletedSessions())
             .sink { completion in
                 if case .failure(let error) = completion {
                     self.uiState = .error(error.localizedDescription)
                 }
-            } receiveValue: { [weak self] user, sessions in
+            } receiveValue: { [weak self] user in
                 guard let self = self, let user = user else { return }
 
                 self.userProfile = user
 
-                Task {
-                    do {
-                        let totalDistance = try await self.statsRepository.getTotalDistance()
-                        let totalDuration = try await self.statsRepository.getTotalDuration()
-                        let totalWalks = try await self.statsRepository.getTotalWalkCount()
+                let contributions = user.poisCreated + user.votesGiven +
+                    user.photosUploaded + user.hazardsReported
 
-                        self.uiState = .success(ProfileData(
-                            user: user,
-                            totalWalks: totalWalks,
-                            totalDistance: Int(totalDistance),
-                            totalTime: Int(totalDuration),
-                            contributions: 0
-                        ))
-                    } catch {
-                        self.uiState = .error(error.localizedDescription)
-                    }
-                }
+                self.uiState = .success(ProfileData(
+                    user: user,
+                    totalWalks: user.totalWalks,
+                    totalDistance: Int(user.totalDistanceMeters),
+                    totalTime: Int(user.totalDurationSec),
+                    contributions: contributions
+                ))
             }
             .store(in: &cancellables)
 
@@ -211,6 +217,7 @@ class ProfileViewModel: ObservableObject {
 
     func loadLeaderboard(type: LeaderboardType) {
         Task {
+            self.leaderboardState = .loading
             do {
                 let users: [UserProfile]
 
@@ -218,16 +225,30 @@ class ProfileViewModel: ObservableObject {
                 case .global:
                     users = try await userRepository.getLeaderboard()
                 case .regional:
-                    let regionCode = userProfile?.regionCode
+                    // regionCode is populated at signup (onUserCreate CF
+                    // defaults to "GB") and re-synced at every login. If
+                    // we somehow still see empty, fall back to the device
+                    // locale's country rather than running an empty-string
+                    // query that silently returns nothing useful. Mirrors
+                    // Android v7.9.111.
+                    let trimmed = (userProfile?.regionCode ?? "")
+                        .trimmingCharacters(in: .whitespaces)
+                    let regionCode = !trimmed.isEmpty
+                        ? trimmed
+                        : (Locale.current.region?.identifier ?? "GB")
                     users = try await userRepository.getLeaderboard(regionCode: regionCode)
                 case .friends:
-                    let friendIds = friends.compactMap { $0.id }
-                    users = try await userRepository.getFriendsLeaderboard(friendIds: friendIds)
+                    // Self-contained query — direct lookup against
+                    // /friendships, no dependency on the friends @Published
+                    // property which may not be populated when the user
+                    // taps Leaderboard before Social. Android's
+                    // getFriendsLeaderboardDirect equivalent.
+                    users = try await userRepository.getFriendsLeaderboardDirect()
                 }
 
-                self.uiState = .leaderboardLoaded(users)
+                self.leaderboardState = .loaded(users)
             } catch {
-                self.uiState = .error(error.localizedDescription)
+                self.leaderboardState = .error(error.localizedDescription)
             }
         }
     }

@@ -46,8 +46,6 @@ struct ProfileView: View {
                         }
                         .padding(.top, 100)
 
-                    case .leaderboardLoaded:
-                        EmptyView()
                     }
                 }
                 .padding()

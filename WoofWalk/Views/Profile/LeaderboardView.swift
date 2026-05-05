@@ -10,19 +10,20 @@ struct LeaderboardView: View {
             VStack(spacing: 0) {
                 leaderboardTypePicker()
 
-                switch viewModel.uiState {
+                switch viewModel.leaderboardState {
                 case .loading:
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                case .leaderboardLoaded(let users):
-                    leaderboardList(users: users)
+                case .loaded(let users):
+                    if users.isEmpty {
+                        emptyLeaderboardView()
+                    } else {
+                        leaderboardList(users: users)
+                    }
 
                 case .error(let message):
                     errorView(message: message)
-
-                default:
-                    EmptyView()
                 }
             }
             .navigationTitle("Leaderboard")
@@ -69,6 +70,23 @@ struct LeaderboardView: View {
                 }
             }
         }
+    }
+
+    private func emptyLeaderboardView() -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "person.3")
+                .font(.system(size: 60))
+                .foregroundColor(.secondary)
+            Text("No-one to show yet")
+                .font(.title3)
+            Text(selectedType == .friends
+                 ? "Add friends from the Social tab to see them here."
+                 : "Be the first to log a walk in your area.")
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func errorView(message: String) -> some View {

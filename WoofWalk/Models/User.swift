@@ -17,6 +17,7 @@ struct UserProfile: Identifiable, Codable {
     var regionCode: String
     var totalWalks: Int
     var totalDistanceMeters: Double
+    var totalDurationSec: Int
     var poisCreated: Int
     var votesGiven: Int
     var photosUploaded: Int
@@ -50,6 +51,7 @@ struct UserProfile: Identifiable, Codable {
          regionCode: String = "",
          totalWalks: Int = 0,
          totalDistanceMeters: Double = 0.0,
+         totalDurationSec: Int = 0,
          poisCreated: Int = 0,
          votesGiven: Int = 0,
          photosUploaded: Int = 0,
@@ -82,6 +84,7 @@ struct UserProfile: Identifiable, Codable {
         self.regionCode = regionCode
         self.totalWalks = totalWalks
         self.totalDistanceMeters = totalDistanceMeters
+        self.totalDurationSec = totalDurationSec
         self.poisCreated = poisCreated
         self.votesGiven = votesGiven
         self.photosUploaded = photosUploaded

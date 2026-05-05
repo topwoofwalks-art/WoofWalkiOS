@@ -114,8 +114,11 @@ class UserRepository: ObservableObject {
         var allUsers: [UserProfile] = []
 
         for chunk in chunks {
+            // Use FieldPath.documentID — UserProfile.id is @DocumentID
+            // (not stored as a field) so the previous whereField("id", in:
+            // chunk) returned nothing. Bug audit 2026-05-05.
             let snapshot = try await db.collection("users")
-                .whereField("id", in: chunk)
+                .whereField(FieldPath.documentID(), in: chunk)
                 .getDocuments()
 
             let users = try snapshot.documents.compactMap { try $0.data(as: UserProfile.self) }
@@ -123,6 +126,41 @@ class UserRepository: ObservableObject {
         }
 
         return allUsers.sorted { $0.pawPoints > $1.pawPoints }
+    }
+
+    /// Self-contained Friends leaderboard. Queries /friendships directly
+    /// for the current user's accepted friendships rather than depending
+    /// on a side-channel @Published property that may not have been
+    /// populated when the user opens Leaderboard before Social. Mirrors
+    /// Android `getFriendsLeaderboardDirect`.
+    func getFriendsLeaderboardDirect() async throws -> [UserProfile] {
+        guard let currentUserId = Auth.auth().currentUser?.uid else { return [] }
+
+        async let side1Snap = db.collection("friendships")
+            .whereField("userId1", isEqualTo: currentUserId)
+            .whereField("status", isEqualTo: "ACCEPTED")
+            .getDocuments()
+        async let side2Snap = db.collection("friendships")
+            .whereField("userId2", isEqualTo: currentUserId)
+            .whereField("status", isEqualTo: "ACCEPTED")
+            .getDocuments()
+
+        let s1 = try await side1Snap
+        let s2 = try await side2Snap
+
+        var friendIds = Set<String>()
+        for doc in s1.documents {
+            if let other = doc["userId2"] as? String { friendIds.insert(other) }
+        }
+        for doc in s2.documents {
+            if let other = doc["userId1"] as? String { friendIds.insert(other) }
+        }
+
+        // Always include the current user so they see their own ranking
+        // among friends.
+        friendIds.insert(currentUserId)
+
+        return try await getFriendsLeaderboard(friendIds: Array(friendIds))
     }
 
     // MARK: - Friend Request Workflow (matches Android FriendRepository)
