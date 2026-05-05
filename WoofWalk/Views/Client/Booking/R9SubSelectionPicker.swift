@@ -570,8 +570,12 @@ struct SessionTypeRow {
 }
 
 private func walkDurations(listing: [String: Any]) -> [WalkDurationRow] {
-    guard let cfg = listing["walkConfig"] as? [String: Any],
-          let arr = cfg["durations"] as? [[String: Any]] else { return [] }
+    guard let cfg = listing["walkConfig"] as? [String: Any] else { return [] }
+    // Canonical 'variants' takes precedence; legacy 'durations' is the fallback.
+    // Mirrors Android ServiceConfig.fromFirestoreMap. Closes parity gap surfaced
+    // by the May 2026 pass-3 audit — when Service Catalogue R1 lands and the
+    // wizard switches to writing 'variants', iOS will already understand both.
+    let arr = (cfg["variants"] as? [[String: Any]]) ?? (cfg["durations"] as? [[String: Any]]) ?? []
     return arr.compactMap { dict -> WalkDurationRow? in
         let isActive = (dict["isActive"] as? Bool) ?? true
         guard isActive else { return nil }
@@ -584,8 +588,10 @@ private func walkDurations(listing: [String: Any]) -> [WalkDurationRow] {
 }
 
 private func groomingMenu(listing: [String: Any]) -> [GroomingMenuRow] {
-    guard let cfg = listing["groomingConfig"] as? [String: Any],
-          let arr = cfg["groomingMenu"] as? [[String: Any]] else { return [] }
+    guard let cfg = listing["groomingConfig"] as? [String: Any] else { return [] }
+    // Canonical 'menuItems' takes precedence; legacy 'groomingMenu' is the fallback.
+    // Mirrors Android ServiceConfig.fromFirestoreMap.
+    let arr = (cfg["menuItems"] as? [[String: Any]]) ?? (cfg["groomingMenu"] as? [[String: Any]]) ?? []
     return arr.compactMap { dict -> GroomingMenuRow? in
         let isActive = (dict["isActive"] as? Bool) ?? true
         guard isActive else { return nil }
