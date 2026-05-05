@@ -13,7 +13,11 @@ struct CharitySettingsView: View {
                         viewModel.persistCharityEnabled(newValue)
                     }
             } footer: {
-                Text("When enabled, 25% of your walk points will be donated to your chosen charity.")
+                // Honest-copy: actual formula is distance / 10 → 1 point
+                // per 10 m walked → 100 pts per km. The old "25% of walk
+                // points" footer was wrong — there's no relationship to
+                // the user's pawPoints. Bug audit 2026-05-05.
+                Text("When enabled, every kilometre you walk earns 100 points for your chosen charity. Walk further, give more.")
             }
 
             if viewModel.charityEnabled {
