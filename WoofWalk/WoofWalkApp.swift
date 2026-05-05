@@ -2,6 +2,7 @@ import SwiftUI
 import Firebase
 import FirebaseAuth
 import StripePaymentSheet
+import GoogleMobileAds
 
 @main
 struct WoofWalkApp: App {
@@ -22,6 +23,15 @@ struct WoofWalkApp: App {
         // are created server-side by `processBookingPayment`; the
         // PaymentSheet client only needs the publishable key + clientSecret.
         StripeAPI.defaultPublishableKey = "pk_live_51Sg8grCHt9yHTLb1wpKwVN5LyUR93kgUYJmjxs5NrD4rHXGyFuAnyskiQYCRZKQNJVALvnnHeZol3Xv8gaIIF0aD00NoVlE74t"
+
+        // Google Mobile Ads (AdMob) — gates the charity-points award.
+        // Must run before the first preloadAd() call. The completion
+        // closure fires when the SDK is ready to serve ads; we don't
+        // block on it because preloadAd() itself queues until ready.
+        // Mirrors Android's MobileAds.initialize(...) on app start.
+        MobileAds.shared.start { _ in
+            print("[WoofWalk] AdMob initialised")
+        }
 
         NotificationService.shared.configure()
 

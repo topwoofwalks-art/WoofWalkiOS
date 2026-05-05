@@ -55,6 +55,11 @@ struct MapScreen: View {
     @State var isPlanningMode = false
     @State var showSavePlannedWalkDialog = false
     @State var showBackgroundLocationPrompt = false
+    /// Pre-walk charity-ad gate sheet. Shown when the user has charity
+    /// mode enabled and a charity selected; lets them watch a rewarded
+    /// interstitial (earns charity points) or skip (no points). Mirrors
+    /// Android DogSelectionSheet's CharityAdPreScreen flow.
+    @State var showCharityAdPreScreen = false
     @State var showRouteStartProximity = false
     @State var pendingRouteStart: CLLocationCoordinate2D?
     @State var showLivestockMode = false
@@ -182,6 +187,23 @@ struct MapScreen: View {
             charityPoints: completedCharityPoints,
             charityName: completedCharityName
         ))
+        .sheet(isPresented: $showCharityAdPreScreen) {
+            // Pre-walk charity-ad prompt. Two outcomes:
+            //   - Watch Ad & Walk → shows rewarded interstitial,
+            //     starts walk on dismiss, awards charity points
+            //     at walk-end if reward was earned.
+            //   - Skip Ad & Walk → starts walk immediately, no
+            //     charity points awarded (charityAdWatched stays
+            //     false, so recordCharityPoints returns 0).
+            CharityAdPreScreen(
+                charityName: CharityRepository.shared.getCharityName(
+                    CharityRepository.shared.getSelectedCharityId()
+                ),
+                onContinue: { chargeCharityAdAndStart() },
+                onSkip: { skipCharityAdAndStart() }
+            )
+            .presentationDetents([.medium])
+        }
         .sheet(isPresented: $showTrailConditionSheet) {
             TrailConditionSheet(
                 userLocation: locationManager.location,
@@ -314,6 +336,13 @@ struct MapScreen: View {
         .onAppear {
             locationManager.startUpdatingLocation()
             mapViewModel.loadPOIs(near: locationManager.location)
+            // Preload the charity rewarded interstitial in the background
+            // so it's ready when the user taps "Walk". Idempotent — no-op
+            // if charity disabled or an ad is already in-flight. Mirrors
+            // Android DogSelectionSheet's LaunchedEffect preload.
+            if CharityRepository.shared.isCharityEnabled() {
+                CharityAdManager.shared.preloadAd()
+            }
             // Only load Firestore data if Firebase is configured
             if FirebaseApp.app() != nil {
                 mapViewModel.loadHazardReports()

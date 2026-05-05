@@ -61,8 +61,81 @@ extension MapScreen {
             hasShownPrompt = true
             return
         }
+
+        // Charity ad gate — mirrors Android DogSelectionSheet flow.
+        // If the user has charity mode enabled AND has picked a
+        // charity, show the rewarded-ad pre-screen. They can watch
+        // (earns points at walk-end) or skip (walk starts, no points).
+        // Either way the walk starts. Anyone with charity off goes
+        // straight through.
+        let charityEnabled = CharityRepository.shared.isCharityEnabled()
+        let charityId = CharityRepository.shared.getSelectedCharityId()
+        if charityEnabled && !charityId.isEmpty {
+            CharityRepository.shared.setCharityAdWatched(false)
+            showCharityAdPreScreen = true
+            return
+        }
+
+        // No charity → start immediately.
+        CharityRepository.shared.setCharityAdWatched(false)
         walkTrackingViewModel.startWalk()
         mapViewModel.startWalkTracking()
+    }
+
+    /// Called from the CharityAdPreScreen "Watch Ad & Walk" button.
+    /// Presents the rewarded interstitial; on reward sets the flag,
+    /// on dismiss starts the walk. On any failure starts walk anyway
+    /// (no points awarded — the gate stays false).
+    func chargeCharityAdAndStart() {
+        showCharityAdPreScreen = false
+        guard let root = topViewController() else {
+            // No window/root — degrade gracefully and start walk.
+            walkTrackingViewModel.startWalk()
+            mapViewModel.startWalkTracking()
+            return
+        }
+        Task { @MainActor in
+            await CharityAdManager.shared.requestTrackingAuthorizationIfNeeded()
+            CharityAdManager.shared.showAd(
+                from: root,
+                onRewardEarned: {
+                    CharityRepository.shared.setCharityAdWatched(true)
+                },
+                onAdDismissed: {
+                    walkTrackingViewModel.startWalk()
+                    mapViewModel.startWalkTracking()
+                },
+                onAdFailed: {
+                    print("[startWalk] ad not ready, starting walk without charity points")
+                    CharityRepository.shared.setCharityAdWatched(false)
+                    walkTrackingViewModel.startWalk()
+                    mapViewModel.startWalkTracking()
+                }
+            )
+        }
+    }
+
+    /// Called from the CharityAdPreScreen "Skip Ad & Walk" button.
+    func skipCharityAdAndStart() {
+        showCharityAdPreScreen = false
+        CharityRepository.shared.setCharityAdWatched(false)
+        walkTrackingViewModel.startWalk()
+        mapViewModel.startWalkTracking()
+    }
+
+    /// Walk the responder chain on the foreground key window to find
+    /// the top-most presented view controller. AdMob's
+    /// rewardedInterstitialAd.present(from:) needs a UIViewController
+    /// to host the ad. SwiftUI doesn't expose one directly so this
+    /// reaches into UIApplication.
+    private func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes
+        guard let windowScene = scenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController
+        else { return nil }
+        var top = rootVC
+        while let presented = top.presentedViewController { top = presented }
+        return top
     }
 
     func stopWalk() {

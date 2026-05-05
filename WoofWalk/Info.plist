@@ -108,5 +108,73 @@
 	-->
 	<key>UIUserInterfaceStyle</key>
 	<string>Dark</string>
+
+	<!--
+	  Google Mobile Ads (AdMob) — gates the charity-points award the
+	  same way Android's CharityAdManager does. The user watches a
+	  rewarded interstitial before each walk; the reward callback
+	  flips charityAdWatched=true so recordCharityPoints() at walk-end
+	  awards points.
+
+	  GADApplicationIdentifier is the iOS test ID until WoofWalk's
+	  iOS AdMob app is provisioned. Once it is, swap to the prod ID
+	  (the Android prod app ID is for Android only — AdMob requires
+	  one app registration per platform).
+	-->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+
+	<!--
+	  ATT (App Tracking Transparency) — iOS 14.5+ requires this
+	  description and an explicit prompt before the SDK can request
+	  IDFA. CharityAdManager calls ATTrackingManager.requestAuthorization
+	  before its first ad load. Even if the user denies, ads still
+	  serve (just non-personalised, lower CPM). Charity points still
+	  award on reward — the gate is "did they watch the ad", not "did
+	  they grant tracking".
+	-->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>WoofWalk shows you a rewarded ad before each charity walk so we can pay your chosen dog rescue charity. Allowing tracking helps us show ads that fund more donations per view.</string>
+
+	<!--
+	  SKAdNetwork — Google's published list (subset; the full ~71-entry
+	  list is at https://developers.google.com/admob/ios/14.0.0-migration).
+	  Every entry here is a Google ad-network partner that needs
+	  conversion attribution on iOS 14.5+. Missing entries don't
+	  break ads, they just lose attribution = lower fill rate.
+	-->
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict><key>SKAdNetworkIdentifier</key><string>cstr6suwn9.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>4fzdc2evr5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>2u9pt9hc89.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>8s468mfl3y.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>klf5c3l5u5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>ppxm28t8ap.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3sh42y64q3.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3qy4746246.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3rd42ekr43.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>v9wttpbfk9.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>n38lu8286q.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>47vhws6wlr.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>kbd757ywx3.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>9t245vhmpl.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>a2p9lx4jpn.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>22mmun2rn5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>4468km3ulz.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>2u9pt9hc89.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>8s468mfl3y.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>klf5c3l5u5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>ppxm28t8ap.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>424m5254lk.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>uw77j35x4d.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>578prtvx9j.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>4dzt52r2t5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>e5fvkxwrpn.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>8c4e2ghe7u.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>zq492l623r.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3qcr597p9d.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3qy4746246.skadnetwork</string></dict>
+	</array>
 </dict>
 </plist>

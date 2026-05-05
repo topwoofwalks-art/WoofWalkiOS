@@ -26,6 +26,12 @@ target 'WoofWalk' do
   # client_secret returned from `processBookingPayment` (the on_behalf_of
   # + transfer_data are baked into the PaymentIntent server-side).
   pod 'StripePaymentSheet', '~> 23.30'
+
+  # Google Mobile Ads (AdMob) — rewarded-interstitial ads gate the
+  # charity-points award. Mirrors Android `play-services-ads` in
+  # app/build.gradle.kts. Without the user watching an ad first, walks
+  # don't award charity points (the ads pay the donations).
+  pod 'Google-Mobile-Ads-SDK', '~> 11.6'
 end
 
 post_install do |installer|

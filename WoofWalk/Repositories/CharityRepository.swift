@@ -20,6 +20,19 @@ class CharityRepository {
     private let charityEnabledKey = "charity_enabled"
     private let selectedCharityKey = "selected_charity_id"
 
+    // In-memory flag mirroring Android `CharityRepository.charityAdWatched`.
+    // Flipped to true by CharityAdManager when the user watches the
+    // rewarded ad to completion; flipped back to false at the end of
+    // recordCharityPoints (and on any failure path) so a stale flag
+    // can never grant points across walks. Volatile semantics — the
+    // flag lives only for the current walk.
+    private(set) var charityAdWatched: Bool = false
+
+    func setCharityAdWatched(_ watched: Bool) {
+        charityAdWatched = watched
+        print("[CharityRepository] charityAdWatched = \(watched)")
+    }
+
     // MARK: - Charity Profile (Firestore path: users/{uid}/charityProfile/profile)
 
     /// Load the full charity profile from Firestore subcollection (matches Android path).
@@ -90,8 +103,19 @@ class CharityRepository {
             return 0
         }
 
+        // Ad-watch gate — mirrors Android exactly. Without this the ads
+        // model collapses (users get points without the SDK ever loading
+        // an ad = zero revenue). Flag is set by CharityAdManager when
+        // the user watches the rewarded interstitial to completion;
+        // reset at end of this method so each walk needs its own ad.
+        guard charityAdWatched else {
+            print("[CharityRepository] Charity ad not watched, no points awarded")
+            return 0
+        }
+
         guard let uid = auth.currentUser?.uid else {
             print("[CharityRepository] No authenticated user, cannot record charity points")
+            charityAdWatched = false
             return 0
         }
 
@@ -147,9 +171,13 @@ class CharityRepository {
                 ], merge: true)
 
             print("[CharityRepository] Charity points recorded: \(points) points for \(charityId)")
+            // Reset flag so the next walk requires its own ad-watch.
+            charityAdWatched = false
             return points
         } catch {
             print("[CharityRepository] Failed to record charity points: \(error)")
+            // Reset on failure too — never let a stale flag leak.
+            charityAdWatched = false
             return 0
         }
     }
