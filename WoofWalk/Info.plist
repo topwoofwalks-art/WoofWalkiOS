@@ -143,6 +143,42 @@
 	  conversion attribution on iOS 14.5+. Missing entries don't
 	  break ads, they just lose attribution = lower fill rate.
 	-->
+	<!--
+	  Branch.io referral attribution — iOS equivalent of Android's
+	  Play Install Referrer API. The Branch SDK reads a deferred
+	  deep-link payload from a `woofwalk.app/invite?ref=CODE` link
+	  the user clicked BEFORE installing, then forwards the `ww_ref`
+	  code to our `attributeInstall` Cloud Function on first launch.
+	  See `Services/BranchReferralService.swift`.
+
+	  TODO(launch): Replace `BRANCH_KEY_NEEDED` with the live + test
+	  keys from the Branch dashboard (https://dashboard.branch.io →
+	  Account Settings → keys). Build still launches with the
+	  placeholders — the service short-circuits and falls through to
+	  fingerprint-only attribution. Once keys land, also fill in the
+	  `applinks:*.app.link` entitlement on the WoofWalk target's
+	  Associated Domains capability.
+	-->
+	<key>BranchKey</key>
+	<string>BRANCH_KEY_NEEDED</string>
+	<key>BranchKeyTest</key>
+	<string>BRANCH_KEY_NEEDED</string>
+	<!--
+	  Branch's auto-detected universal-link domains. Populate with
+	  the WoofWalk subdomain on the Branch dashboard once
+	  provisioned (e.g. `woofwalk.app.link`,
+	  `woofwalk-alternate.app.link`, plus the custom-domain
+	  `link.woofwalk.app` if/when set up). Branch matches incoming
+	  Universal Link `NSUserActivity` URLs against this list to
+	  decide whether it owns the link; non-matching URLs fall
+	  through to the existing `woofwalk://` router untouched.
+	-->
+	<key>BranchUniversalLinkDomains</key>
+	<array>
+		<string>woofwalk.app.link</string>
+		<string>woofwalk-alternate.app.link</string>
+	</array>
+
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict><key>SKAdNetworkIdentifier</key><string>cstr6suwn9.skadnetwork</string></dict>

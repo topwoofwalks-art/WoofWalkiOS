@@ -141,25 +141,7 @@ struct CommunityChatTab: View {
 
     @ViewBuilder
     private func authorAvatar(for msg: CommunityChatMessage) -> some View {
-        if let urlStr = msg.authorPhotoUrl, let url = URL(string: urlStr) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().aspectRatio(contentMode: .fill)
-                default:
-                    Image(systemName: "person.crop.circle.fill")
-                        .resizable()
-                        .foregroundColor(.secondary.opacity(0.4))
-                }
-            }
-            .frame(width: 28, height: 28)
-            .clipShape(Circle())
-        } else {
-            Image(systemName: "person.crop.circle.fill")
-                .resizable()
-                .frame(width: 28, height: 28)
-                .foregroundColor(.secondary.opacity(0.4))
-        }
+        UserAvatarView(photoUrl: msg.authorPhotoUrl, displayName: msg.authorName, size: 28)
     }
 
     private func timeStr(_ date: Date) -> String {

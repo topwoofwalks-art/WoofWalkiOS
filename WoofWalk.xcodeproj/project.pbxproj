@@ -372,6 +372,8 @@
 		'A1000001000000000001192' = {isa = PBXBuildFile; fileRef = A1000001000000000001191; };
 		'A1000001000000000001194' = {isa = PBXBuildFile; fileRef = A1000001000000000001193; };
 		'A1000001000000000001196' = {isa = PBXBuildFile; fileRef = A1000001000000000001195; };
+		'A1000001000000000001601' = {isa = PBXBuildFile; fileRef = A1000001000000000001600; };
+		'A1000001000000000001603' = {isa = PBXBuildFile; fileRef = A1000001000000000001602; };
 		'A1000001000000000001198' = {isa = PBXBuildFile; fileRef = A1000001000000000001197; };
 		'A1000001000000000001200' = {isa = PBXBuildFile; fileRef = A1000001000000000001199; };
 		'A1000001000000000001202' = {isa = PBXBuildFile; fileRef = A1000001000000000001201; };
@@ -433,6 +435,7 @@
 		'A1000001000000000001310' = {isa = PBXBuildFile; fileRef = A1000001000000000001309; };
 		'A1000001000000000001312' = {isa = PBXBuildFile; fileRef = A1000001000000000001311; };
 		'A1000001000000000001314' = {isa = PBXBuildFile; fileRef = A1000001000000000001313; };
+		'A1000001000000000001316' = {isa = PBXBuildFile; fileRef = A1000001000000000001315; };
 		'A1000001000000000001147' = {isa = PBXBuildFile; fileRef = A1000001000000000001146; };
 		'A1000001000000000001149' = {isa = PBXBuildFile; fileRef = A1000001000000000001148; };
 		'A1000001000000000001151' = {isa = PBXBuildFile; fileRef = A1000001000000000001150; };
@@ -518,6 +521,13 @@
 		'A1000001000000000009451' = {isa = PBXBuildFile; fileRef = A1000001000000000009450; };
 		'A1000001000000000009453' = {isa = PBXBuildFile; fileRef = A1000001000000000009452; };
 		'A1000001000000000009461' = {isa = PBXBuildFile; fileRef = A1000001000000000009460; };
+		'A1000001000000000001501' = {isa = PBXBuildFile; fileRef = A1000001000000000001500; };
+		'A1000001000000000001503' = {isa = PBXBuildFile; fileRef = A1000001000000000001502; };
+		'A1000001000000000001505' = {isa = PBXBuildFile; fileRef = A1000001000000000001504; };
+		'A1000001000000000001507' = {isa = PBXBuildFile; fileRef = A1000001000000000001506; };
+		'A1000001000000000001509' = {isa = PBXBuildFile; fileRef = A1000001000000000001508; };
+		'A1000001000000000001511' = {isa = PBXBuildFile; fileRef = A1000001000000000001510; };
+		'A1000001000000000001513' = {isa = PBXBuildFile; fileRef = A1000001000000000001512; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -885,6 +895,8 @@
 		A1000001000000000001191 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LostDogReportScreen.swift; path = WoofWalk/Views/Social/LostDogReportScreen.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001193 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessCharityDonationView.swift; path = WoofWalk/Views/Business/Settings/BusinessCharityDonationView.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001195 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PhoneWatchSessionManager.swift; path = WoofWalk/Services/PhoneWatchSessionManager.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001600 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BranchReferralService.swift; path = WoofWalk/Services/BranchReferralService.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001602 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BranchAppDelegate.swift; path = WoofWalk/BranchAppDelegate.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001197 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EmergencyContactsView.swift; path = WoofWalk/Views/Settings/EmergencyContactsView.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001199 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DogProfilePublic.swift; path = WoofWalk/Models/DogProfilePublic.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001201 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CashTopupRepository.swift; path = WoofWalk/Repositories/CashTopupRepository.swift; sourceTree = SOURCE_ROOT; };
@@ -946,6 +958,7 @@
 		A1000001000000000001309 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DogGallerySection.swift; path = WoofWalk/Views/Profile/DogGallerySection.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001311 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DogMedicalSection.swift; path = WoofWalk/Views/Profile/DogMedicalSection.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000001313 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VaccinationFormSheet.swift; path = WoofWalk/Views/Profile/VaccinationFormSheet.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001315 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UserAvatarView.swift; path = WoofWalk/Views/Components/UserAvatarView.swift; sourceTree = SOURCE_ROOT; };
 		'A1000001000000000001146' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LostDogsScreen.swift; sourceTree = "<group>"; };
 		'A1000001000000000001148' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialHubScreenV2.swift; sourceTree = "<group>"; };
 		'A1000001000000000001150' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModeSwitcher.swift; sourceTree = "<group>"; };
@@ -1036,6 +1049,13 @@
 		A1000001000000000009450 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunitySettingsScreen.swift; path = WoofWalk/Views/Social/Communities/CommunitySettingsScreen.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009452 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityModerationScreen.swift; path = WoofWalk/Views/Social/Communities/CommunityModerationScreen.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009460 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityCodableExtensions.swift; path = WoofWalk/Repositories/Community/CommunityCodableExtensions.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001500 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DogQuestion.swift; path = WoofWalk/Models/QA/DogQuestion.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001502 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DogAnswer.swift; path = WoofWalk/Models/QA/DogAnswer.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001504 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QARepository.swift; path = WoofWalk/Repositories/QARepository.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001506 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QAViewModel.swift; path = WoofWalk/ViewModels/QAViewModel.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001508 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QAListScreen.swift; path = WoofWalk/Views/Social/QA/QAListScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001510 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QADetailScreen.swift; path = WoofWalk/Views/Social/QA/QADetailScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001512 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AskQuestionScreen.swift; path = WoofWalk/Views/Social/QA/AskQuestionScreen.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1131,6 +1151,7 @@
 				A1000001000000000001309,
 				A1000001000000000001311,
 				A1000001000000000001313,
+				A1000001000000000001315,
 				A1000001000000000009100,
 				A1000001000000000009102,
 				A1000001000000000009104,
@@ -1173,6 +1194,15 @@
 				A1000001000000000009450,
 				A1000001000000000009452,
 				A1000001000000000009460,
+				A1000001000000000001600,
+				A1000001000000000001602,
+				A1000001000000000001500,
+				A1000001000000000001502,
+				A1000001000000000001504,
+				A1000001000000000001506,
+				A1000001000000000001508,
+				A1000001000000000001510,
+				A1000001000000000001512,
 			);
 			sourceTree = "<group>";
 		};
@@ -2585,6 +2615,7 @@
 				A1000001000000000001310,
 				A1000001000000000001312,
 				A1000001000000000001314,
+				A1000001000000000001316,
 				A1000001000000000001321,
 				A1000001000000000001323,
 				A1000001000000000001325,
@@ -2635,6 +2666,15 @@
 				A1000001000000000009451,
 				A1000001000000000009453,
 				A1000001000000000009461,
+				A1000001000000000001601,
+				A1000001000000000001603,
+				A1000001000000000001501,
+				A1000001000000000001503,
+				A1000001000000000001505,
+				A1000001000000000001507,
+				A1000001000000000001509,
+				A1000001000000000001511,
+				A1000001000000000001513,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

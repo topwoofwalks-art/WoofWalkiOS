@@ -6,6 +6,14 @@ import GoogleMobileAds
 
 @main
 struct WoofWalkApp: App {
+    // Mount a tiny UIKit delegate purely so the Branch SDK can hook
+    // into `didFinishLaunchingWithOptions`, `application(_:continue:)`,
+    // and `application(_:open:options:)` — none of which are surfaced
+    // by SwiftUI's pure-App lifecycle. The delegate forwards those
+    // callbacks to BranchReferralService, which falls through to the
+    // existing `.onOpenURL` deeplink router for non-Branch URLs.
+    @UIApplicationDelegateAdaptor(BranchAppDelegate.self) private var branchAppDelegate
+
     @StateObject private var screenshotAutomation = ScreenshotAutomation.shared
     @StateObject private var authViewModel = AuthViewModel()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -16,6 +24,17 @@ struct WoofWalkApp: App {
         } else {
             print("[WoofWalk] GoogleService-Info.plist not found - Firebase disabled")
         }
+
+        // Branch.io referral attribution — initialise the SDK before
+        // the first scene appears so the deferred deep-link callback
+        // fires during cold start. Mirrors Android's
+        // `ReferralAttribution` self-hosted attribution flow: Branch
+        // is iOS's source for the "user clicked an invite link before
+        // installing" payload, the equivalent of Play Install Referrer
+        // on Android. The service short-circuits if the BranchKey
+        // Info.plist value is the `BRANCH_KEY_NEEDED` placeholder, so
+        // dev builds without keys still launch cleanly.
+        BranchReferralService.shared.configure()
 
         // Stripe SDK — full PaymentSheet parity with Android. The publishable
         // key is hard-coded to match Android's `WoofWalkApplication.kt`
@@ -60,6 +79,20 @@ struct WoofWalkApp: App {
                             }
                         }
                         authViewModel.checkProfileExists()
+
+                        // Self-hosted referral attribution. One-shot,
+                        // post-sign-in: takes any Branch-supplied
+                        // referral code stashed in UserDefaults and
+                        // forwards it to the `attributeInstall` Cloud
+                        // Function which writes
+                        // `users/{uid}.referredBy` and creates the
+                        // `referrals/{id}` doc. Idempotent — only
+                        // runs once per install. Mirrors Android's
+                        // `referralAttribution.attributeIfNeeded()`
+                        // call in `MainActivity.onCreate`.
+                        Task {
+                            await BranchReferralService.shared.attributeIfNeeded()
+                        }
                     }
                 }
                 .onOpenURL { url in

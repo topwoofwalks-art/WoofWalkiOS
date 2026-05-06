@@ -218,25 +218,7 @@ struct PostCard: View {
 
     @ViewBuilder
     private var avatar: some View {
-        if let urlStr = post.authorPhotoUrl, let url = URL(string: urlStr) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().aspectRatio(contentMode: .fill)
-                default:
-                    Image(systemName: "person.crop.circle.fill")
-                        .resizable()
-                        .foregroundColor(.secondary.opacity(0.4))
-                }
-            }
-            .frame(width: 36, height: 36)
-            .clipShape(Circle())
-        } else {
-            Image(systemName: "person.crop.circle.fill")
-                .resizable()
-                .frame(width: 36, height: 36)
-                .foregroundColor(.secondary.opacity(0.4))
-        }
+        UserAvatarView(photoUrl: post.authorPhotoUrl, displayName: post.authorName, size: 36)
     }
 
     private var relativeTime: String {

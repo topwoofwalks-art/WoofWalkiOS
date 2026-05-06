@@ -60,6 +60,7 @@ struct MapSheetModifiers: ViewModifier {
                 showRouteStartProximity: $showRouteStartProximity,
                 pendingRouteStart: pendingRouteStart,
                 locationManager: locationManager,
+                routingViewModel: routingViewModel,
                 onDismiss: onRouteStartProximityDismiss,
                 onNavigate: onRouteStartNavigate,
                 onStartAnyway: onRouteStartAnyway
@@ -180,6 +181,7 @@ struct MapSheetModifiersGroup3: ViewModifier {
 
     let pendingRouteStart: CLLocationCoordinate2D?
     var locationManager: LocationManager
+    var routingViewModel: RoutingViewModel
     let onDismiss: () -> Void
     let onNavigate: (CLLocationCoordinate2D) -> Void
     let onStartAnyway: () -> Void
@@ -194,7 +196,8 @@ struct MapSheetModifiersGroup3: ViewModifier {
                         routeName: "Planned Walk",
                         onNavigateToStart: { onNavigate(start) },
                         onStartAnyway: onStartAnyway,
-                        onCancel: onDismiss
+                        onCancel: onDismiss,
+                        routingViewModel: routingViewModel
                     )
                 }
             }

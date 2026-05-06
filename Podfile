@@ -32,6 +32,17 @@ target 'WoofWalk' do
   # app/build.gradle.kts. Without the user watching an ad first, walks
   # don't award charity points (the ads pay the donations).
   pod 'Google-Mobile-Ads-SDK', '~> 11.6'
+
+  # Branch.io — iOS-side referral attribution + deferred deep-linking.
+  # Equivalent of Android's Play Install Referrer API: when a user
+  # clicks a `woofwalk.app/invite?ref=CODE` link and *then* installs
+  # the app, Branch's first-session callback delivers the `ww_ref`
+  # code to BranchReferralService, which forwards it to the
+  # `attributeInstall` Cloud Function (the same CF Android calls).
+  # The 3.x SDK is the modern replacement for `Branch` 2.x — module
+  # name is `BranchSDK`. Plays nicely with Firebase + Stripe; no
+  # known transitive conflicts with our existing pods.
+  pod 'BranchSDK', '~> 3.0'
 end
 
 post_install do |installer|

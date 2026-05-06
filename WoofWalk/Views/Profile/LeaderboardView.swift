@@ -119,24 +119,11 @@ struct LeaderboardRow: View {
         HStack(spacing: 16) {
             rankBadge()
 
-            if let photoUrl = user.photoUrl, let url = URL(string: photoUrl) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Image(systemName: "person.circle.fill")
-                        .resizable()
-                        .foregroundColor(.gray)
-                }
-                .frame(width: 50, height: 50)
-                .clipShape(Circle())
-            } else {
-                Image(systemName: "person.circle.fill")
-                    .resizable()
-                    .foregroundColor(.gray)
-                    .frame(width: 50, height: 50)
-            }
+            UserAvatarView(
+                photoUrl: user.photoUrl,
+                displayName: user.username,
+                size: 50
+            )
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {

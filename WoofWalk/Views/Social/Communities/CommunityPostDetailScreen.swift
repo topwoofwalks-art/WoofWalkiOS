@@ -124,7 +124,7 @@ struct CommunityPostDetailScreen: View {
 
     private func authorHeader(post: CommunityPost) -> some View {
         HStack(spacing: 12) {
-            avatarFor(urlStr: post.authorPhotoUrl, size: 44)
+            UserAvatarView(photoUrl: post.authorPhotoUrl, displayName: post.authorName, size: 44)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(post.authorName.isEmpty ? "Unknown" : post.authorName)
@@ -351,7 +351,7 @@ struct CommunityPostDetailScreen: View {
 
     private func commentRow(comment: CommunityComment, depth: Int) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            avatarFor(urlStr: comment.authorPhotoUrl, size: 30)
+            UserAvatarView(photoUrl: comment.authorPhotoUrl, displayName: comment.authorName, size: 30)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(comment.authorName.isEmpty ? "Unknown" : comment.authorName)
