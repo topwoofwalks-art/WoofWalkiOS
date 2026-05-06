@@ -116,13 +116,13 @@
 	  flips charityAdWatched=true so recordCharityPoints() at walk-end
 	  awards points.
 
-	  GADApplicationIdentifier is the iOS test ID until WoofWalk's
-	  iOS AdMob app is provisioned. Once it is, swap to the prod ID
-	  (the Android prod app ID is for Android only — AdMob requires
-	  one app registration per platform).
+	  Provisioned 2026-05-06 in the same AdMob account as Android
+	  (publisher ca-app-pub-6114201892028196). Approval status is
+	  "Requires review" until the iOS app ships to a public store —
+	  ad serving is limited until then but test ads serve fully.
 	-->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-6114201892028196~9167251061</string>
 
 	<!--
 	  ATT (App Tracking Transparency) — iOS 14.5+ requires this

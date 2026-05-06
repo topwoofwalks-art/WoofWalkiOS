@@ -23,11 +23,14 @@ import AppTrackingTransparency
 final class CharityAdManager: NSObject {
     static let shared = CharityAdManager()
 
-    // Universal Google test IDs — safe to ship; AdMob requires the
-    // GADApplicationIdentifier in Info.plist to match a real app, but
-    // the *unit* IDs can be the test ones until prod is provisioned.
+    // DEBUG uses Google's universal test rewarded-interstitial unit
+    // (no monetisation, infinite fillrate). RELEASE uses WoofWalk's
+    // own iOS rewarded-interstitial unit, provisioned 2026-05-06 in
+    // the same AdMob account as Android (publisher 6114201892028196).
+    // Mirrors the same DEBUG-vs-RELEASE split Android uses in
+    // util/CharityAdManager.kt:16-19.
     private static let testAdUnitID = "ca-app-pub-3940256099942544/6978759866"
-    private static let prodAdUnitID = "ca-app-pub-3940256099942544/6978759866" // TODO: replace with WoofWalk iOS prod unit
+    private static let prodAdUnitID = "ca-app-pub-6114201892028196/7471026019"
 
     private var adUnitID: String {
         #if DEBUG
