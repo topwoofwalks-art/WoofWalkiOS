@@ -165,7 +165,8 @@ class BookingRepository: ObservableObject {
         paymentMethod: String? = nil,
         boardingDates: (checkInMs: Int64, checkOutMs: Int64)? = nil,
         dogDetails: [String: Any]? = nil,
-        perVerticalOverlay: (key: String, value: [String: Any])? = nil
+        perVerticalOverlay: (key: String, value: [String: Any])? = nil,
+        recurrence: RecurrencePattern? = nil
     ) async throws -> String {
         // Resolve dog IDs. Booking carries a single `petId` today; the CF
         // expects an array. If absent, fall back to empty (CF will reject
@@ -303,6 +304,17 @@ class BookingRepository: ObservableObject {
             payload["dogDetails"] = dogDetails
         }
 
+        // Recurring bookings — when the user opted into a series on the
+        // recurrence step, forward the rule under the `recurrence` key.
+        // The CF (createClientBooking) creates a `booking_series/{id}`
+        // doc, materialises the next 4 weeks of occurrences, and stamps
+        // `recurrenceGroupId` + frequency snapshot onto the parent
+        // booking before returning. Mirrors Android's
+        // `UnifiedBookingFlowViewModel#submitBooking` recurrence map.
+        if let pattern = recurrence {
+            payload["recurrence"] = pattern.toPayload()
+        }
+
         // Call the CF. CF returns { bookingId, status, price }.
         let result = try await functions
             .httpsCallable("createClientBooking")
@@ -373,6 +385,48 @@ class BookingRepository: ObservableObject {
         print("[BookingRepository] Cancelled booking \(bookingId)")
     }
 
+    /// Cancel a booking that's part of a recurring series. Routes through
+    /// the `cancelBookingSeries` Cloud Function so the series rule + every
+    /// affected occurrence are updated together with a server-stamped
+    /// audit trail. Mirrors Android's
+    /// `ClientBookingDetailViewModel#onCancelBooking(scope=…)` path.
+    ///
+    /// - Parameters:
+    ///   - bookingId: The occurrence the user tapped Cancel on. The CF
+    ///     reads its `recurrenceGroupId` to find the series.
+    ///   - scope: `.this` cancels only this occurrence; `.thisAndFuture`
+    ///     also caps the series so no more are materialised; `.all`
+    ///     cancels the entire series including past unfinished occurrences.
+    ///   - reason: Optional cancellation reason, written to every
+    ///     affected occurrence's `cancellationReason` field.
+    /// - Returns: Number of occurrences actually cancelled (the CF skips
+    ///   already-CANCELLED and COMPLETED docs).
+    @discardableResult
+    func cancelBookingSeries(
+        bookingId: String,
+        scope: RecurrenceCancelScope,
+        reason: String? = nil
+    ) async throws -> Int {
+        let payload: [String: Any] = [
+            "bookingId": bookingId,
+            "scope": scope.rawValue,
+            "reason": reason ?? ""
+        ]
+
+        let result = try await functions
+            .httpsCallable("cancelBookingSeries")
+            .call(payload)
+
+        guard let response = result.data as? [String: Any] else {
+            print("[BookingRepository] cancelBookingSeries returned malformed response: \(String(describing: result.data))")
+            return 0
+        }
+
+        let cancelled = (response["cancelled"] as? NSNumber)?.intValue ?? 0
+        print("[BookingRepository] cancelBookingSeries scope=\(scope.rawValue) booking=\(bookingId) cancelled=\(cancelled)")
+        return cancelled
+    }
+
     // MARK: - Cleanup
 
     /// Remove all active snapshot listeners.
@@ -422,7 +476,11 @@ class BookingRepository: ObservableObject {
             specialRequirements: data["specialRequirements"] as? String,
             cancellationReason: data["cancellationReason"] as? String,
             createdAt: (data["createdAt"] as? NSNumber)?.int64Value ?? Int64(Date().timeIntervalSince1970 * 1000),
-            updatedAt: (data["updatedAt"] as? NSNumber)?.int64Value ?? Int64(Date().timeIntervalSince1970 * 1000)
+            updatedAt: (data["updatedAt"] as? NSNumber)?.int64Value ?? Int64(Date().timeIntervalSince1970 * 1000),
+            recurrenceGroupId: data["recurrenceGroupId"] as? String,
+            recurrenceOccurrenceIndex: (data["recurrenceOccurrenceIndex"] as? NSNumber)?.intValue,
+            recurrenceFrequency: data["recurrenceFrequency"] as? String,
+            recurrenceInterval: (data["recurrenceInterval"] as? NSNumber)?.intValue
         )
     }
 }

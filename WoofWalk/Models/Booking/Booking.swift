@@ -32,6 +32,25 @@ struct Booking: Identifiable, Codable {
     var createdAt: Int64
     var updatedAt: Int64
 
+    // MARK: - Recurring Bookings
+
+    /// Server-side series identity stamped on every occurrence in a
+    /// recurring series. Null for one-off bookings. The recurrence rule
+    /// itself lives at `booking_series/{recurrenceGroupId}` (CF-only,
+    /// clients never read it directly). Drives the recurring badge on
+    /// the bookings list and the cancel-scope dialog on detail.
+    var recurrenceGroupId: String?
+    /// 0-based position within the series (0 = first occurrence). Null
+    /// for one-off bookings.
+    var recurrenceOccurrenceIndex: Int?
+    /// Frequency snapshot — `DAILY` / `WEEKLY` / `BIWEEKLY` / `MONTHLY`.
+    /// Stored as a string so the badge renders without reading
+    /// `booking_series`. Null for one-off bookings.
+    var recurrenceFrequency: String?
+    /// Interval (every N units, e.g. 1 = every week, 2 = every other
+    /// week). Null for one-off bookings.
+    var recurrenceInterval: Int?
+
     // MARK: - Service Selection (Phase 1)
 
     /// ID of the selected variant (walk duration, sitting visit type, etc.)
@@ -135,6 +154,10 @@ struct Booking: Identifiable, Codable {
         cancellationReason: String? = nil,
         createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
         updatedAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
+        recurrenceGroupId: String? = nil,
+        recurrenceOccurrenceIndex: Int? = nil,
+        recurrenceFrequency: String? = nil,
+        recurrenceInterval: Int? = nil,
         selectedVariantId: String? = nil,
         selectedVariantName: String? = nil,
         selectedPackageId: String? = nil,
@@ -173,6 +196,10 @@ struct Booking: Identifiable, Codable {
         self.cancellationReason = cancellationReason
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.recurrenceGroupId = recurrenceGroupId
+        self.recurrenceOccurrenceIndex = recurrenceOccurrenceIndex
+        self.recurrenceFrequency = recurrenceFrequency
+        self.recurrenceInterval = recurrenceInterval
         self.selectedVariantId = selectedVariantId
         self.selectedVariantName = selectedVariantName
         self.selectedPackageId = selectedPackageId
@@ -183,6 +210,31 @@ struct Booking: Identifiable, Codable {
         self.computedPrice = computedPrice
         self.paymentMethod = paymentMethod
         self.autoCancelAtMillis = autoCancelAtMillis
+    }
+
+    // MARK: - Recurring Helpers
+
+    /// True when this booking is part of a recurring series. Drives the
+    /// recurring badge on the bookings list and the scoped cancel dialog
+    /// on the detail screen.
+    var isRecurring: Bool {
+        guard let groupId = recurrenceGroupId else { return false }
+        return !groupId.isEmpty
+    }
+
+    /// Short human label for the recurring badge — "Daily", "Weekly",
+    /// "Every 2 weeks", "Monthly". Falls back to "Repeats" when the
+    /// snapshot field is missing on legacy occurrences. Nil for one-off
+    /// bookings (caller suppresses the badge).
+    var recurrenceBadgeLabel: String? {
+        guard isRecurring else { return nil }
+        switch recurrenceFrequency?.uppercased() {
+        case "DAILY": return "Daily"
+        case "WEEKLY": return "Weekly"
+        case "BIWEEKLY": return "Every 2 weeks"
+        case "MONTHLY": return "Monthly"
+        default: return "Repeats"
+        }
     }
 
     // MARK: - Static Helpers

@@ -200,6 +200,19 @@ class BookingFlowViewModel: ObservableObject {
     /// Inline-toast text for save-back failure (booking still succeeds).
     @Published var dogDetailsSaveBackToast: String?
 
+    // MARK: - Recurring Bookings
+    //
+    // When the user opts into a series on the addDetails step, this
+    // pattern is sent to `createClientBooking` under the `recurrence`
+    // key. The CF creates a `booking_series` doc + materialises the
+    // first 4 weeks of occurrences; the scheduled
+    // `materialiseBookingSeries` CF extends the window daily.
+    //
+    // nil = one-off booking (no `recurrence` key on the payload).
+    // Mirrors Android's `recurrenceEnabled` + `recurrenceFrequency`
+    // pair on `UnifiedBookingFlowState`.
+    @Published var recurrencePattern: RecurrencePattern?
+
     // Stripe PaymentSheet state. Mirrors Android's flow:
     //   - submit creates the booking (CF: createClientBooking)
     //   - if card + total > 0: request clientSecret (CF: processBookingPayment)
@@ -462,6 +475,10 @@ class BookingFlowViewModel: ObservableObject {
         // review step before the new provider's settings load.
         acceptedPaymentMethods = ["card"]
         paymentMethod = "card"
+        // Recurring config is per-booking — switching service resets it
+        // so the user re-confirms it for the new vertical (e.g. a
+        // weekly walk doesn't bleed into a one-off boarding stay).
+        recurrencePattern = nil
     }
 
     // Map UI ServiceType to BookingServiceType
@@ -767,6 +784,17 @@ class BookingFlowViewModel: ObservableObject {
         let method = paymentMethod
         let providerOrgId = provider.id
         let boardingDates = boardingDatesPayload
+        // Recurring opt-in: forward the pattern when the user has
+        // enabled it AND set a stop condition (end-date OR max
+        // occurrences). The CF rejects an unbounded series with
+        // `invalid-argument` and we surface that as `errorMessage` —
+        // matches Android's `UnifiedBookingFlowViewModel#submitBooking`
+        // which similarly defers to the server for stop-condition
+        // validation. We skip the payload entirely (one-off booking)
+        // when the user has the recurrence section collapsed (pattern
+        // is nil), since Android's `recurrenceEnabled=false` path drops
+        // the `recurrence` key wholesale.
+        let recurrence: RecurrencePattern? = recurrencePattern
 
         // R10: pack the rich dog-details block when the vertical is
         // grooming / walking / sitting. Boarding / daycare / training
@@ -804,7 +832,8 @@ class BookingFlowViewModel: ObservableObject {
                     paymentMethod: method,
                     boardingDates: boardingDates,
                     dogDetails: dogDetailsPayload,
-                    perVerticalOverlay: perVerticalConfig
+                    perVerticalOverlay: perVerticalConfig,
+                    recurrence: recurrence
                 )
 
                 // Cash flow: provider takes payment in person — no Stripe.
@@ -1878,6 +1907,18 @@ struct BookingFlowScreen: View {
                     Divider().background(Color.neutral20).padding(.vertical, 8)
                 }
 
+                // Recurring-bookings opt-in. Hidden for boarding —
+                // multi-night stays don't fit a weekly/monthly cadence
+                // (Android does the same in `UnifiedBookingFlowScreen`'s
+                // recurrence section).
+                if let baseDate = viewModel.selectedDateTime,
+                   viewModel.selectedService != .boarding {
+                    RecurrenceSelector(
+                        baseDate: baseDate,
+                        pattern: $viewModel.recurrencePattern
+                    )
+                }
+
                 // Free-text catch-alls — kept for ALL verticals so the
                 // user can still hand-write a note even when the structured
                 // capture covers the bases.
@@ -2066,6 +2107,36 @@ struct BookingFlowScreen: View {
                                     .foregroundColor(.white)
                                 Spacer()
                                 Text(dateTime, style: .time)
+                                    .foregroundColor(.white)
+                            }
+                        }
+                    }
+                }
+
+                // Recurring summary — shows ONLY when the user opted
+                // into a series with a valid stop condition. Mirrors
+                // Android's recurrence row on the review step.
+                if let pattern = viewModel.recurrencePattern, pattern.hasStopCondition {
+                    reviewSection(title: "Repeats", icon: "repeat") {
+                        HStack {
+                            Text(pattern.frequency.displayName)
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
+                        if let endDate = pattern.endDate {
+                            HStack {
+                                Text("Ends on")
+                                    .foregroundColor(.neutral60)
+                                Spacer()
+                                Text(endDate, style: .date)
+                                    .foregroundColor(.white)
+                            }
+                        } else if let count = pattern.maxOccurrences, count > 0 {
+                            HStack {
+                                Text("Total occurrences")
+                                    .foregroundColor(.neutral60)
+                                Spacer()
+                                Text("\(count)")
                                     .foregroundColor(.white)
                             }
                         }

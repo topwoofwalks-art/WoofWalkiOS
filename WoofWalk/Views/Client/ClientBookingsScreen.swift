@@ -300,7 +300,7 @@ struct ClientBookingsScreen: View {
         }()
 
         return VStack(alignment: .leading, spacing: 10) {
-            // Top row: service type + status badge
+            // Top row: service type + recurring chip + status badge
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: booking.serviceTypeEnum.icon)
@@ -309,6 +309,25 @@ struct ClientBookingsScreen: View {
                     Text(booking.serviceTypeEnum.displayName)
                         .font(.subheadline.bold())
                         .foregroundColor(AppColors.Dark.onSurface)
+
+                    // Recurring badge — surfaces when the booking is
+                    // part of a series so the user knows tapping it
+                    // opens the scope-aware cancel dialog. Mirrors
+                    // Android's chip on `ClientBookingsScreen`.
+                    if let label = booking.recurrenceBadgeLabel {
+                        HStack(spacing: 3) {
+                            Image(systemName: "repeat")
+                                .font(.system(size: 10, weight: .bold))
+                            Text(label)
+                                .font(.system(size: 10, weight: .bold))
+                        }
+                        .foregroundColor(AppColors.Dark.onTertiaryContainer)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule().fill(AppColors.Dark.tertiaryContainer)
+                        )
+                    }
                 }
 
                 Spacer()

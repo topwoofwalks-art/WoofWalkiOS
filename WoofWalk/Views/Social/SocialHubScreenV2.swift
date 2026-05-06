@@ -8,6 +8,7 @@ struct SocialHubScreenV2: View {
 
     private let tabs: [(String, String)] = [
         ("Friends", "person.2.fill"),
+        ("Communities", "person.3.sequence.fill"),
         ("Lost Dogs", "pawprint.fill"),
         ("Group Walks", "figure.walk"),
         ("Chats", "bubble.left.and.bubble.right.fill"),
@@ -54,10 +55,11 @@ struct SocialHubScreenV2: View {
                 // Tab content
                 TabView(selection: $selectedTab) {
                     FriendsListScreen().tag(0)
-                    LostDogsScreen().tag(1)
-                    GroupWalksScreen().tag(2)
-                    ChatsTabScreen().tag(3)
-                    EventsScreen().tag(4)
+                    CommunityListScreen().tag(1)
+                    LostDogsScreen().tag(2)
+                    GroupWalksScreen().tag(3)
+                    ChatsTabScreen().tag(4)
+                    EventsScreen().tag(5)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }

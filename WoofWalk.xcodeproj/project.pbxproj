@@ -99,6 +99,8 @@
 		'A1000001000000000000275' = {isa = PBXBuildFile; fileRef = A1000001000000000000274; };
 		'A1000001000000000000277' = {isa = PBXBuildFile; fileRef = A1000001000000000000276; };
 		'A1000001000000000099002' = {isa = PBXBuildFile; fileRef = A1000001000000000099001; };
+		'A1000001000000000099502' = {isa = PBXBuildFile; fileRef = A1000001000000000099501; };
+		'A1000001000000000099602' = {isa = PBXBuildFile; fileRef = A1000001000000000099601; };
 		'A1000001000000000000279' = {isa = PBXBuildFile; fileRef = A1000001000000000000278; };
 		'A1000001000000000000281' = {isa = PBXBuildFile; fileRef = A1000001000000000000280; };
 		'A1000001000000000000283' = {isa = PBXBuildFile; fileRef = A1000001000000000000282; };
@@ -488,6 +490,34 @@
 		'A1000001000000000009303' = {isa = PBXBuildFile; fileRef = A1000001000000000009302; };
 		'A1000001000000000009305' = {isa = PBXBuildFile; fileRef = A1000001000000000009304; };
 		'A1000001000000000009307' = {isa = PBXBuildFile; fileRef = A1000001000000000009306; };
+		'A1000001000000000009401' = {isa = PBXBuildFile; fileRef = A1000001000000000009400; };
+		'A1000001000000000009403' = {isa = PBXBuildFile; fileRef = A1000001000000000009402; };
+		'A1000001000000000009405' = {isa = PBXBuildFile; fileRef = A1000001000000000009404; };
+		'A1000001000000000009407' = {isa = PBXBuildFile; fileRef = A1000001000000000009406; };
+		'A1000001000000000009409' = {isa = PBXBuildFile; fileRef = A1000001000000000009408; };
+		'A1000001000000000009411' = {isa = PBXBuildFile; fileRef = A1000001000000000009410; };
+		'A1000001000000000009413' = {isa = PBXBuildFile; fileRef = A1000001000000000009412; };
+		'A1000001000000000009415' = {isa = PBXBuildFile; fileRef = A1000001000000000009414; };
+		'A1000001000000000009417' = {isa = PBXBuildFile; fileRef = A1000001000000000009416; };
+		'A1000001000000000009419' = {isa = PBXBuildFile; fileRef = A1000001000000000009418; };
+		'A1000001000000000009421' = {isa = PBXBuildFile; fileRef = A1000001000000000009420; };
+		'A1000001000000000009423' = {isa = PBXBuildFile; fileRef = A1000001000000000009422; };
+		'A1000001000000000009425' = {isa = PBXBuildFile; fileRef = A1000001000000000009424; };
+		'A1000001000000000009427' = {isa = PBXBuildFile; fileRef = A1000001000000000009426; };
+		'A1000001000000000009429' = {isa = PBXBuildFile; fileRef = A1000001000000000009428; };
+		'A1000001000000000009431' = {isa = PBXBuildFile; fileRef = A1000001000000000009430; };
+		'A1000001000000000009433' = {isa = PBXBuildFile; fileRef = A1000001000000000009432; };
+		'A1000001000000000009435' = {isa = PBXBuildFile; fileRef = A1000001000000000009434; };
+		'A1000001000000000009437' = {isa = PBXBuildFile; fileRef = A1000001000000000009436; };
+		'A1000001000000000009439' = {isa = PBXBuildFile; fileRef = A1000001000000000009438; };
+		'A1000001000000000009441' = {isa = PBXBuildFile; fileRef = A1000001000000000009440; };
+		'A1000001000000000009443' = {isa = PBXBuildFile; fileRef = A1000001000000000009442; };
+		'A1000001000000000009445' = {isa = PBXBuildFile; fileRef = A1000001000000000009444; };
+		'A1000001000000000009447' = {isa = PBXBuildFile; fileRef = A1000001000000000009446; };
+		'A1000001000000000009449' = {isa = PBXBuildFile; fileRef = A1000001000000000009448; };
+		'A1000001000000000009451' = {isa = PBXBuildFile; fileRef = A1000001000000000009450; };
+		'A1000001000000000009453' = {isa = PBXBuildFile; fileRef = A1000001000000000009452; };
+		'A1000001000000000009461' = {isa = PBXBuildFile; fileRef = A1000001000000000009460; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -924,6 +954,8 @@
 		'A1000001000000000001156' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMode.swift; sourceTree = "<group>"; };
 		'A1000001000000000001158' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingInstructions.swift; sourceTree = "<group>"; };
 		'A1000001000000000001160' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PriceBreakdown.swift; sourceTree = "<group>"; };
+		'A1000001000000000099501' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrencePattern.swift; sourceTree = "<group>"; };
+		A1000001000000000099601 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RecurrenceSelector.swift; path = WoofWalk/Views/Client/Booking/RecurrenceSelector.swift; sourceTree = SOURCE_ROOT; };
 		'A1000001000000000001162' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientKey.swift; sourceTree = "<group>"; };
 		'A1000001000000000001164' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessTabView.swift; sourceTree = "<group>"; };
 		'A1000001000000000001166' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientTabView.swift; sourceTree = "<group>"; };
@@ -976,6 +1008,34 @@
 		A1000001000000000009302 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = OrgDangerZoneSection.swift; path = WoofWalk/Views/Business/Settings/OrgDangerZoneSection.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009304 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MatchFoundSheet.swift; path = WoofWalk/Views/Business/Signup/MatchFoundSheet.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009306 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RemoveListingSheet.swift; path = WoofWalk/Views/Discovery/Unclaimed/RemoveListingSheet.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009400 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Community.swift; path = WoofWalk/Models/Community/Community.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009402 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityPost.swift; path = WoofWalk/Models/Community/CommunityPost.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009404 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityMember.swift; path = WoofWalk/Models/Community/CommunityMember.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009406 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityComment.swift; path = WoofWalk/Models/Community/CommunityComment.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009408 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityEvent.swift; path = WoofWalk/Models/Community/CommunityEvent.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009410 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityInvite.swift; path = WoofWalk/Models/Community/CommunityInvite.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009412 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityReport.swift; path = WoofWalk/Models/Community/CommunityReport.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009414 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityChatMessage.swift; path = WoofWalk/Models/Community/CommunityChatMessage.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009416 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityRepository.swift; path = WoofWalk/Repositories/Community/CommunityRepository.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009418 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityPostRepository.swift; path = WoofWalk/Repositories/Community/CommunityPostRepository.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009420 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityMemberRepository.swift; path = WoofWalk/Repositories/Community/CommunityMemberRepository.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009422 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityListViewModel.swift; path = WoofWalk/ViewModels/Community/CommunityListViewModel.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009424 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityDetailViewModel.swift; path = WoofWalk/ViewModels/Community/CommunityDetailViewModel.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009426 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityCreateViewModel.swift; path = WoofWalk/ViewModels/Community/CommunityCreateViewModel.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009428 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityPostViewModel.swift; path = WoofWalk/ViewModels/Community/CommunityPostViewModel.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009430 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityModerationViewModel.swift; path = WoofWalk/ViewModels/Community/CommunityModerationViewModel.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009432 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityListScreen.swift; path = WoofWalk/Views/Social/Communities/CommunityListScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009434 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityDetailScreen.swift; path = WoofWalk/Views/Social/Communities/CommunityDetailScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009436 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityFeedTab.swift; path = WoofWalk/Views/Social/Communities/CommunityFeedTab.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009438 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityChatTab.swift; path = WoofWalk/Views/Social/Communities/CommunityChatTab.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009440 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityEventsTab.swift; path = WoofWalk/Views/Social/Communities/CommunityEventsTab.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009442 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityMembersTab.swift; path = WoofWalk/Views/Social/Communities/CommunityMembersTab.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009444 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityPostDetailScreen.swift; path = WoofWalk/Views/Social/Communities/CommunityPostDetailScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009446 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CreateCommunityScreen.swift; path = WoofWalk/Views/Social/Communities/CreateCommunityScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009448 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CreateCommunityPostScreen.swift; path = WoofWalk/Views/Social/Communities/CreateCommunityPostScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009450 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunitySettingsScreen.swift; path = WoofWalk/Views/Social/Communities/CommunitySettingsScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009452 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityModerationScreen.swift; path = WoofWalk/Views/Social/Communities/CommunityModerationScreen.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000009460 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CommunityCodableExtensions.swift; path = WoofWalk/Repositories/Community/CommunityCodableExtensions.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1060,6 +1120,7 @@
 				A1000001000000000001289,
 				A1000001000000000001291,
 				A1000001000000000001293,
+				A1000001000000000099601,
 				A1000001000000000001295,
 				A1000001000000000001297,
 				A1000001000000000001299,
@@ -1084,6 +1145,34 @@
 				A1000001000000000009302,
 				A1000001000000000009304,
 				A1000001000000000009306,
+				A1000001000000000009400,
+				A1000001000000000009402,
+				A1000001000000000009404,
+				A1000001000000000009406,
+				A1000001000000000009408,
+				A1000001000000000009410,
+				A1000001000000000009412,
+				A1000001000000000009414,
+				A1000001000000000009416,
+				A1000001000000000009418,
+				A1000001000000000009420,
+				A1000001000000000009422,
+				A1000001000000000009424,
+				A1000001000000000009426,
+				A1000001000000000009428,
+				A1000001000000000009430,
+				A1000001000000000009432,
+				A1000001000000000009434,
+				A1000001000000000009436,
+				A1000001000000000009438,
+				A1000001000000000009440,
+				A1000001000000000009442,
+				A1000001000000000009444,
+				A1000001000000000009446,
+				A1000001000000000009448,
+				A1000001000000000009450,
+				A1000001000000000009452,
+				A1000001000000000009460,
 			);
 			sourceTree = "<group>";
 		};
@@ -1912,6 +2001,7 @@
 				A1000001000000000000988,
 				A1000001000000000001158,
 				A1000001000000000001160,
+				A1000001000000000099501,
 			);
 			path = Booking;
 			sourceTree = "<group>";
@@ -2483,6 +2573,8 @@
 				A1000001000000000001290,
 				A1000001000000000001292,
 				A1000001000000000001294,
+				A1000001000000000099502,
+				A1000001000000000099602,
 				A1000001000000000001296,
 				A1000001000000000001298,
 				A1000001000000000001300,
@@ -2515,6 +2607,34 @@
 				A1000001000000000009303,
 				A1000001000000000009305,
 				A1000001000000000009307,
+				A1000001000000000009401,
+				A1000001000000000009403,
+				A1000001000000000009405,
+				A1000001000000000009407,
+				A1000001000000000009409,
+				A1000001000000000009411,
+				A1000001000000000009413,
+				A1000001000000000009415,
+				A1000001000000000009417,
+				A1000001000000000009419,
+				A1000001000000000009421,
+				A1000001000000000009423,
+				A1000001000000000009425,
+				A1000001000000000009427,
+				A1000001000000000009429,
+				A1000001000000000009431,
+				A1000001000000000009433,
+				A1000001000000000009435,
+				A1000001000000000009437,
+				A1000001000000000009439,
+				A1000001000000000009441,
+				A1000001000000000009443,
+				A1000001000000000009445,
+				A1000001000000000009447,
+				A1000001000000000009449,
+				A1000001000000000009451,
+				A1000001000000000009453,
+				A1000001000000000009461,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

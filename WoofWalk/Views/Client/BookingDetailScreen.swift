@@ -14,6 +14,12 @@ class BookingDetailViewModel: ObservableObject {
     @Published var showCancelDialog = false
     @Published var cancelReason = ""
     @Published var isCancelling = false
+    /// Selected cancel scope when this booking is part of a recurring
+    /// series. Default is `.this` (cancel only this occurrence) —
+    /// matches Android's pre-selection in
+    /// `ClientBookingDetailScreen#CancelBookingDialog`. Ignored for
+    /// one-off bookings.
+    @Published var cancelScope: RecurrenceCancelScope = .this
 
     // Tip sheet
     @Published var showTipSheet = false
@@ -65,17 +71,44 @@ class BookingDetailViewModel: ObservableObject {
         guard !cancelReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || true else { return }
         isCancelling = true
 
+        // Snapshot what we need before crossing the await — the booking
+        // may still load when the user taps Cancel, but isRecurring is
+        // captured deterministically off the doc that's currently in VM
+        // state. Worst case the booking is nil → fall back to the
+        // standard one-off path (the CF would reject `cancelBookingSeries`
+        // for a non-recurring booking anyway).
+        let recurring = booking?.isRecurring ?? false
+        let scope = cancelScope
+
         Task {
             do {
                 let reason = cancelReason.trimmingCharacters(in: .whitespacesAndNewlines)
-                try await bookingRepository.cancelBooking(
-                    bookingId: bookingId,
-                    reason: reason.isEmpty ? nil : reason
-                )
+                let trimmedReason = reason.isEmpty ? nil : reason
+
+                if recurring {
+                    // Recurring — route through the cancelBookingSeries
+                    // CF so the series rule + every affected occurrence
+                    // are updated together with a server-stamped audit
+                    // trail. Mirrors Android's
+                    // `ClientBookingDetailViewModel#onCancelBooking(scope=…)`.
+                    _ = try await bookingRepository.cancelBookingSeries(
+                        bookingId: bookingId,
+                        scope: scope,
+                        reason: trimmedReason
+                    )
+                    snackbarMessage = scope.successToast
+                } else {
+                    try await bookingRepository.cancelBooking(
+                        bookingId: bookingId,
+                        reason: trimmedReason
+                    )
+                    snackbarMessage = "Booking cancelled"
+                }
+
                 isCancelling = false
                 showCancelDialog = false
                 cancelReason = ""
-                snackbarMessage = "Booking cancelled"
+                cancelScope = .this
             } catch {
                 isCancelling = false
                 snackbarMessage = "Failed to cancel: \(error.localizedDescription)"
@@ -263,9 +296,28 @@ struct BookingDetailScreen: View {
                 Text(config.text)
                     .font(.title3.bold())
                     .foregroundColor(config.color)
-                Text(booking.serviceTypeEnum.displayName)
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.Dark.onSurfaceVariant)
+                HStack(spacing: 6) {
+                    Text(booking.serviceTypeEnum.displayName)
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.Dark.onSurfaceVariant)
+
+                    // Recurring chip — also on the detail header so the
+                    // user knows the cancel dialog will offer scope.
+                    if let label = booking.recurrenceBadgeLabel {
+                        HStack(spacing: 3) {
+                            Image(systemName: "repeat")
+                                .font(.system(size: 10, weight: .bold))
+                            Text(label)
+                                .font(.system(size: 10, weight: .bold))
+                        }
+                        .foregroundColor(AppColors.Dark.onTertiaryContainer)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule().fill(AppColors.Dark.tertiaryContainer)
+                        )
+                    }
+                }
             }
 
             Spacer()
@@ -898,20 +950,32 @@ struct BookingDetailScreen: View {
     // MARK: - Cancel Sheet
 
     private var cancelSheet: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 48))
-                    .foregroundColor(.orange)
+        let isRecurring = viewModel.booking?.isRecurring ?? false
 
-                Text("Cancel Booking?")
+        return NavigationStack {
+            VStack(spacing: 20) {
+                Image(systemName: isRecurring ? "repeat.circle.fill" : "exclamationmark.triangle.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(isRecurring ? .turquoise60 : .orange)
+
+                Text(isRecurring ? "Cancel Repeating Booking" : "Cancel Booking?")
                     .font(.title2.bold())
                     .foregroundColor(AppColors.Dark.onSurface)
 
-                Text("Are you sure you want to cancel this booking? This action cannot be undone.")
+                Text(isRecurring
+                     ? "This booking is part of a repeating series. What would you like to cancel?"
+                     : "Are you sure you want to cancel this booking? This action cannot be undone.")
                     .font(.subheadline)
                     .foregroundColor(AppColors.Dark.onSurfaceVariant)
                     .multilineTextAlignment(.center)
+
+                if isRecurring {
+                    VStack(spacing: 8) {
+                        ForEach(RecurrenceCancelScope.allCases) { scope in
+                            cancelScopeRow(scope)
+                        }
+                    }
+                }
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Reason (optional)")
@@ -975,6 +1039,39 @@ struct BookingDetailScreen: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+
+    private func cancelScopeRow(_ scope: RecurrenceCancelScope) -> some View {
+        let isSelected = viewModel.cancelScope == scope
+        return Button {
+            viewModel.cancelScope = scope
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                    .foregroundColor(isSelected ? .turquoise60 : AppColors.Dark.onSurfaceVariant)
+                Text(scope.displayName)
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.Dark.onSurface)
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isSelected
+                          ? AppColors.Dark.surfaceVariant
+                          : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(
+                        isSelected ? Color.turquoise60 : AppColors.Dark.outlineVariant,
+                        lineWidth: 1
+                    )
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Tip Sheet
