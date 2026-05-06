@@ -114,7 +114,7 @@ extension MapScreen {
         .padding()
     }
 
-    // MARK: - Bottom Left (marketplace, bin distance, mark bin)
+    // MARK: - Bottom Left (bin distance, mark bin)
 
     var bottomLeftButtons: some View {
         VStack(alignment: .leading, spacing: 8) {

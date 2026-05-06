@@ -9,7 +9,7 @@ struct ServicesCategoryGrid: View {
     var onLostDogTapped: (() -> Void)?
     var onInviteWalkerTapped: (() -> Void)?
     var onEmergencyVetTapped: (() -> Void)?
-    var onMarketplaceTapped: (() -> Void)?
+    // Marketplace removed (Android task #74); the corresponding row is gone.
 
     var body: some View {
         VStack(spacing: 16) {
@@ -107,15 +107,6 @@ struct ServicesCategoryGrid: View {
                     iconColor: .red
                 ) {
                     onSelectCategory?(.vet)
-                }
-
-                ServiceCategoryRow(
-                    title: "Marketplace",
-                    subtitle: "Shop pet supplies with exclusive deals",
-                    icon: "cart.fill",
-                    iconColor: .turquoise60
-                ) {
-                    onMarketplaceTapped?()
                 }
             }
         }

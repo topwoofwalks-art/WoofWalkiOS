@@ -131,9 +131,9 @@ struct R9SubSelectionPicker: View {
             sittingPicker(listing: listing)
         case .inSitting, .outSitting, .meetGreet:
             // Server SubSelection contract has no key for these; spec
-            // says MEET_GREET / MARKETPLACE submit basePrice as before.
-            // IN_SITTING / OUT_SITTING fall back the same way until they
-            // get their own contract entry.
+            // says MEET_GREET submits basePrice as before. IN_SITTING /
+            // OUT_SITTING fall back the same way until they get their
+            // own contract entry.
             EmptyView()
         }
     }
