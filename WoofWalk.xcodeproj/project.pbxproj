@@ -479,6 +479,9 @@
 		'A1000001000000000001331' = {isa = PBXBuildFile; fileRef = A1000001000000000001330; };
 		'A1000001000000000001333' = {isa = PBXBuildFile; fileRef = A1000001000000000001332; };
 		'A1000001000000000001335' = {isa = PBXBuildFile; fileRef = A1000001000000000001334; };
+		'A1000001000000000001801' = {isa = PBXBuildFile; fileRef = A1000001000000000001800; };
+		'A1000001000000000001803' = {isa = PBXBuildFile; fileRef = A1000001000000000001802; };
+		'A1000001000000000001805' = {isa = PBXBuildFile; fileRef = A1000001000000000001804; };
 		'A1000001000000000009101' = {isa = PBXBuildFile; fileRef = A1000001000000000009100; };
 		'A1000001000000000009103' = {isa = PBXBuildFile; fileRef = A1000001000000000009102; };
 		'A1000001000000000009105' = {isa = PBXBuildFile; fileRef = A1000001000000000009104; };
@@ -1007,6 +1010,9 @@
 		'A1000001000000000001330' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMeSendingSplash.swift; sourceTree = "<group>"; };
 		'A1000001000000000001332' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInPromptOverlay.swift; sourceTree = "<group>"; };
 		'A1000001000000000001334' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessLiveShareRepository.swift; sourceTree = "<group>"; };
+		A1000001000000000001800 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessLiveShareRecap.swift; path = WoofWalk/Models/Business/BusinessLiveShareRecap.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001802 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BookingPickerSheet.swift; path = WoofWalk/Views/Business/BookingPickerSheet.swift; sourceTree = SOURCE_ROOT; };
+		A1000001000000000001804 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessLiveShareRecapSection.swift; path = WoofWalk/Views/Walk/BusinessLiveShareRecapSection.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009100 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalkConsoleModels.swift; path = WoofWalk/Models/Business/WalkConsoleModels.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009102 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BusinessWalkSessionRepository.swift; path = WoofWalk/Repositories/BusinessWalkSessionRepository.swift; sourceTree = SOURCE_ROOT; };
 		A1000001000000000009104 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WalkConsoleViewModel.swift; path = WoofWalk/ViewModels/WalkConsoleViewModel.swift; sourceTree = SOURCE_ROOT; };
@@ -1203,6 +1209,9 @@
 				A1000001000000000001508,
 				A1000001000000000001510,
 				A1000001000000000001512,
+				A1000001000000000001800,
+				A1000001000000000001802,
+				A1000001000000000001804,
 			);
 			sourceTree = "<group>";
 		};
@@ -2675,6 +2684,9 @@
 				A1000001000000000001509,
 				A1000001000000000001511,
 				A1000001000000000001513,
+				A1000001000000000001801,
+				A1000001000000000001803,
+				A1000001000000000001805,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,5 +1,6 @@
 import Foundation
 import FirebaseAuth
+import FirebaseFirestore
 import FirebaseFunctions
 
 /// Business walker → client live-walk share repository.
@@ -22,7 +23,13 @@ final class BusinessLiveShareRepository {
     static let shared = BusinessLiveShareRepository()
 
     private let auth = Auth.auth()
+    private let db = Firestore.firestore()
     private lazy var functions = Functions.functions(region: "europe-west2")
+
+    /// Collection holding every business live-share doc, public-readable
+    /// by design (token == access credential). Authenticated clients can
+    /// also query by `participantBookingIds` for their own recap.
+    private static let collection = "live_share_links"
 
     private init() {}
 
@@ -141,5 +148,138 @@ final class BusinessLiveShareRepository {
         guard isGroupWalk else { return baseUrl }
         let separator = baseUrl.contains("?") ? "&" : "?"
         return "\(baseUrl)\(separator)b=\(bookingId)"
+    }
+
+    // MARK: - Client recap (Phase 5)
+
+    /// Fetch the recap projection of a live-share for the household
+    /// represented by `bookingId`. Used by the client app on the
+    /// post-walk recap surface to show the walker's photos, note,
+    /// and branded close-out.
+    ///
+    /// Strategy: query `live_share_links` where
+    /// `participantBookingIds array-contains bookingId` ordered by
+    /// `createdAt` desc, take the first hit. Direct Firestore reads
+    /// are allowed under the existing rule (auth-only). The returned
+    /// recap filters `participants` to the viewer's own booking so a
+    /// client only sees their own dog — privacy parity with the
+    /// public portal's per-viewer filter.
+    ///
+    /// Returns `nil` when no share exists for the booking. Errors
+    /// (network, decode) propagate; callers should treat them as
+    /// "no recap available" rather than a hard failure.
+    func fetchRecapForBooking(bookingId: String) async throws -> BusinessLiveShareRecap? {
+        guard auth.currentUser != nil else {
+            throw NSError(
+                domain: "BusinessLiveShareRepository", code: 401,
+                userInfo: [NSLocalizedDescriptionKey: "Not authenticated"]
+            )
+        }
+        guard !bookingId.isEmpty else { return nil }
+
+        // Look for the most-recent share doc that names this booking
+        // as a participant. ordering by createdAt picks the latest if
+        // multiple historical shares exist for the same booking
+        // (recurring weekly walks, etc.).
+        let snap = try await db.collection(Self.collection)
+            .whereField("participantBookingIds", arrayContains: bookingId)
+            .order(by: "createdAt", descending: true)
+            .limit(to: 1)
+            .getDocuments()
+        guard let shareDoc = snap.documents.first else { return nil }
+        let d = shareDoc.data()
+        let shareId = (d["id"] as? String) ?? shareDoc.documentID
+
+        // Photos subcollection — best-effort; an empty/missing
+        // collection just means no photos were captured.
+        var photos: [BusinessLiveSharePhoto] = []
+        do {
+            let photoSnap = try await shareDoc.reference.collection("photos")
+                .order(by: "takenAt", descending: false)
+                .limit(to: 50)
+                .getDocuments()
+            photos = photoSnap.documents.compactMap { Self.mapPhoto($0) }
+        } catch {
+            print("[BusinessLiveShareRepo] photo subcollection read failed: \(error)")
+        }
+
+        // Filter participants to this client's booking. Mirrors the
+        // CF's per-viewer privacy filter — without this a stale share
+        // doc could leak other households' dogs by name + photo.
+        let allParticipants = (d["participants"] as? [[String: Any]]) ?? []
+        let visibleParticipants: [[String: Any]] = {
+            // Solo walks (1 participant) bypass the filter.
+            guard allParticipants.count > 1 else { return allParticipants }
+            return allParticipants.filter { ($0["bookingId"] as? String) == bookingId }
+        }()
+        let participants = visibleParticipants.compactMap { Self.mapParticipant($0) }
+
+        return BusinessLiveShareRecap(
+            id: shareId,
+            walkSessionId: (d["walkSessionId"] as? String) ?? (d["sessionId"] as? String),
+            walkEnded: (d["walkEnded"] as? Bool) ?? false,
+            walkerNote: (d["walkerNote"] as? String).flatMap { $0.isEmpty ? nil : $0 },
+            walkerNoteUpdatedAt: Self.readInt64(d["walkerNoteUpdatedAt"]),
+            lastUpdatedAt: Self.readInt64(d["lastUpdatedAt"]),
+            scheduledEndAt: Self.readInt64(d["scheduledEndAt"]),
+            distanceMeters: (d["distanceMeters"] as? Double) ?? 0,
+            durationSec: Self.readInt64(d["durationSec"]) ?? 0,
+            walkerDisplayName: (d["walkerDisplayName"] as? String)
+                ?? (d["walkerFirstName"] as? String),
+            walkerPhotoUrl: d["walkerPhotoUrl"] as? String,
+            orgId: d["orgId"] as? String,
+            orgName: d["orgName"] as? String,
+            orgLogoUrl: d["orgLogoUrl"] as? String,
+            orgBrandColour: d["orgBrandColour"] as? String,
+            participants: participants,
+            photos: photos
+        )
+    }
+
+    // MARK: - Decode helpers
+
+    private static func mapPhoto(_ doc: QueryDocumentSnapshot) -> BusinessLiveSharePhoto? {
+        let d = doc.data()
+        guard let storageUrl = d["storageUrl"] as? String, !storageUrl.isEmpty else { return nil }
+        return BusinessLiveSharePhoto(
+            id: (d["id"] as? String) ?? doc.documentID,
+            storageUrl: storageUrl,
+            thumbnailUrl: (d["thumbnailUrl"] as? String).flatMap { $0.isEmpty ? nil : $0 },
+            caption: (d["caption"] as? String).flatMap { $0.isEmpty ? nil : $0 },
+            takenAt: readInt64(d["takenAt"]) ?? 0,
+            lat: d["lat"] as? Double,
+            lng: d["lng"] as? Double
+        )
+    }
+
+    private static func mapParticipant(_ raw: [String: Any]) -> BusinessLiveShareParticipant? {
+        let bookingId = (raw["bookingId"] as? String) ?? ""
+        guard !bookingId.isEmpty else { return nil }
+        let dogsRaw = (raw["dogs"] as? [[String: Any]]) ?? []
+        let dogs = dogsRaw.compactMap { dogDict -> BusinessLiveShareDog? in
+            let id = (dogDict["id"] as? String) ?? ""
+            let name = (dogDict["name"] as? String) ?? ""
+            guard !name.isEmpty else { return nil }
+            return BusinessLiveShareDog(
+                id: id.isEmpty ? name : id,
+                name: name,
+                photoUrl: (dogDict["photoUrl"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            )
+        }
+        return BusinessLiveShareParticipant(
+            bookingId: bookingId,
+            clientName: (raw["clientName"] as? String).flatMap { $0.isEmpty ? nil : $0 },
+            dogs: dogs
+        )
+    }
+
+    /// Firestore returns numeric fields as either Int64, Int, or Double
+    /// depending on how they were written. Normalise to Int64.
+    private static func readInt64(_ raw: Any?) -> Int64? {
+        if let v = raw as? Int64 { return v }
+        if let v = raw as? Int { return Int64(v) }
+        if let v = raw as? Double { return Int64(v) }
+        if let v = raw as? NSNumber { return v.int64Value }
+        return nil
     }
 }

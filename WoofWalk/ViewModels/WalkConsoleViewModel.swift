@@ -51,6 +51,19 @@ final class WalkConsoleViewModel: ObservableObject {
     @Published var walkerSafetyWatchActive: Bool = false
     @Published var walkerSafetyContactName: String?
 
+    // MARK: - Phase 5 multi-select picker
+    //
+    // Pre-share step for group walks: instead of auto-fanning the live
+    // share to every active booking, the walker picks the subset of
+    // households to share with. Solo walks skip the picker entirely
+    // and go straight to `createShare`. The picker reads booking
+    // metadata (client name, dogs, service type) so each row reads as
+    // a recognisable household, not a raw booking id.
+    @Published var selectableBookings: [BookingShareTarget] = []
+    @Published var selectedBookingIds: Set<String> = []
+    @Published var showBookingPicker: Bool = false
+    @Published var isLoadingPicker: Bool = false
+
     /// True until the walker hits Start. Drives the canStartWalk flag in
     /// the same way Android's UiState.canStartWalk does.
     var canStartWalk: Bool { !isTracking && walkSession == nil }
@@ -440,17 +453,86 @@ final class WalkConsoleViewModel: ObservableObject {
     // MARK: - Live share
 
     /// Create (or reuse) a live-share for the active walk and reveal
-    /// the share sheet. Solo walks fall back to the single-URL Copy
-    /// / Send buttons; group walks render per-client send rows.
+    /// the share sheet. For solo walks (one booking) creates the
+    /// share directly. For group walks (>1 booking) opens the
+    /// multi-select picker first so the walker chooses the subset of
+    /// households to share with.
+    ///
+    /// Phase 5 — the picker step replaces the previous auto-fan to
+    /// every active booking. Default selection is "all", so a walker
+    /// who wants the old behaviour just taps confirm.
     func startSharingWalk() {
-        guard let sessionId = activeWalkId, let bookingId = activeBookingId else {
+        guard let _ = activeWalkId, let bookingId = activeBookingId else {
+            self.error = "Start the walk before sharing"
+            return
+        }
+        let candidateIds = activeBookingIds.isEmpty ? [bookingId] : activeBookingIds
+        if candidateIds.count <= 1 {
+            // Solo walk — straight to share, skip the picker.
+            proceedWithShare(bookingIds: candidateIds)
+            return
+        }
+        // Group walk — load metadata for each booking so the picker
+        // shows recognisable rows. Default selection = all bookings,
+        // matching the pre-Phase-5 behaviour for one-tap confirm.
+        isLoadingPicker = true
+        selectedBookingIds = Set(candidateIds)
+        Task { @MainActor in
+            // Build targets without a base URL — the share doesn't
+            // exist yet. We'll re-build with the real per-client URLs
+            // after `createShare` lands.
+            let targets = await walkSessionRepo.buildBookingShareTargets(
+                bookingIds: candidateIds,
+                baseUrl: ""
+            )
+            self.selectableBookings = targets
+            self.isLoadingPicker = false
+            self.showBookingPicker = true
+        }
+    }
+
+    /// Toggle a booking's inclusion in the share. No-op if the id
+    /// isn't in the candidate list.
+    func toggleBookingSelection(_ bookingId: String) {
+        guard selectableBookings.contains(where: { $0.bookingId == bookingId }) else { return }
+        if selectedBookingIds.contains(bookingId) {
+            selectedBookingIds.remove(bookingId)
+        } else {
+            selectedBookingIds.insert(bookingId)
+        }
+    }
+
+    /// Confirm the picker selection and create the share with the
+    /// chosen subset. No-op if no rows are selected.
+    func confirmBookingPicker() {
+        let chosen = selectableBookings
+            .map { $0.bookingId }
+            .filter { selectedBookingIds.contains($0) }
+        guard !chosen.isEmpty else {
+            self.error = "Pick at least one client"
+            return
+        }
+        showBookingPicker = false
+        proceedWithShare(bookingIds: chosen)
+    }
+
+    /// Dismiss the picker without sharing.
+    func cancelBookingPicker() {
+        showBookingPicker = false
+        selectableBookings = []
+        selectedBookingIds = []
+    }
+
+    /// Internal helper — actually call the CF and reveal the send sheet.
+    /// Always runs after the picker (or directly for solo walks).
+    private func proceedWithShare(bookingIds: [String]) {
+        guard let sessionId = activeWalkId else {
             self.error = "Start the walk before sharing"
             return
         }
         isCreatingShareLink = true
         Task { @MainActor in
             do {
-                let bookingIds = activeBookingIds.isEmpty ? [bookingId] : activeBookingIds
                 let result = try await liveShareRepo.createShare(
                     sessionId: sessionId,
                     bookingIds: bookingIds
@@ -468,6 +550,10 @@ final class WalkConsoleViewModel: ObservableObject {
                 } else {
                     bookingShareTargets = []
                 }
+
+                // Reset picker state — we're past the picker now.
+                selectableBookings = []
+                selectedBookingIds = []
             } catch {
                 self.error = "Couldn't create share link: \(error.localizedDescription)"
                 print("[WalkConsole] startSharingWalk failed: \(error)")

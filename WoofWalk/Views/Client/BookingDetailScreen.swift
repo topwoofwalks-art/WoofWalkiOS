@@ -273,6 +273,13 @@ struct BookingDetailScreen: View {
 
                 if booking.statusEnum == .completed {
                     walkReportCard(booking)
+
+                    // Phase 5 — surface walker photos / note / branded
+                    // close-out when the business shared a live walk
+                    // for this booking. Self-hides when no share exists.
+                    if let bookingId = booking.id {
+                        BusinessLiveShareRecapSection(bookingId: bookingId)
+                    }
                 }
 
                 timelineCard(booking)

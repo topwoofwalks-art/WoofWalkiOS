@@ -169,6 +169,16 @@ struct BusinessWalkConsoleScreen: View {
                 }
             )
         }
+        .sheet(isPresented: $viewModel.showBookingPicker) {
+            BookingPickerSheet(
+                candidates: viewModel.selectableBookings,
+                selectedIds: viewModel.selectedBookingIds,
+                isLoading: viewModel.isLoadingPicker,
+                onToggle: { viewModel.toggleBookingSelection($0) },
+                onConfirm: { viewModel.confirmBookingPicker() },
+                onCancel: { viewModel.cancelBookingPicker() }
+            )
+        }
         .sheet(isPresented: $showShareActivitySheet) {
             ShareActivityView(text: shareActivityText)
         }
