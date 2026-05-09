@@ -1,9 +1,6 @@
 import Foundation
 
 class OsrmService {
-    private let baseURL = "https://router.project-osrm.org/"
-    private let networkManager = NetworkManager.shared
-
     func getRoute(
         coordinates: String,
         overview: String = "full",
@@ -14,51 +11,40 @@ class OsrmService {
         bearings: String? = nil,
         radiuses: String? = nil
     ) async throws -> OsrmRouteResponse {
-        guard let url = URL(string: "\(baseURL)route/v1/foot/\(coordinates)") else {
-            throw NetworkError.invalidURL
-        }
-
-        var parameters: [String: Any] = [
-            "overview": overview,
-            "geometries": geometries,
-            "steps": steps,
-            "alternatives": alternatives
+        var queryItems: [URLQueryItem] = [
+            URLQueryItem(name: "overview", value: overview),
+            URLQueryItem(name: "geometries", value: geometries),
+            URLQueryItem(name: "steps", value: String(steps)),
+            URLQueryItem(name: "alternatives", value: String(alternatives))
         ]
-
         if let continueStraight = continueStraight {
-            parameters["continue_straight"] = continueStraight
+            queryItems.append(URLQueryItem(name: "continue_straight", value: String(continueStraight)))
         }
         if let bearings = bearings {
-            parameters["bearings"] = bearings
+            queryItems.append(URLQueryItem(name: "bearings", value: bearings))
         }
         if let radiuses = radiuses {
-            parameters["radiuses"] = radiuses
+            queryItems.append(URLQueryItem(name: "radiuses", value: radiuses))
         }
 
-        return try await networkManager.request(
-            url: url,
-            parameters: parameters,
-            cachePolicy: .reloadIgnoringLocalCacheData
+        let (data, _) = try await SmartOsrmEndpoint.loadData(
+            path: "/route/v1/foot/\(coordinates)",
+            coordinates: coordinates,
+            queryItems: queryItems
         )
+        return try JSONDecoder().decode(OsrmRouteResponse.self, from: data)
     }
 
     func getNearest(
         coordinates: String,
         number: Int = 1
     ) async throws -> OsrmNearestResponse {
-        guard let url = URL(string: "\(baseURL)nearest/v1/foot/\(coordinates)") else {
-            throw NetworkError.invalidURL
-        }
-
-        let parameters: [String: Any] = [
-            "number": number
-        ]
-
-        return try await networkManager.request(
-            url: url,
-            parameters: parameters,
-            cachePolicy: .reloadIgnoringLocalCacheData
+        let (data, _) = try await SmartOsrmEndpoint.loadData(
+            path: "/nearest/v1/foot/\(coordinates)",
+            coordinates: coordinates,
+            queryItems: [URLQueryItem(name: "number", value: String(number))]
         )
+        return try JSONDecoder().decode(OsrmNearestResponse.self, from: data)
     }
 
     func getRoute(

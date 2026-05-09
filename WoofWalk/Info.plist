@@ -110,6 +110,28 @@
 	<string>Dark</string>
 
 	<!--
+	  ATS exception for the self-hosted UK OSRM endpoint at
+	  178.105.124.133:5000 (Hetzner CAX21, Falkenstein). The box
+	  serves plain HTTP to keep latency low and avoid Let's Encrypt
+	  IP-cert hassles; ATS otherwise blocks cleartext on iOS 9+.
+	  Scoped to the single IP — no global cleartext exemption.
+	  Mirrors Android's res/xml/network_security_config.xml entry.
+	-->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>178.105.124.133</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
+	</dict>
+
+	<!--
 	  Google Mobile Ads (AdMob) — gates the charity-points award the
 	  same way Android's CharityAdManager does. The user watches a
 	  rewarded interstitial before each walk; the reward callback

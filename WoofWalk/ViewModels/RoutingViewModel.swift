@@ -180,7 +180,9 @@ enum RoutingState {
 class RoutingViewModel: ObservableObject {
     @Published var routingState: RoutingState = .idle
 
-    private let osrmBaseURL = "https://router.project-osrm.org"
+    // OSRM endpoint selection now lives in SmartOsrmEndpoint:
+    //   UK coords  → self-hosted Hetzner box (Primary), failover to public router
+    //   non-UK     → public router directly
     private var debounceTask: Task<Void, Never>?
     private let routeCache = RouteCache()
 
@@ -448,16 +450,15 @@ class RoutingViewModel: ObservableObject {
 
             print("[RoutingVM] Trying OSRM route: \(coordinates)")
 
-            var urlComponents = URLComponents(string: "\(osrmBaseURL)/route/v1/foot/\(coordinates)")!
-            urlComponents.queryItems = [
-                URLQueryItem(name: "overview", value: "full"),
-                URLQueryItem(name: "geometries", value: "polyline"),
-                URLQueryItem(name: "steps", value: "true")
-            ]
-
-            guard let url = urlComponents.url else { return nil }
-
-            let (data, _) = try await URLSession.shared.data(from: url)
+            let (data, _) = try await SmartOsrmEndpoint.loadData(
+                path: "/route/v1/foot/\(coordinates)",
+                coordinates: coordinates,
+                queryItems: [
+                    URLQueryItem(name: "overview", value: "full"),
+                    URLQueryItem(name: "geometries", value: "polyline"),
+                    URLQueryItem(name: "steps", value: "true")
+                ]
+            )
             let response = try JSONDecoder().decode(OsrmRouteResponse.self, from: data)
 
             if response.code != "Ok" {
@@ -667,7 +668,6 @@ class RoutingViewModel: ObservableObject {
             let bearingsParam = attempt < 2 ? "\(startBearing),180;\(endBearing),180" : nil
             let radiusesParam = "100;100"
 
-            var urlComponents = URLComponents(string: "\(osrmBaseURL)/route/v1/foot/\(coordinates)")!
             var queryItems = [
                 URLQueryItem(name: "overview", value: "full"),
                 URLQueryItem(name: "geometries", value: "polyline"),
@@ -680,16 +680,14 @@ class RoutingViewModel: ObservableObject {
             }
             queryItems.append(URLQueryItem(name: "radiuses", value: radiusesParam))
 
-            urlComponents.queryItems = queryItems
-
-            guard let url = urlComponents.url else {
-                throw NSError(domain: "RoutingViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])
-            }
-
-            print("[RoutingVM] OSRM Request: \(url)")
+            print("[RoutingVM] OSRM Request: /route/v1/foot/\(coordinates)")
 
             do {
-                let (data, response) = try await URLSession.shared.data(from: url)
+                let (data, response) = try await SmartOsrmEndpoint.loadData(
+                    path: "/route/v1/foot/\(coordinates)",
+                    coordinates: coordinates,
+                    queryItems: queryItems
+                )
 
                 if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 400 {
                     if attempt < 2 {
@@ -1125,14 +1123,11 @@ class RoutingViewModel: ObservableObject {
         // Fallback: OSRM Nearest with foot profile (prefers footways but may return roads)
         do {
             let coordinates = "\(location.longitude),\(location.latitude)"
-            var urlComponents = URLComponents(string: "\(osrmBaseURL)/nearest/v1/foot/\(coordinates)")!
-            urlComponents.queryItems = [URLQueryItem(name: "number", value: "1")]
-
-            guard let url = urlComponents.url else {
-                return SnapResult(point: location, distanceMeters: 0.0, failed: true)
-            }
-
-            let (data, _) = try await URLSession.shared.data(from: url)
+            let (data, _) = try await SmartOsrmEndpoint.loadData(
+                path: "/nearest/v1/foot/\(coordinates)",
+                coordinates: coordinates,
+                queryItems: [URLQueryItem(name: "number", value: "1")]
+            )
             let response = try JSONDecoder().decode(OsrmNearestResponse.self, from: data)
 
             if response.code == "Ok", let waypoint = response.waypoints?.first {

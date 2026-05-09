@@ -38,7 +38,9 @@ class MapViewModel: ObservableObject {
     @Published var useFootpathRouting: Bool = true // true = walking mode via OSRM
 
     private static let walkingSpeedKmh: Double = 5.0
-    private let osrmBaseURL = "https://router.project-osrm.org"
+    // OSRM endpoint selection now lives in SmartOsrmEndpoint:
+    //   UK coords  → self-hosted Hetzner box (Primary), failover to public router
+    //   non-UK     → public router directly
 
     private var cancellables = Set<AnyCancellable>()
     private var walkStartTime: Date?
@@ -743,20 +745,15 @@ class MapViewModel: ObservableObject {
             do {
                 let coordinates = "\(from.longitude),\(from.latitude);\(to.longitude),\(to.latitude)"
 
-                var urlComponents = URLComponents(string: "\(osrmBaseURL)/route/v1/foot/\(coordinates)")!
-                urlComponents.queryItems = [
-                    URLQueryItem(name: "overview", value: "full"),
-                    URLQueryItem(name: "geometries", value: "polyline"),
-                    URLQueryItem(name: "steps", value: "true")
-                ]
-
-                guard let url = urlComponents.url else {
-                    print("[MapViewModel] Invalid OSRM URL")
-                    ensureSegmentPlaceholder(at: segmentIndex)
-                    return
-                }
-
-                let (data, response) = try await URLSession.shared.data(from: url)
+                let (data, response) = try await SmartOsrmEndpoint.loadData(
+                    path: "/route/v1/foot/\(coordinates)",
+                    coordinates: coordinates,
+                    queryItems: [
+                        URLQueryItem(name: "overview", value: "full"),
+                        URLQueryItem(name: "geometries", value: "polyline"),
+                        URLQueryItem(name: "steps", value: "true")
+                    ]
+                )
 
                 if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
                     print("[MapViewModel] OSRM HTTP error: \(httpResponse.statusCode)")
