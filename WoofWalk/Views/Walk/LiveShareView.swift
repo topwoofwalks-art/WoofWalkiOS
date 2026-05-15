@@ -134,9 +134,11 @@ struct LiveShareView: View {
             // Tear down the periodic location push + flip isActive=false
             // on the doc so the recipient page shows "Sharing stopped"
             // instead of polling forever against a stale GeoPoint.
-            WalkTrackingService.shared.endLiveShare()
-            onStopSharing()
-            dismiss()
+            Task { @MainActor in
+                await WalkTrackingService.shared.endLiveShare()
+                onStopSharing()
+                dismiss()
+            }
         } label: {
             Label("Stop Sharing", systemImage: "xmark.circle")
                 .frame(maxWidth: .infinity)
@@ -152,7 +154,7 @@ struct LiveShareView: View {
         // If WalkTrackingService already has an active live share for this
         // walk (e.g. the sheet was reopened mid-walk), surface the existing
         // URL instead of creating a duplicate doc.
-        if let existing = WalkTrackingService.shared.currentLiveShareUrl {
+        if let existing = await WalkTrackingService.shared.currentLiveShareUrl {
             await MainActor.run {
                 shareLink = existing
                 isLoading = false
@@ -165,7 +167,7 @@ struct LiveShareView: View {
         }
         // Hand the linkId to the walk service so it can start pushing
         // GPS updates onto the doc for the duration of the walk.
-        WalkTrackingService.shared.beginLiveShare(linkId: handle.linkId, url: handle.url)
+        await WalkTrackingService.shared.beginLiveShare(linkId: handle.linkId, url: handle.url)
         await MainActor.run {
             shareLink = handle.url
             isLoading = false

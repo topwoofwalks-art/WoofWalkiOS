@@ -322,16 +322,12 @@ struct LeaderboardScreen: View {
 
             // The score field name varies by metric / CF version. Try the
             // explicit per-metric name first, then a generic `score`, then
-            // the legacy `points` / `count` fields.
-            let score: Double = (entry[selectedMetric.scoreFieldName] as? Double)
-                ?? (entry[selectedMetric.scoreFieldName] as? Int).map(Double.init)
-                ?? (entry["score"] as? Double)
-                ?? (entry["score"] as? Int).map(Double.init)
-                ?? (entry["points"] as? Double)
-                ?? (entry["points"] as? Int).map(Double.init)
-                ?? (entry["count"] as? Double)
-                ?? (entry["count"] as? Int).map(Double.init)
-                ?? 0
+            // the legacy `points` / `count` fields. Split into helper to
+            // keep the Swift type-checker under its expression budget.
+            let score = Self.resolveScore(
+                entry: entry,
+                primaryKey: selectedMetric.scoreFieldName
+            )
 
             out.append(LeaderboardEntry(
                 uid: uid,
@@ -342,6 +338,14 @@ struct LeaderboardScreen: View {
             ))
         }
         return out
+    }
+
+    private static func resolveScore(entry: [String: Any], primaryKey: String) -> Double {
+        for key in [primaryKey, "score", "points", "count"] {
+            if let v = entry[key] as? Double { return v }
+            if let v = entry[key] as? Int { return Double(v) }
+        }
+        return 0
     }
 }
 
