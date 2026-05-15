@@ -305,6 +305,12 @@ struct SettingsView: View {
             NavigationLink(destination: NotificationCenterScreen()) {
                 Label(String(localized: "settings_notifications"), systemImage: "bell")
             }
+            // Parity with Android `BetaFeedbackScreen` — writes to the
+            // shared `beta_feedback` Firestore collection so iOS reports
+            // surface in the same back-office dashboard.
+            NavigationLink(destination: BetaFeedbackScreen()) {
+                Label("Send beta feedback", systemImage: "ladybug")
+            }
         }
     }
 

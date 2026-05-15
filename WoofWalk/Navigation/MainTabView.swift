@@ -10,8 +10,20 @@ struct MainTabView: View {
     @State private var lostDogAlertPayload: [AnyHashable: Any]?
     @State private var showLostDogAlert = false
 
+    // Safety-critical: full-screen panic-alarm takeover for guardians.
+    // Driven by `.panicAlertReceived` (NotificationService routes
+    // FCM `type: "panicAlert"` here). Mirrors Android's
+    // `PanicAlarmActivity` full-screen intent.
+    @State private var panicAlertPayload: [AnyHashable: Any]?
+    @State private var showPanicAlert = false
+
     var body: some View {
         VStack(spacing: 0) {
+            // Yellow "verify your email" banner — parity with Android's
+            // MainTabView top-of-tab prompt. Renders nothing when verified
+            // or signed-out; auto-refreshes on app foreground.
+            EmailVerificationBanner()
+
             if updateChecker.updateAvailable {
                 AppUpdateBanner(
                     currentVersion: updateChecker.currentVersion,
@@ -107,6 +119,22 @@ struct MainTabView: View {
                 LostDogAlertSheet(payload: payload) {
                     showLostDogAlert = false
                     lostDogAlertPayload = nil
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .panicAlertReceived)) { note in
+            // Safety-critical: a walker triggered the panic button. Open
+            // the full-screen alarm cover immediately — siren + map + the
+            // three forced-choice actions live inside `PanicAlarmSheet`.
+            guard let payload = note.userInfo, !payload.isEmpty else { return }
+            panicAlertPayload = payload
+            showPanicAlert = true
+        }
+        .fullScreenCover(isPresented: $showPanicAlert) {
+            if let payload = panicAlertPayload {
+                PanicAlarmSheet(payload: payload) {
+                    showPanicAlert = false
+                    panicAlertPayload = nil
                 }
             }
         }

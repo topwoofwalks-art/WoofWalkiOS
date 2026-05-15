@@ -161,8 +161,16 @@ class WalkViewModel: ObservableObject {
             // Get selected dogs
             currentWalkDogs = try await dogRepository.getDogs(ids: Array(selectedDogIds))
 
-            // Start location tracking
-            locationManager.startTracking()
+            // Start location tracking with the same context the crash-
+            // recovery sheet looks for — without dogIds + mode the
+            // post-crash resume flow showed "0 dogs tagged". Mirrors
+            // Android's `WalkTrackingService.startTracking(sessionId, dogIds, mode)`.
+            // Default mode is `.walk`; switching to e.g. "runWith" or
+            // "trainingSession" is a follow-up once the VM tracks mode.
+            locationManager.startTracking(
+                dogIds: Array(selectedDogIds),
+                mode: .walk
+            )
 
             // Start statistics timer
             startStatisticsTimer()
@@ -526,6 +534,21 @@ protocol WalkDogRepository {
     func getDogs(ids: [String]) async throws -> [Dog]
 }
 
+// MARK: - Walk Location Mode
+
+/// Mirror of the Kotlin / WalkTrackingService mode token. The Swift VM
+/// keeps the same string-coded values so the crash-recovery sheet,
+/// diagnostics, and back-end walk records all line up cross-platform.
+enum WalkLocationMode: String {
+    case walk = "personal"
+    case runWith = "runWith"
+    case trainingSession = "trainingSession"
+    case business = "business"
+
+    /// Pass-through to the underlying WalkTrackingService string.
+    var serviceToken: String { rawValue }
+}
+
 // MARK: - Walk Location Manager (to be implemented)
 class WalkLocationManager: ObservableObject {
     var locationPublisher: AnyPublisher<CLLocation, Never> {
@@ -534,8 +557,23 @@ class WalkLocationManager: ObservableObject {
 
     private let locationSubject = PassthroughSubject<CLLocation, Never>()
 
-    func startTracking() {
-        print("Location tracking started")
+    /// Start the underlying location service for a walk session.
+    ///
+    /// `dogIds` + `mode` carry the same context Android's
+    /// `WalkTrackingService.startTracking` takes — without them the
+    /// crash-recovery sheet shows "0 dogs tagged" after an unclean exit
+    /// because there's nothing to repopulate the dog roster from.
+    /// Stored as a side-effect via `WalkTrackingService.shared` so the
+    /// service-owned in-flight markers reflect the right walk metadata.
+    func startTracking(dogIds: [String] = [], mode: WalkLocationMode = .walk) {
+        print("Location tracking started — dogIds=\(dogIds.count) mode=\(mode.rawValue)")
+        // Bridge into the shared WalkTrackingService so diagnostics +
+        // crash-recovery + auto-resume see the same context.
+        WalkTrackingService.shared.startTracking(
+            sessionId: nil,
+            dogIds: dogIds,
+            mode: mode.serviceToken
+        )
     }
 
     func pauseTracking() {

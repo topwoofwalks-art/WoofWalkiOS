@@ -21,6 +21,12 @@ struct MapScreen: View {
     @StateObject var walkTrackingViewModel = WalkTrackingService.shared
     @StateObject var pooBagDropViewModel = PooBagDropViewModel()
     @StateObject var locationManager = LocationManager()
+    /// Proximity-fires `HazardAlertBanner` when the user walks within
+    /// ~50 m of an active hazard. Subscribes to
+    /// `LocationService.locationUpdatePublisher` in `start(...)`.
+    /// Mirrors Android `HazardAlertSystem.kt`. See
+    /// `HazardAlertEngine.swift` for the dedup window + haptic.
+    @StateObject var hazardEngine = HazardAlertEngine()
 
     @State var showSearchBar = false
     @State var showFilterSheet = false
@@ -73,6 +79,11 @@ struct MapScreen: View {
     @State var showLivestockMode = false
     @State var showWalkingPaths = false
     @State var dismissedHazardIds: Set<String> = []
+    /// Preflight result captured by the most recent
+    /// `WalkPreflightChecker.check()` call. Driven by `startWalk()`.
+    /// `nil` = no dialog pending.
+    @State var preflightCheck: WalkPreflightCheck?
+    @State var showPreflightDialog = false
     @State var showRainMode = false
     @State var showFogOfWar = false
     @State var fogOfWarCoordinates: [CLLocationCoordinate2D] = []
@@ -83,6 +94,10 @@ struct MapScreen: View {
     @State var showClusterSelectionSheet = false
     @State var selectedCluster: AnnotationCluster?
     @State var pendingPlannedWalk: PlannedWalk?
+    /// User whose story to present when a story pin is tapped. Set by
+    /// the story-pin tap handler in `mapLayer`; bound by the sheet at
+    /// the bottom of `mapContent`.
+    @State var presentedStoryUserId: String?
     @AppStorage("hasShownBackgroundLocationPrompt") var hasShownPrompt = false
     @AppStorage("walkStreak") var walkStreak: Int = 0
 
@@ -97,6 +112,28 @@ struct MapScreen: View {
             mapLayer
             controlsOverlay
             hazardAlertOverlay
+            dogMatchOverlay
+            // 50-m proximity engine alert. The container above
+            // (`hazardAlertOverlay`) is the always-on "nearest unseen
+            // hazard within severity-radius" list banner; this one is
+            // the close-range "you're 50 m from an active hazard"
+            // single-shot alert with haptic feedback, mirroring the
+            // Android `HazardAlertSystem.kt` proximity trigger.
+            if let alert = hazardEngine.activeAlert {
+                VStack {
+                    HazardAlertBanner(
+                        hazard: alert,
+                        userLocation: locationManager.location,
+                        onReroute: { handleHazardReroute(alert) },
+                        onDismiss: { hazardEngine.dismissAlert() }
+                    )
+                    .show()
+                    Spacer()
+                }
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: alert.id)
+            }
             planningOverlay
             FogOfWarOverlay(
                 exploredCoordinates: fogOfWarCoordinates,
@@ -287,6 +324,14 @@ struct MapScreen: View {
                 )
             }
         }
+        // Story-pin tap → open the existing StoryViewerScreen for the
+        // matched poster. Parity with Android's StoryMapPins onClick.
+        .sheet(item: Binding(
+            get: { presentedStoryUserId.map { IdentifiableString($0) } },
+            set: { presentedStoryUserId = $0?.id }
+        )) { wrapped in
+            StoryViewerScreen(userId: wrapped.id)
+        }
         .sheet(isPresented: $showSavePlannedWalkDialog) {
             SavePlannedWalkDialog(
                 isPresented: $showSavePlannedWalkDialog,
@@ -357,12 +402,48 @@ struct MapScreen: View {
                 mapViewModel.loadTrailConditions()
                 mapViewModel.loadPublicDogs()
                 mapViewModel.loadLostDogs()
+                mapViewModel.loadNearbyDogMatches()
+                mapViewModel.loadStoryPins()
             }
+            // Boot the proximity engine. Hazard list is empty at this
+            // point — the .onChange(of:hazardReports) feeds it once
+            // the Firestore snapshot lands.
+            hazardEngine.start(hazards: mapViewModel.hazardReports)
             // Sync map style from settings
             switch settingsViewModel.settings.mapStyle {
             case .standard: mapStyle = .standard
             case .hybrid: mapStyle = .hybrid
             case .satellite: mapStyle = .satellite
+            }
+        }
+        .onDisappear {
+            hazardEngine.stop()
+        }
+        .onChange(of: mapViewModel.hazardReports) { newHazards in
+            // Firestore snapshot delivered a new hazard set — push it
+            // into the proximity engine so the next location fix
+            // evaluates against the up-to-date list.
+            hazardEngine.updateHazards(newHazards)
+        }
+        .sheet(isPresented: $showPreflightDialog) {
+            if let check = preflightCheck {
+                WalkPreflightDialog(
+                    check: check,
+                    onWalkAnyway: {
+                        showPreflightDialog = false
+                        preflightCheck = nil
+                        // Re-enter startWalk on the next runloop; the
+                        // preflight gate inside `startWalk` skips the
+                        // check when `preflightCheck` is nil AND the
+                        // caller passes through with `bypassPreflight`.
+                        startWalkBypassingPreflight()
+                    },
+                    onDismiss: {
+                        showPreflightDialog = false
+                        preflightCheck = nil
+                    }
+                )
+                .presentationDetents([.medium, .large])
             }
         }
         .onChange(of: locationManager.location) { newLocation in
@@ -726,6 +807,15 @@ struct MapScreen: View {
             ))
         }
 
+        // Story pins (geotagged stories last 24h)
+        for pin in mapViewModel.storyPins {
+            items.append(MapMarkerItem(
+                id: "story-\(pin.storyId)",
+                coordinate: pin.coordinate,
+                kind: .storyPin(pin)
+            ))
+        }
+
         // Planning waypoints
         if isPlanningMode {
             let waypoints = mapViewModel.planningWaypoints
@@ -826,6 +916,13 @@ struct MapScreen: View {
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white)
                     }
+                case .storyPin(let pin):
+                    StoryMapPinView(pin: pin)
+                        .onTapGesture {
+                            // Open the existing StoryViewerScreen for
+                            // this poster — matches Android tap UX.
+                            presentedStoryUserId = pin.posterUid
+                        }
                 }
             }
         }
@@ -992,6 +1089,9 @@ struct MapMarkerItem: Identifiable {
         case trailCondition(TrailCondition)
         case offLeadZoneLabel(OffLeadZone)
         case planningWaypoint(index: Int, isFirst: Bool, isLast: Bool)
+        // Parity with Android `StoryMapPins`. Tap presents
+        // StoryViewerScreen(userId: posterUid).
+        case storyPin(StoryPin)
     }
 }
 

@@ -83,7 +83,7 @@ enum HazardSeverity: String, CaseIterable, Codable {
 
 // MARK: - Hazard Report
 
-struct HazardReport: Identifiable, Codable {
+struct HazardReport: Identifiable, Codable, Equatable {
     @DocumentID var id: String?
     var type: String
     var severity: String

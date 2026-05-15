@@ -255,8 +255,11 @@ struct RouteDestination: View {
             PlaceholderView(title: "Shared walk", icon: "square.and.arrow.up")
         case .providerDeepLink(let providerId):
             ProviderDetailScreen(providerId: providerId)
-        case .charityDeepLink:
-            CharitySettingsView()
+        case .charityDeepLink(let charityId):
+            // Parity with Android — deep-link lands on the per-charity
+            // detail screen (logo, mission, leaderboard, "make this mine"
+            // CTA). Settings page is still reachable from the cog menu.
+            CharityDetailScreen(charityId: charityId)
         case .settingsSection:
             SettingsView()
         case .referral:

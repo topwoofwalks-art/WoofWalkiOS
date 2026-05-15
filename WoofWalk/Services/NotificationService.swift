@@ -289,6 +289,16 @@ class NotificationService: NSObject, ObservableObject, UNUserNotificationCenterD
         switch type {
         case "lost_dog_alert", "lostDogAlert":
             NotificationCenter.default.post(name: .lostDogAlertReceived, object: nil, userInfo: userInfo)
+        case "panicAlert", "panic_alert", "PANIC_ALERT", "safety_watch_panic":
+            // Safety-critical: a walker triggered the panic button mid-walk
+            // and we (a guardian) need to be alerted unconditionally. The
+            // payload mirrors Android's `WoofWalkMessagingService.handleSafetyWatchPanic`
+            // — `watchId`, `walkerFirstName`, `lat`, `lng`, `walkerPhone?`.
+            // Root observer in `MainTabView` presents `PanicAlarmSheet` as
+            // a `.fullScreenCover` with siren audio + DND-bypass behaviour
+            // (the latter requires the critical-alerts entitlement to fully
+            // engage; without it the alarm sound still plays in-app).
+            NotificationCenter.default.post(name: .panicAlertReceived, object: nil, userInfo: userInfo)
         case "walk_started", "WALK_STARTED":
             NotificationCenter.default.post(name: .startWalkFromNotification, object: nil, userInfo: userInfo)
         case "walk_update", "walk_completed", "WALK_UPDATE", "WALK_COMPLETED":
@@ -394,6 +404,14 @@ extension Notification.Name {
     /// foreground tab. Mirrors Android's
     /// `WoofWalkMessagingService.handleLostDogAlert` notification path.
     static let lostDogAlertReceived = Notification.Name("lostDogAlertReceived")
+
+    /// Posted by `NotificationService` when an FCM payload of type
+    /// `panicAlert` lands — a walker on a Watch Me session has triggered
+    /// the panic button. The root navigator (`MainTabView`) observes this
+    /// and presents `PanicAlarmSheet` as a full-screen cover with siren
+    /// audio. Mirrors Android's `WoofWalkMessagingService.handleSafetyWatchPanic`
+    /// + `PanicAlarmActivity` full-screen takeover.
+    static let panicAlertReceived = Notification.Name("panicAlertReceived")
 
     /// Posted by `NotificationService` when an FCM payload's `actionUrl`
     /// resolves to a known `AppRoute`. `userInfo["route"]` is the resolved

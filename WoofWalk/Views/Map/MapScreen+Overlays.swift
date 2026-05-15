@@ -125,6 +125,35 @@ extension MapScreen {
         )
     }
 
+    // MARK: - Dog Match Overlay (reactive-dog parity)
+
+    /// Floating card at the top of the map when the reactive-dog
+    /// matcher surfaces a compatible nearby dog. Mirrors Android
+    /// `DogMatchOverlay`. Shows one match at a time; tapping the X
+    /// dismisses locally (see `MapViewModel.dismissedDogMatchIds`)
+    /// and the next un-dismissed match takes its place.
+    @ViewBuilder
+    var dogMatchOverlay: some View {
+        if let match = mapViewModel.activeDogMatch {
+            VStack {
+                DogMatchCard(
+                    match: match,
+                    onWave: {
+                        DogMatchWaveAction.sendWave(toOwnerUid: match.ownerUid)
+                        mapViewModel.dismissDogMatch(match.id)
+                    },
+                    onDismiss: {
+                        mapViewModel.dismissDogMatch(match.id)
+                    }
+                )
+                .id(match.id) // re-instantiate when match changes so auto-dismiss timer resets
+                Spacer()
+            }
+            .padding(.top, 80) // below hazard banner / RAG pill row
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
     // MARK: - Reroute Handler
 
     func handleHazardReroute(_ hazard: HazardReport) {

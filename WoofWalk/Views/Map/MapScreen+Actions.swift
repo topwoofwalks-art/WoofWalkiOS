@@ -62,6 +62,27 @@ extension MapScreen {
             return
         }
 
+        // Preflight gate — mirrors Android WalkPreflightChecker. Block
+        // start when location permission is denied / services off; warn
+        // (but allow) on low-power / low-battery. We don't re-run
+        // preflight when re-entering via `startWalkBypassingPreflight()`
+        // — the user has already accepted the warning surface.
+        Task { @MainActor in
+            let check = await WalkPreflightCheck.check()
+            if !check.canStart || !check.warnings.isEmpty {
+                preflightCheck = check
+                showPreflightDialog = true
+                return
+            }
+            startWalkBypassingPreflight()
+        }
+    }
+
+    /// Re-entry point that skips the preflight check. Called from the
+    /// preflight sheet's "Walk anyway" action and from
+    /// `startWalk()` once the check passes cleanly. All the original
+    /// charity-ad + tracking-start logic lives here.
+    func startWalkBypassingPreflight() {
         // Charity ad gate — mirrors Android DogSelectionSheet flow.
         // If the user has charity mode enabled AND has picked a
         // charity, show the rewarded-ad pre-screen. They can watch

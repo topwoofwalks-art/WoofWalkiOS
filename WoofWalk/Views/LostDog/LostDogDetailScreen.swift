@@ -32,12 +32,17 @@ struct LostDogDetailScreen: View {
     @State private var showSightingSheet = false
     @State private var showShareSheet = false
     @State private var sightingsListener: ListenerRegistration?
-    @State private var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 54.5, longitude: -2.5),
-            span: MKCoordinateSpan(latitudeDelta: 8, longitudeDelta: 8)
-        )
+    @State private var region: MKCoordinateRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 54.5, longitude: -2.5),
+        span: MKCoordinateSpan(latitudeDelta: 8, longitudeDelta: 8)
     )
+
+    private struct PinItem: Identifiable {
+        let id: String
+        let coordinate: CLLocationCoordinate2D
+        let kind: Kind
+        enum Kind { case lastSeen, sighting }
+    }
 
     enum LoadState {
         case loading
@@ -235,35 +240,38 @@ struct LostDogDetailScreen: View {
     @ViewBuilder
     private func miniMap(_ alert: LostDogAlert) -> some View {
         if let lat = alert.lat, let lng = alert.lng {
-            Map(position: $cameraPosition) {
-                Annotation(
-                    "Last seen",
-                    coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)
-                ) {
-                    ZStack {
-                        Circle().fill(Color.orange).frame(width: 28, height: 28)
-                        Image(systemName: "pawprint.fill")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
-                    }
-                }
-                ForEach(sightings) { sighting in
-                    if let sLat = sighting.lat, let sLng = sighting.lng {
-                        Annotation(
-                            "Sighting",
-                            coordinate: CLLocationCoordinate2D(latitude: sLat, longitude: sLng)
-                        ) {
-                            ZStack {
-                                Circle().fill(Color.blue).frame(width: 18, height: 18)
-                                Image(systemName: "eye.fill")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
+            let pins: [PinItem] = [
+                PinItem(id: "lastSeen", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng), kind: .lastSeen)
+            ] + sightings.compactMap { s in
+                guard let sLat = s.lat, let sLng = s.lng else { return nil }
+                return PinItem(id: s.id, coordinate: CLLocationCoordinate2D(latitude: sLat, longitude: sLng), kind: .sighting)
+            }
+            Map(coordinateRegion: $region, annotationItems: pins) { pin in
+                MapAnnotation(coordinate: pin.coordinate) {
+                    switch pin.kind {
+                    case .lastSeen:
+                        ZStack {
+                            Circle().fill(Color.orange).frame(width: 28, height: 28)
+                            Image(systemName: "pawprint.fill")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                    case .sighting:
+                        ZStack {
+                            Circle().fill(Color.blue).frame(width: 18, height: 18)
+                            Image(systemName: "eye.fill")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(.white)
                         }
                     }
                 }
             }
-            .mapStyle(.standard(elevation: .flat))
+            .onAppear {
+                region = MKCoordinateRegion(
+                    center: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                    span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+                )
+            }
         }
     }
 

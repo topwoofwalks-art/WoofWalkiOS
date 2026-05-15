@@ -31,6 +31,8 @@ struct ProfileView: View {
 
                         gamificationSection()
 
+                        safetySection()
+
                         portalLinkCard()
 
                         logoutButton()
@@ -539,6 +541,50 @@ struct ProfileView: View {
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(radius: 2)
+    }
+
+    // MARK: - Safety Section
+    //
+    // Guardian-side "Watch Me" entry — see which friends are currently
+    // asking you to keep an eye on their walk. Counterpart to Android's
+    // safety / Watched Walks profile row. The screen pulls from
+    // `listMyWatchedWalks` (`SafetyWatchRepository`) which serves both
+    // active and historical sessions.
+    private func safetySection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Safety")
+                .font(.headline)
+
+            NavigationLink(destination: WatchedWalksScreen()) {
+                HStack(spacing: 12) {
+                    Image(systemName: "shield.checkered")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 36, height: 36)
+                        .background(Circle().fill(Color(red: 0.145, green: 0.388, blue: 0.922)))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Watched walks")
+                            .font(.subheadline.bold())
+                            .foregroundColor(.primary)
+                        Text("Friends you're keeping an eye on")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.bold())
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
             }
             .buttonStyle(.plain)
         }

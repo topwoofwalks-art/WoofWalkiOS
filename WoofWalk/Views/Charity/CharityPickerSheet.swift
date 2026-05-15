@@ -1,16 +1,28 @@
 import SwiftUI
 
+/// Picker sheet — tapping a charity row pushes the per-charity detail
+/// screen (parity with Android). The detail screen's "Make this my chosen
+/// charity" CTA is the only path that actually persists the choice; this
+/// sheet just disambiguates which charity the user wants to learn about.
 struct CharityPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedCharityId: String
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List(CharityOrg.supportedCharities) { charity in
-                Button(action: {
-                    selectedCharityId = charity.id
-                    dismiss()
-                }) {
+                NavigationLink {
+                    // Push the detail screen. Selection happens there so
+                    // users can see the charity's mission + leaderboard
+                    // before committing.
+                    CharityDetailScreen(charityId: charity.id)
+                        .onDisappear {
+                            // Re-read the (now possibly updated) selected
+                            // charity so the picker's checkmark reflects
+                            // the user's decision on the detail screen.
+                            selectedCharityId = CharityRepository.shared.getSelectedCharityId()
+                        }
+                } label: {
                     HStack(spacing: 12) {
                         Text(charity.logoEmoji)
                             .font(.title)

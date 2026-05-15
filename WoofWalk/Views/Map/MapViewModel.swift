@@ -27,6 +27,32 @@ class MapViewModel: ObservableObject {
     @Published var trailConditions: [TrailCondition] = []
     @Published var offLeadZones: [OffLeadZone] = []
 
+    // MARK: - Reactive-Dog Matches (parity with Android DogMatchCard)
+    //
+    // Live stream of nearby compatible dogs. Source-of-truth is
+    // `nearby_dogs/{uid}/active/*` — written by the reactive-dog
+    // proximity matcher (server-side function) when two dogs flagged
+    // compatible end up within range during a walk. Each doc holds the
+    // matched dog's name + breed + owner identity + a precomputed
+    // distance.
+    @Published var nearbyDogMatches: [DogMatch] = []
+    @Published var dismissedDogMatchIds: Set<String> = []
+    private var nearbyDogListener: ListenerRegistration?
+
+    // MARK: - Story Pins (parity with Android StoryMapPins.kt)
+    //
+    // Geotagged stories from the last 24 h, rendered as circular
+    // avatar annotations on the map. Tapping a pin opens the story
+    // viewer for that user — matches the Android UX.
+    @Published var storyPins: [StoryPin] = []
+    private var storyPinListener: ListenerRegistration?
+
+    /// Front of `nearbyDogMatches` minus anything the user already
+    /// X-ed out on this session. Bound by the MapScreen overlay.
+    var activeDogMatch: DogMatch? {
+        nearbyDogMatches.first { !dismissedDogMatchIds.contains($0.id) }
+    }
+
     // MARK: - Planning Mode State
     @Published var planningWaypoints: [CLLocationCoordinate2D] = []
     @Published var plannedRouteDistance: Double = 0 // meters
@@ -265,6 +291,113 @@ class MapViewModel: ObservableObject {
                 }
                 print("[MapViewModel] Loaded \(self?.lostDogs.count ?? 0) lost dogs")
             }
+    }
+
+    // MARK: - Load Nearby Dog Matches
+
+    /// Subscribe to `nearby_dogs/{currentUid}/active` and surface the
+    /// matched dogs as `DogMatch` items. Mirrors Android's reactive-dog
+    /// pipeline; backend matching is approximate where the Android
+    /// collection shape isn't 1:1 — see comment block at the top of the
+    /// listener for the supported document shape.
+    func loadNearbyDogMatches() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        nearbyDogListener?.remove()
+        // Document shape (best-effort parity, fields all optional with
+        // safe defaults so missing-data on the backend doesn't crash):
+        //   dogName: String
+        //   breed: String
+        //   ownerUid: String
+        //   ownerName: String
+        //   distanceMeters: Int
+        //   photoUrl: String?
+        //   compatible: Bool (must be true to surface)
+        let db = Firestore.firestore()
+        nearbyDogListener = db.collection("nearby_dogs").document(uid).collection("active")
+            .whereField("compatible", isEqualTo: true)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                if let error = error {
+                    // permission-denied is expected when the user has
+                    // no active matches doc — debug-level only.
+                    print("[MapViewModel] nearby_dogs listener: \(error.localizedDescription)")
+                    return
+                }
+                guard let docs = snapshot?.documents else { return }
+                let matches: [DogMatch] = docs.compactMap { doc in
+                    let data = doc.data()
+                    let ownerUid = data["ownerUid"] as? String ?? ""
+                    guard !ownerUid.isEmpty, ownerUid != uid else { return nil }
+                    return DogMatch(
+                        id: doc.documentID,
+                        dogName: data["dogName"] as? String ?? "A dog",
+                        breed: data["breed"] as? String ?? "",
+                        ownerUid: ownerUid,
+                        ownerName: data["ownerName"] as? String ?? "",
+                        distanceMeters: data["distanceMeters"] as? Int ?? 0,
+                        photoURL: (data["photoUrl"] as? String).flatMap { URL(string: $0) }
+                    )
+                }
+                self.nearbyDogMatches = matches
+                print("[MapViewModel] Loaded \(matches.count) nearby dog matches")
+            }
+    }
+
+    /// X-out the active match locally so the overlay slides away. Doesn't
+    /// touch the backend doc — the next compatible match still surfaces.
+    func dismissDogMatch(_ id: String) {
+        dismissedDogMatchIds.insert(id)
+    }
+
+    func stopNearbyDogMatchListener() {
+        nearbyDogListener?.remove()
+        nearbyDogListener = nil
+    }
+
+    // MARK: - Load Story Pins
+
+    /// Subscribe to active geotagged stories (last 24 h, with lat/lng
+    /// set). Mirrors Android `StoryMapPins`. Backed by the existing
+    /// `stories` collection (`expiresAt > now`); falls back to client-
+    /// side filtering for the lat/lng presence since Firestore can't
+    /// do `whereField("latitude", isNotEqualTo: nil)` cheaply.
+    func loadStoryPins() {
+        storyPinListener?.remove()
+        let db = Firestore.firestore()
+        let now = Timestamp(date: Date())
+        storyPinListener = db.collection("stories")
+            .whereField("expiresAt", isGreaterThan: now)
+            .order(by: "expiresAt", descending: false)
+            .order(by: "createdAt", descending: true)
+            .limit(to: 200)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                if let error = error {
+                    print("[MapViewModel] storyPins listener: \(error.localizedDescription)")
+                    return
+                }
+                guard let docs = snapshot?.documents else { return }
+                let pins: [StoryPin] = docs.compactMap { doc in
+                    let data = doc.data()
+                    guard let lat = data["latitude"] as? Double,
+                          let lng = data["longitude"] as? Double else { return nil }
+                    return StoryPin(
+                        storyId: doc.documentID,
+                        coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                        posterUid: data["userId"] as? String ?? "",
+                        posterName: data["userName"] as? String ?? "",
+                        posterPhotoUrl: (data["userAvatar"] as? String).flatMap { URL(string: $0) },
+                        thumbnailUrl: (data["thumbnailUrl"] as? String ?? data["mediaUrl"] as? String).flatMap { URL(string: $0) }
+                    )
+                }
+                self.storyPins = pins
+                print("[MapViewModel] Loaded \(pins.count) story pins")
+            }
+    }
+
+    func stopStoryPinListener() {
+        storyPinListener?.remove()
+        storyPinListener = nil
     }
 
     func togglePOIType(_ type: POI.POIType) {

@@ -33,12 +33,16 @@ struct WatchWalkReceiverScreen: View {
     @State private var loadState: LoadState = .loading
     @State private var errorMessage: String?
     @State private var pollTask: Task<Void, Never>?
-    @State private var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 54.5, longitude: -2.5),
-            span: MKCoordinateSpan(latitudeDelta: 8, longitudeDelta: 8)
-        )
+    @State private var region: MKCoordinateRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 54.5, longitude: -2.5),
+        span: MKCoordinateSpan(latitudeDelta: 8, longitudeDelta: 8)
     )
+
+    private struct WalkerPin: Identifiable {
+        let id = "walker"
+        let coordinate: CLLocationCoordinate2D
+        let name: String
+    }
     @State private var hasCenteredOnFix = false
     @State private var arrivedMarking = false
 
@@ -214,21 +218,26 @@ struct WatchWalkReceiverScreen: View {
     @ViewBuilder
     private func mapView(_ s: WatchSnapshot) -> some View {
         ZStack {
-            Map(position: $cameraPosition) {
-                if s.hasFix {
-                    Annotation(
-                        "\(s.walkerFirstName) is here",
-                        coordinate: CLLocationCoordinate2D(latitude: s.lastLat, longitude: s.lastLng)
-                    ) {
-                        walkerMarker(name: s.walkerFirstName, accent: accentColor(for: s))
-                    }
-                }
-                if s.routePoints.count >= 2 {
-                    MapPolyline(coordinates: s.routePoints)
-                        .stroke(accentColor(for: s), lineWidth: 4)
+            // iOS 16-compatible Map. MapPolyline only exists on iOS 17+ so
+            // the route trail is rendered as a series of small annotation
+            // dots on iOS 16 — visually close enough for the receiver UX.
+            let walkerPin: [WalkerPin] = s.hasFix
+                ? [WalkerPin(coordinate: CLLocationCoordinate2D(latitude: s.lastLat, longitude: s.lastLng), name: s.walkerFirstName)]
+                : []
+            Map(coordinateRegion: $region, annotationItems: walkerPin) { pin in
+                MapAnnotation(coordinate: pin.coordinate) {
+                    walkerMarker(name: pin.name, accent: accentColor(for: s))
                 }
             }
-            .mapStyle(.standard(elevation: .flat))
+            .onChange(of: s.lastLat) { _ in
+                if s.hasFix && !hasCenteredOnFix {
+                    region = MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: s.lastLat, longitude: s.lastLng),
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    )
+                    hasCenteredOnFix = true
+                }
+            }
 
             if !s.hasFix {
                 Color.black.opacity(0.35)
