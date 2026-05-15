@@ -67,6 +67,37 @@ class DogRepository: ObservableObject {
         return try await fetchDogs(forUserId: userId)
     }
 
+    // MARK: - Fetch a single dog by id
+
+    /// Fetch a single dog document by id. Returns nil if the doc doesn't
+    /// exist, is archived, or can't be decoded. Used by walk-history /
+    /// booking flows to resolve dogIds → dog name + photo.
+    func getDog(id: String) async throws -> UnifiedDog? {
+        let doc = try await db.collection("dogs").document(id).getDocument()
+        guard doc.exists else { return nil }
+        return try? doc.data(as: UnifiedDog.self)
+    }
+
+    /// Batched fetch — resolves a list of dogIds to UnifiedDogs.
+    /// Best-effort: missing / undecodable ids are silently dropped so a
+    /// single bad reference doesn't poison the whole list.
+    func getDogs(ids: [String]) async throws -> [UnifiedDog] {
+        guard !ids.isEmpty else { return [] }
+        // Firestore caps `in` queries at 30 ids; chunk to stay safe.
+        let chunks = stride(from: 0, to: ids.count, by: 30).map {
+            Array(ids[$0 ..< min($0 + 30, ids.count)])
+        }
+        var result: [UnifiedDog] = []
+        for chunk in chunks {
+            let snapshot = try await db.collection("dogs")
+                .whereField(FieldPath.documentID(), in: chunk)
+                .getDocuments()
+            let dogs = snapshot.documents.compactMap { try? $0.data(as: UnifiedDog.self) }
+            result.append(contentsOf: dogs)
+        }
+        return result
+    }
+
     // MARK: - Add a dog to the dogs collection
 
     func addDog(_ dog: UnifiedDog) async throws {

@@ -10,8 +10,13 @@ class WalkHistoryViewModel: ObservableObject {
     @Published var statistics: WalkStatsSummary?
     @Published var isLoading = false
     @Published var error: String?
+    /// Dogs that were on the currently-selected walk, indexed by dogId.
+    /// Populated by `selectWalk(walkId:)`. The detail screen renders
+    /// name + photo using this map instead of the raw dogId string.
+    @Published var selectedWalkDogs: [String: UnifiedDog] = [:]
 
     private let db = Firestore.firestore()
+    private let dogRepository = DogRepository()
     private var cancellables = Set<AnyCancellable>()
     private var walksListener: ListenerRegistration?
 
@@ -79,6 +84,7 @@ class WalkHistoryViewModel: ObservableObject {
 
     func selectWalk(walkId: String) {
         isLoading = true
+        selectedWalkDogs = [:]
 
         guard let userId = Auth.auth().currentUser?.uid else {
             error = "User not authenticated"
@@ -86,25 +92,30 @@ class WalkHistoryViewModel: ObservableObject {
             return
         }
 
-        db.collection("users").document(userId)
-            .collection("walks").document(walkId)
-            .getDocument { [weak self] snapshot, error in
-                guard let self = self else { return }
+        Task { [weak self] in
+            guard let self = self else { return }
+            do {
+                let snapshot = try await self.db.collection("users").document(userId)
+                    .collection("walks").document(walkId)
+                    .getDocument()
+                let walk = try? snapshot.data(as: WalkHistory.self)
+                self.selectedWalk = walk
 
-                if let error = error {
-                    self.error = error.localizedDescription
-                    self.isLoading = false
-                    return
+                // Hydrate dog name + photo for the dog row. Best-effort —
+                // failures fall through to the placeholder pawprint.
+                if let dogIds = walk?.dogIds, !dogIds.isEmpty {
+                    let dogs = (try? await self.dogRepository.getDogs(ids: dogIds)) ?? []
+                    var byId: [String: UnifiedDog] = [:]
+                    for dog in dogs {
+                        if let id = dog.id { byId[id] = dog }
+                    }
+                    self.selectedWalkDogs = byId
                 }
-
-                guard let snapshot = snapshot else {
-                    self.isLoading = false
-                    return
-                }
-
-                self.selectedWalk = try? snapshot.data(as: WalkHistory.self)
-                self.isLoading = false
+            } catch {
+                self.error = error.localizedDescription
             }
+            self.isLoading = false
+        }
     }
 
     func deleteWalk(walkId: String) {

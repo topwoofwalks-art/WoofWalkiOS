@@ -38,9 +38,17 @@ struct ServiceProviderLite: Identifiable, Codable {
     /// True if matched against a UK council licensing register
     /// (regulator-validated identity).
     var licensed: Bool?
+    /// Insurance documents reviewed by the WoofWalk team. Distinct from
+    /// `hasInsurance` (self-attested) — `insuranceVerified` means we've
+    /// actually seen the policy. Mirrors Android Provider.insuranceVerified.
+    var insuranceVerified: Bool
+    /// Provider photo gallery (multi-image hero on the detail screen).
+    /// Mirrors Android Provider.photoUrls — falls back to single
+    /// `photoUrl` when empty.
+    var photoUrls: [String]
 
-    init(id: String = UUID().uuidString, name: String = "", photoUrl: String? = nil, rating: Double? = nil, reviewCount: Int? = nil, priceRange: String? = nil, services: [String] = [], distance: Double? = nil, hasBackgroundCheck: Bool = false, hasInsurance: Bool = false, acceptingNewClients: Bool = true, isExternal: Bool = false, bio: String? = nil, experience: String? = nil, responseTime: String? = nil, phone: String? = nil, email: String? = nil, website: String? = nil, heroPhotoUrl: String? = nil, latitude: Double? = nil, longitude: Double? = nil, isPartner: Bool = false, availableNow: Bool = false, servicePricing: [ServicePriceItem] = [], verifiedSince: Date? = nil, mobileConfidence: String? = nil, licensed: Bool? = nil) {
-        self.id = id; self.name = name; self.photoUrl = photoUrl; self.rating = rating; self.reviewCount = reviewCount; self.priceRange = priceRange; self.services = services; self.distance = distance; self.hasBackgroundCheck = hasBackgroundCheck; self.hasInsurance = hasInsurance; self.acceptingNewClients = acceptingNewClients; self.isExternal = isExternal; self.bio = bio; self.experience = experience; self.responseTime = responseTime; self.phone = phone; self.email = email; self.website = website; self.heroPhotoUrl = heroPhotoUrl; self.latitude = latitude; self.longitude = longitude; self.isPartner = isPartner; self.availableNow = availableNow; self.servicePricing = servicePricing; self.verifiedSince = verifiedSince; self.mobileConfidence = mobileConfidence; self.licensed = licensed
+    init(id: String = UUID().uuidString, name: String = "", photoUrl: String? = nil, rating: Double? = nil, reviewCount: Int? = nil, priceRange: String? = nil, services: [String] = [], distance: Double? = nil, hasBackgroundCheck: Bool = false, hasInsurance: Bool = false, acceptingNewClients: Bool = true, isExternal: Bool = false, bio: String? = nil, experience: String? = nil, responseTime: String? = nil, phone: String? = nil, email: String? = nil, website: String? = nil, heroPhotoUrl: String? = nil, latitude: Double? = nil, longitude: Double? = nil, isPartner: Bool = false, availableNow: Bool = false, servicePricing: [ServicePriceItem] = [], verifiedSince: Date? = nil, mobileConfidence: String? = nil, licensed: Bool? = nil, insuranceVerified: Bool = false, photoUrls: [String] = []) {
+        self.id = id; self.name = name; self.photoUrl = photoUrl; self.rating = rating; self.reviewCount = reviewCount; self.priceRange = priceRange; self.services = services; self.distance = distance; self.hasBackgroundCheck = hasBackgroundCheck; self.hasInsurance = hasInsurance; self.acceptingNewClients = acceptingNewClients; self.isExternal = isExternal; self.bio = bio; self.experience = experience; self.responseTime = responseTime; self.phone = phone; self.email = email; self.website = website; self.heroPhotoUrl = heroPhotoUrl; self.latitude = latitude; self.longitude = longitude; self.isPartner = isPartner; self.availableNow = availableNow; self.servicePricing = servicePricing; self.verifiedSince = verifiedSince; self.mobileConfidence = mobileConfidence; self.licensed = licensed; self.insuranceVerified = insuranceVerified; self.photoUrls = photoUrls
     }
 }
 

@@ -11,6 +11,12 @@ struct WalkHistory: Identifiable, Codable {
     var track: [TrackPoint]
     var polyline: String
     var dogIds: [String]
+    /// Total elevation gain in metres over the walk. Computed server-side
+    /// (or by the Android/iOS tracker) from CLLocation altitudes; persisted
+    /// on the walk doc so the history detail screen doesn't have to
+    /// recompute from a track that may not carry per-point altitude.
+    /// Optional because legacy walks pre-elevation-tracking won't have it.
+    var elevGainM: Int?
 
     init(id: String? = nil,
          userId: String = "",
@@ -20,7 +26,8 @@ struct WalkHistory: Identifiable, Codable {
          durationSec: Int = 0,
          track: [TrackPoint] = [],
          polyline: String = "",
-         dogIds: [String] = []) {
+         dogIds: [String] = [],
+         elevGainM: Int? = nil) {
         self.id = id
         self.userId = userId
         self.startedAt = startedAt
@@ -30,6 +37,7 @@ struct WalkHistory: Identifiable, Codable {
         self.track = track
         self.polyline = polyline
         self.dogIds = dogIds
+        self.elevGainM = elevGainM
     }
 }
 

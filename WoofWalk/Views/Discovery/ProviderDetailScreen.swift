@@ -64,7 +64,7 @@ struct ProviderDetailScreen: View {
                     headerSection(provider)
 
                     // Verification badges
-                    if provider.hasBackgroundCheck || provider.hasInsurance || provider.isPartner {
+                    if provider.hasBackgroundCheck || provider.hasInsurance || provider.insuranceVerified || provider.isPartner {
                         badgesSection(provider)
                     }
 
@@ -137,11 +137,57 @@ struct ProviderDetailScreen: View {
 
     // MARK: - Hero Section
 
+    /// Gallery URLs for the swipeable hero. Prefer `photoUrls` (multi-image
+    /// gallery), fall back to single `heroPhotoUrl`/`photoUrl` to preserve
+    /// the existing single-image behaviour for providers that haven't
+    /// uploaded a gallery yet. Mirrors Android PhotoGalleryHeroSection.
+    private func heroGalleryUrls(_ provider: ServiceProviderLite) -> [String] {
+        if !provider.photoUrls.isEmpty {
+            return provider.photoUrls
+        }
+        if let hero = provider.heroPhotoUrl, !hero.isEmpty {
+            return [hero]
+        }
+        if let single = provider.photoUrl, !single.isEmpty {
+            return [single]
+        }
+        return []
+    }
+
     private func heroSection(_ provider: ServiceProviderLite) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            // Background image
-            let imageUrl = provider.heroPhotoUrl ?? provider.photoUrl
-            if let urlStr = imageUrl, let url = URL(string: urlStr) {
+        let urls = heroGalleryUrls(provider)
+        return ZStack(alignment: .bottomLeading) {
+            // Background — swipeable pager when we have a gallery,
+            // single image otherwise, placeholder gradient if neither.
+            if urls.count > 1 {
+                TabView {
+                    ForEach(urls, id: \.self) { urlStr in
+                        if let url = URL(string: urlStr) {
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 260)
+                                        .clipped()
+                                case .failure:
+                                    heroPlaceholder
+                                default:
+                                    heroPlaceholder
+                                        .overlay(ProgressView())
+                                }
+                            }
+                        } else {
+                            heroPlaceholder
+                        }
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .always))
+                .indexViewStyle(.page(backgroundDisplayMode: .interactive))
+                .frame(height: 260)
+            } else if let urlStr = urls.first, let url = URL(string: urlStr) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let image):
@@ -279,6 +325,13 @@ struct ProviderDetailScreen: View {
             }
             if provider.hasInsurance {
                 badgeItem(icon: "lock.shield.fill", label: "Fully\nInsured", color: .blue)
+            }
+            // Distinct from "Fully Insured" (self-attested) — this badge
+            // only renders when the WoofWalk team has actually reviewed
+            // the policy document. Mirrors Android TrustBadges
+            // "Insurance Verified" + ProviderProfileScreen "Insured".
+            if provider.insuranceVerified {
+                badgeItem(icon: "cross.case.fill", label: "Insurance\nVerified", color: .success60)
             }
             if provider.isPartner {
                 badgeItem(icon: "star.circle.fill", label: "WoofWalk\nPartner", color: .orange60)

@@ -50,9 +50,12 @@ struct WalkHistoryDetailScreen: View {
     }
 
     private var elevationGain: Double {
-        // Estimate from track points altitude differences (simplified)
-        guard let w = walk, w.track.count > 1 else { return 0 }
-        return 0 // Placeholder -- track doesn't store elevation
+        // Surfaced from the walk doc — computed at tracking time from
+        // CLLocation altitudes and persisted on the walk so the detail
+        // screen doesn't have to re-derive it from a track that may
+        // not carry per-point altitude. Legacy walks pre-elevation-
+        // tracking won't have the field — fall through to 0.
+        return Double(walk?.elevGainM ?? 0)
     }
 
     private var trackCoordinates: [CLLocationCoordinate2D] {
@@ -217,22 +220,42 @@ struct WalkHistoryDetailScreen: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(dogIds, id: \.self) { dogId in
-                        VStack(spacing: 4) {
-                            Circle()
-                                .fill(Color(.systemGray5))
-                                .frame(width: 52, height: 52)
-                                .overlay(
-                                    Image(systemName: "pawprint.fill")
-                                        .foregroundStyle(.secondary)
-                                )
-                            Text(dogId.prefix(8))
-                                .font(.caption2)
-                                .lineLimit(1)
-                                .foregroundStyle(.secondary)
-                        }
+                        dogChip(for: dogId)
                     }
                 }
             }
+        }
+    }
+
+    /// Single dog avatar + name. Resolves the dogId against the
+    /// view-model's hydrated dog map. Falls through to placeholder
+    /// pawprint + truncated id only when the dog can't be loaded
+    /// (deleted, archived, permission denied).
+    @ViewBuilder
+    private func dogChip(for dogId: String) -> some View {
+        let dog = viewModel.selectedWalkDogs[dogId]
+        let dogName = dog?.name ?? String(dogId.prefix(8))
+        VStack(spacing: 4) {
+            ZStack {
+                Circle()
+                    .fill(Color(.systemGray5))
+                    .frame(width: 52, height: 52)
+
+                if let dog = dog {
+                    UserAvatarView(
+                        photoUrl: dog.photoUrl,
+                        displayName: dog.name,
+                        size: 52
+                    )
+                } else {
+                    Image(systemName: "pawprint.fill")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Text(dogName)
+                .font(.caption2)
+                .lineLimit(1)
+                .foregroundStyle(.secondary)
         }
     }
 

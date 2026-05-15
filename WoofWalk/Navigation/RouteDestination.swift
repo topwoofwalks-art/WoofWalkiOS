@@ -221,10 +221,10 @@ struct RouteDestination: View {
             AcceptInviteScreen(token: token)
 
         // Deep-link parity with Android — most reuse existing destinations.
-        case .lostDog:
-            PlaceholderView(title: "Lost dog", icon: "pawprint.fill")
-        case .watchWalk:
-            PlaceholderView(title: "Watch walk", icon: "eye")
+        case .lostDog(let alertId):
+            LostDogDetailScreen(alertId: alertId)
+        case .watchWalk(let token):
+            WatchWalkReceiverScreen(token: token)
         case .payment(let bookingId):
             BookingDetailScreen(bookingId: bookingId)
         case .addTip(let bookingId):
