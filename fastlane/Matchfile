@@ -1,0 +1,22 @@
+# fastlane match — encrypted certificate + provisioning profile storage.
+#
+# Cert storage lives in a separate private GitHub repo: woofwalk/woofwalk-ios-certs
+# (created by the testflight workflow on first run). Match auto-generates
+# the Distribution cert + provisioning profiles via App Store Connect API,
+# encrypts them with MATCH_PASSWORD, pushes to the certs repo. Subsequent
+# CI runs pull from there.
+#
+# Why a separate repo: Apple's cert + private key are sensitive material we
+# don't want in the main iOS source repo, and match's convention is to keep
+# them in their own encrypted store so cert rotation doesn't touch app code.
+
+git_url("https://github.com/topwoofwalks-art/WoofWalkiOS-certs")
+storage_mode("git")
+type("appstore")
+
+app_identifier(["com.woofwalk.ios", "com.woofwalk.ios.watchkitapp"])
+team_id("6439W9DW5X")
+
+# In CI mode, match needs the App Store Connect API key set up via
+# app_store_connect_api_key action before this runs. See Fastfile :certs lane.
+readonly(ENV["MATCH_READONLY"] == "true")

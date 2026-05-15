@@ -1,0 +1,81 @@
+name: TestFlight
+
+# Triggered manually for now. After we trust the pipeline we can flip to
+# `on: push` for the `main` branch.
+on:
+  workflow_dispatch:
+    inputs:
+      bootstrap_certs:
+        description: "First-time cert bootstrap (regenerates if missing). Leave OFF for normal builds."
+        type: boolean
+        default: false
+
+jobs:
+  testflight:
+    name: Build + upload to TestFlight
+    runs-on: macos-14
+    env:
+      # All credentials supplied via GitHub Secrets — see repo Settings → Secrets and variables → Actions.
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+      MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      # Personal-access token (or GitHub App token) with read-write access
+      # to the woofwalk-ios-certs repo. Used by `match` to push/pull the
+      # encrypted cert+profile store. Format: base64("username:token").
+      MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+      # Default to readonly so concurrent CI runs don't race to regenerate.
+      # Flipped to false when the manual trigger sets bootstrap_certs.
+      MATCH_READONLY: ${{ github.event.inputs.bootstrap_certs == 'true' && 'false' || 'true' }}
+
+    steps:
+      - name: Checkout iOS repo
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 15.4
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Restore Firebase config
+        env:
+          GOOGLE_SERVICE_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -z "$GOOGLE_SERVICE_PLIST" ]; then
+            echo "::error::GOOGLE_SERVICE_INFO_PLIST secret is missing — Firebase init will skip and crashlytics/messaging won't work."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICE_PLIST" | base64 --decode > WoofWalk/GoogleService-Info.plist
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: Pods
+          key: pods-v2-${{ hashFiles('Podfile.lock', 'Podfile') }}
+          restore-keys: pods-v2-
+
+      - name: Cache Ruby gems (fastlane)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install CocoaPods
+        run: pod install --repo-update
+
+      - name: Bootstrap certs (if requested)
+        if: ${{ github.event.inputs.bootstrap_certs == 'true' }}
+        run: bundle exec fastlane certs
+        # On bootstrap match generates the Distribution cert + provisioning
+        # profiles via the ASC API and pushes them encrypted to the certs
+        # repo. Only needed the first time, or after a cert rotation.
+
+      - name: Build + upload to TestFlight
+        run: bundle exec fastlane beta
+
+      - name: Upload xcodebuild log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testflight-build-log
+          path: |
+            ~/Library/Logs/gym/*.log
+            fastlane/test_output

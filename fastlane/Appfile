@@ -1,5 +1,12 @@
-app_identifier("com.woofwalk.app")
-apple_id(ENV["APPLE_ID"])
-team_id(ENV["TEAM_ID"])
+# App Store Connect / Apple Developer config used by all fastlane lanes.
+#
+# Bundle ID corrected 2026-05-15 from `com.woofwalk.app` (never registered)
+# to `com.woofwalk.ios` (the actual App Store Connect record, app id 6769812797,
+# registered on Killearnan Innovations Ltd / Team ID 6439W9DW5X).
 
-itc_team_id(ENV["ITC_TEAM_ID"])
+app_identifier("com.woofwalk.ios")
+team_id("6439W9DW5X")
+
+# itc_team_id is auto-resolved by App Store Connect API key — leave unset.
+# apple_id is unused when authenticating via API key (env-var path is a
+# fallback for fastlane-spaceship username/password login, which we don't use).

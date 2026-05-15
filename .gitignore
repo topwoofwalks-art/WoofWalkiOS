@@ -100,3 +100,6 @@ secrets.plist
 .DS_Store
 all_swift_types.txt
 screenshots-latest/
+
+# Private credentials — .p8 keys, certs, etc. NEVER commit.
+.private/
