@@ -44,7 +44,7 @@ struct SplitsOverlay: View {
         .allowsHitTesting(false)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: visibleSplit?.kmNumber)
         .onAppear { resetFor(state: walkTracking.trackingState) }
-        .onChange(of: walkTracking.trackingState.isTracking) { _, isActive in
+        .onChange(of: walkTracking.trackingState.isTracking) { isActive in
             if isActive {
                 resetFor(state: walkTracking.trackingState)
             } else {
@@ -55,7 +55,7 @@ struct SplitsOverlay: View {
                 hasArmed = false
             }
         }
-        .onChange(of: walkTracking.trackingState.distanceMeters) { _, newDistance in
+        .onChange(of: walkTracking.trackingState.distanceMeters) { newDistance in
             evaluate(distanceMeters: newDistance,
                      durationSec: walkTracking.trackingState.durationSeconds)
         }

@@ -866,11 +866,11 @@ class WalkTrackingService: ObservableObject {
             withTimeInterval: Self.weatherSamplingIntervalSec,
             repeats: true
         ) { [weak self] _ in
+            guard let strongSelf = self else { return }
             Task { @MainActor in
-                guard let self = self,
-                      self.trackingState.isTracking,
-                      !self.trackingState.isPaused else { return }
-                await self.captureWeatherSample()
+                guard strongSelf.trackingState.isTracking,
+                      !strongSelf.trackingState.isPaused else { return }
+                await strongSelf.captureWeatherSample()
             }
         }
     }

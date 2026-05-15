@@ -201,7 +201,7 @@ struct TipWalkerSheet: View {
                 .keyboardType(.decimalPad)
                 .font(.title3)
                 .disableAutocorrection(true)
-                .onChange(of: customText) { _, newValue in
+                .onChange(of: customText) { newValue in
                     // Keep only digits + at most one decimal point, max 2 dp.
                     customText = sanitiseDecimal(newValue)
                 }
