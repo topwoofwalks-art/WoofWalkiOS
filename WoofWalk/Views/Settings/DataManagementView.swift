@@ -37,7 +37,7 @@ struct DataManagementView: View {
         }
         .sheet(isPresented: $showExportDialog) {
             if let url = exportURL {
-                ShareSheet(items: [url])
+                ShareSheet(activityItems: [url])
             }
         }
     }

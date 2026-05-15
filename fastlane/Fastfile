@@ -136,6 +136,14 @@ platform :ios do
       build_number: build_num
     )
 
+    # First make sure every Swift file under WoofWalk/ is in the target's
+    # source list. The repo has accumulated several files that were added
+    # to git but never opened in Xcode (no team Mac to do so) — Debug
+    # builds tolerated this, Release with full strictness doesn't.
+    # ensure_xcode_target_membership.rb walks the tree and adds anything
+    # missing. Idempotent.
+    sh("cd .. && bundle exec ruby scripts/ensure_xcode_target_membership.rb")
+
     # The Xcode project pre-dated the developer account so DEVELOPMENT_TEAM
     # and PROVISIONING_PROFILE_SPECIFIER are not set in project.pbxproj. We
     # patch them in-place on the runner (throwaway file system) so the

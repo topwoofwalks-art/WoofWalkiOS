@@ -675,12 +675,6 @@ final class CommunityRepository {
     }
 }
 
-// MARK: - Array chunked helper
-
-extension Array {
-    fileprivate func chunked(into size: Int) -> [[Element]] {
-        stride(from: 0, to: count, by: size).map {
-            Array(self[$0..<Swift.min($0 + size, count)])
-        }
-    }
-}
+// Array.chunked(into:) lives in Extensions/Array+Chunked.swift — single
+// canonical definition shared with UserRepository. Was duplicated here
+// fileprivate which Release-mode Swift still rejected as a clash.

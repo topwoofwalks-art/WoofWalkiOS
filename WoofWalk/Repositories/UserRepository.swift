@@ -456,13 +456,8 @@ class UserRepository: ObservableObject {
 
 }
 
-extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        stride(from: 0, to: count, by: size).map {
-            Array(self[$0..<Swift.min($0 + size, count)])
-        }
-    }
-}
+// Array.chunked(into:) is now in Extensions/Array+Chunked.swift — single
+// canonical definition shared with CommunityRepository.
 
 /// Wire-format badge IDs — must match `BADGES[].id` in
 /// `functions/src/gamification/badges.ts`.

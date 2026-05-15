@@ -415,7 +415,8 @@ extension DocumentSnapshot {
     }
 }
 
-extension QueryDocumentSnapshot {
-    func decodeDogQuestion() -> DogQuestion? { (self as DocumentSnapshot).decodeDogQuestion() }
-    func decodeDogAnswer() -> DogAnswer? { (self as DocumentSnapshot).decodeDogAnswer() }
-}
+// QueryDocumentSnapshot inherits decodeDogQuestion / decodeDogAnswer
+// from DocumentSnapshot's extension above. The forwarding extension
+// previously here was rejected by Release-mode Swift ("cannot be
+// overridden") and made every call site ambiguous. Deleted 2026-05-15 —
+// same pattern as CommunityCodableExtensions.swift.

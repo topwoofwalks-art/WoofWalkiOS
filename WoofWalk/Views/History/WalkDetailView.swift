@@ -116,7 +116,7 @@ struct WalkDetailView: View {
         }
         .sheet(isPresented: $showShareSheet) {
             if let walk = walk {
-                ShareSheet(items: [generateShareText(walk: walk)])
+                ShareSheet(activityItems: [generateShareText(walk: walk)])
             }
         }
         .alert("Error", isPresented: .constant(viewModel.error != nil)) {
@@ -291,12 +291,6 @@ struct ActionButtonsSection: View {
     }
 }
 
-struct ShareSheet: UIViewControllerRepresentable {
-    let items: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
+// ShareSheet is now in Views/Shared/ShareSheet.swift — single canonical
+// definition with the `activityItems:` parameter label to match
+// UIActivityViewController's own initialiser.

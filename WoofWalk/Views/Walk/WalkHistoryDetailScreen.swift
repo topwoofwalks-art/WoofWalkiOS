@@ -150,7 +150,7 @@ struct WalkHistoryDetailScreen: View {
         }
         .sheet(isPresented: $showShareSheet) {
             if let walk = walk {
-                ShareSheet(items: [shareText(for: walk)])
+                ShareSheet(activityItems: [shareText(for: walk)])
             }
         }
         .onAppear {

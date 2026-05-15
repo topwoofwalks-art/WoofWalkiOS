@@ -124,7 +124,7 @@ struct BusinessClientsScreen: View {
         }
         .sheet(isPresented: $showingExportShare) {
             if let url = exportFileURL {
-                ShareSheet(items: [url])
+                ShareSheet(activityItems: [url])
             }
         }
         .confirmationDialog("Sort By", isPresented: $showingSortOptions) {

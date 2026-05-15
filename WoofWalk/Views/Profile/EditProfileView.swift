@@ -5,8 +5,14 @@ struct EditProfileView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: ProfileViewModel
 
-    @State private var username: String = ""
+    @State private var displayName: String = ""
     @State private var bio: String = ""
+    @State private var phone: String = ""
+    @State private var addressLine1: String = ""
+    @State private var addressLine2: String = ""
+    @State private var addressCity: String = ""
+    @State private var addressPostcode: String = ""
+    @State private var addressCountry: String = "GB"
     @State private var showDogSheet = false
     @State private var editingDog: DogProfile?
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -18,6 +24,8 @@ struct EditProfileView: View {
                     profilePhotoSection()
 
                     basicInformationSection()
+
+                    addressSection()
 
                     myDogsSection()
                 }
@@ -49,7 +57,20 @@ struct EditProfileView: View {
             }
             .onAppear {
                 if let user = viewModel.userProfile {
-                    username = user.username
+                    // Prefer displayName; fall back to legacy username so
+                    // legacy users still see a populated field.
+                    displayName = user.displayName?.isEmpty == false
+                        ? (user.displayName ?? "")
+                        : user.username
+                    bio = user.bio
+                    phone = user.phone ?? ""
+                    if let a = user.address {
+                        addressLine1 = a.line1
+                        addressLine2 = a.line2
+                        addressCity = a.city
+                        addressPostcode = a.postcode
+                        addressCountry = a.country.isEmpty ? "GB" : a.country
+                    }
                 }
             }
         }
@@ -117,7 +138,19 @@ struct EditProfileView: View {
                     Image(systemName: "person")
                         .foregroundColor(.gray)
                         .frame(width: 24)
-                    TextField("Username", text: $username)
+                    TextField("Display name", text: $displayName)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+
+                HStack {
+                    Image(systemName: "phone")
+                        .foregroundColor(.gray)
+                        .frame(width: 24)
+                    TextField("Phone", text: $phone)
+                        .keyboardType(.phonePad)
+                        .textContentType(.telephoneNumber)
                 }
                 .padding()
                 .background(Color(.systemGray6))
@@ -135,6 +168,49 @@ struct EditProfileView: View {
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(12)
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(radius: 2)
+    }
+
+    private func addressSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Address")
+                .font(.headline)
+            Text("Helps providers find you and us match you with services nearby. Visible only to providers you book with.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+            VStack(spacing: 12) {
+                TextField("Address line 1", text: $addressLine1)
+                    .textContentType(.streetAddressLine1)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+
+                TextField("Address line 2 (optional)", text: $addressLine2)
+                    .textContentType(.streetAddressLine2)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+
+                HStack(spacing: 12) {
+                    TextField("City", text: $addressCity)
+                        .textContentType(.addressCity)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+
+                    TextField("Postcode", text: $addressPostcode)
+                        .textContentType(.postalCode)
+                        .autocapitalization(.allCharacters)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                }
             }
         }
         .padding()
@@ -187,9 +263,27 @@ struct EditProfileView: View {
     }
 
     private func saveProfile() {
+        // Send the address as a structured value iff at least one core
+        // line is non-empty. nil means "no change" — preserves existing
+        // value when the user only edited name/bio/phone.
+        let addressDirty = !addressLine1.isEmpty || !addressCity.isEmpty || !addressPostcode.isEmpty
+        let addressArg: PostalAddress? = addressDirty
+            ? PostalAddress(
+                line1: addressLine1.trimmingCharacters(in: .whitespaces),
+                line2: addressLine2.trimmingCharacters(in: .whitespaces),
+                city: addressCity.trimmingCharacters(in: .whitespaces),
+                postcode: addressPostcode.trimmingCharacters(in: .whitespaces),
+                country: addressCountry.trimmingCharacters(in: .whitespaces).isEmpty
+                    ? "GB" : addressCountry.trimmingCharacters(in: .whitespaces)
+            )
+            : nil
+
         viewModel.updateProfile(
-            username: username.isEmpty ? nil : username,
-            bio: bio.isEmpty ? nil : bio
+            displayName: displayName.isEmpty ? nil : displayName,
+            bio: bio.isEmpty ? nil : bio,
+            phone: phone.trimmingCharacters(in: .whitespaces).isEmpty
+                ? nil : phone.trimmingCharacters(in: .whitespaces),
+            address: addressArg
         )
         dismiss()
     }

@@ -39,6 +39,15 @@ struct UserProfile: Identifiable, Codable {
     var searchableEmail: String
     var searchableDisplayName: String
 
+    // Contact + delivery details — optional so existing user docs without
+    // these fields decode fine. The portal ClientProfile + Android
+    // EditProfile let the user fill them in; the geocoding CF derives
+    // addressGeo from address.postcode (server-only write).
+    var phone: String?
+    var phoneVerified: Bool?
+    var address: PostalAddress?
+    var addressGeo: GeoPoint?
+
     init(id: String? = nil,
          username: String = "",
          email: String = "",
@@ -71,7 +80,11 @@ struct UserProfile: Identifiable, Codable {
          leagueWeekId: String? = nil,
          searchableUsername: String = "",
          searchableEmail: String = "",
-         searchableDisplayName: String = "") {
+         searchableDisplayName: String = "",
+         phone: String? = nil,
+         phoneVerified: Bool? = nil,
+         address: PostalAddress? = nil,
+         addressGeo: GeoPoint? = nil) {
         self.id = id
         self.username = username
         self.email = email
@@ -105,6 +118,43 @@ struct UserProfile: Identifiable, Codable {
         self.searchableUsername = searchableUsername
         self.searchableEmail = searchableEmail
         self.searchableDisplayName = searchableDisplayName
+        self.phone = phone
+        self.phoneVerified = phoneVerified
+        self.address = address
+        self.addressGeo = addressGeo
+    }
+}
+
+/// Postal address attached to a user profile. Optional struct on
+/// `users/{uid}.address`. Mirrors Android `PostalAddress` and the
+/// portal type `PostalAddress` in ClientProfile.tsx so a doc written by
+/// any platform decodes cleanly on the others.
+struct PostalAddress: Codable, Equatable {
+    var line1: String
+    var line2: String
+    var city: String
+    var postcode: String
+    /// ISO 3166-1 alpha-2, e.g. "GB". Defaults to "GB" when blank — the
+    /// geocoding CF gates non-GB postcodes off postcodes.io anyway.
+    var country: String
+
+    init(line1: String = "", line2: String = "", city: String = "",
+         postcode: String = "", country: String = "") {
+        self.line1 = line1
+        self.line2 = line2
+        self.city = city
+        self.postcode = postcode
+        self.country = country
+    }
+
+    var isBlank: Bool {
+        line1.isEmpty && city.isEmpty && postcode.isEmpty
+    }
+
+    func asSingleLine() -> String {
+        [line1, line2, city, postcode, country]
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
     }
 }
 

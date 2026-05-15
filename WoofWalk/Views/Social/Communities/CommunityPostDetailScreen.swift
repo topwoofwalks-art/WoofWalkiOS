@@ -571,14 +571,7 @@ struct CommunityReportSheet: View {
     }
 }
 
-// MARK: - UIActivityViewController wrapper
-
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
+// ShareSheet is now in Views/Shared/ShareSheet.swift — single canonical
+// definition. This file previously had a duplicate with the correct
+// `activityItems:` label; the duplicate in WalkDetailView.swift had a
+// different label `items:` which caused all call-site type errors.

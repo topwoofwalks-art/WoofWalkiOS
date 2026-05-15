@@ -157,15 +157,40 @@ class ProfileViewModel: ObservableObject {
         return min(Float(current) / Float(target), 1.0)
     }
 
-    func updateProfile(username: String? = nil, bio: String? = nil) {
+    func updateProfile(
+        displayName: String? = nil,
+        bio: String? = nil,
+        phone: String? = nil,
+        address: PostalAddress? = nil
+    ) {
         Task {
             do {
                 var updates: [String: Any] = [:]
-                if let username = username {
-                    updates["username"] = username
+                // Writes the public display name. The @-handle (`username`)
+                // is set once at signup and not editable here. Pre-fix the
+                // iOS signature wrote `username` directly, which diverged
+                // from the displayName field that the portal / Firebase
+                // Auth / Android all treat as canonical.
+                if let displayName = displayName {
+                    updates["displayName"] = displayName
                 }
                 if let bio = bio {
                     updates["bio"] = bio
+                }
+                if let phone = phone {
+                    updates["phone"] = phone
+                }
+                if let address = address {
+                    // Persist as a map; the geocoding CF
+                    // (functions/src/user/geocodeUserAddress.ts) watches
+                    // address.postcode and writes addressGeo on the doc.
+                    updates["address"] = [
+                        "line1": address.line1,
+                        "line2": address.line2,
+                        "city": address.city,
+                        "postcode": address.postcode.uppercased(),
+                        "country": (address.country.isEmpty ? "GB" : address.country).uppercased()
+                    ]
                 }
 
                 try await userRepository.updateUserProfile(updates: updates)

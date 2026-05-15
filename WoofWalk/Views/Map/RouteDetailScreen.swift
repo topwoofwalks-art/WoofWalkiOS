@@ -144,7 +144,7 @@ struct RouteDetailScreen: View {
         }
         .sheet(isPresented: $showShareSheet) {
             if let route = route {
-                ShareSheet(items: [shareText(for: route)])
+                ShareSheet(activityItems: [shareText(for: route)])
             }
         }
         .onAppear {
