@@ -58,42 +58,6 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
-      # Xcode 15+ sandboxes user script phases by default, which
-      # rejects the rsync calls in [CP] Embed Pods Frameworks
-      # (paths under the project root register as denied).
-      # Disabling for Pods targets matches CocoaPods' own recommended
-      # workaround until they ship a sandbox-safe embed script.
-      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-    end
-  end
-
-  # Same setting on the main app project's build phases — the
-  # [CP] Embed Pods Frameworks script lives in the WoofWalk target.
-  installer.aggregate_targets.each do |aggregate|
-    aggregate.user_project.native_targets.each do |target|
-      target.build_configurations.each do |config|
-        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-      end
-    end
-    aggregate.user_project.save
-  end
-
-  # Workaround for CocoaPods 1.16.x regression where
-  # Pods-WoofWalk-frameworks.sh runs under `set -u` (nounset) but
-  # then references SCRIPT_INPUT_FILE_<n> entries past the actual
-  # input-file count — bash aborts with "source: unbound variable"
-  # at line 42 and the [CP] Embed Pods Frameworks build phase fails.
-  # See https://github.com/CocoaPods/CocoaPods/issues/12830.
-  # Patching the generated script to flip `set -u` → `set +u` for
-  # the frameworks/embed-frameworks script lets the build through;
-  # the iteration logic already early-exits on empty entries.
-  frameworks_script = "Pods/Target Support Files/Pods-WoofWalk/Pods-WoofWalk-frameworks.sh"
-  if File.exist?(frameworks_script)
-    contents = File.read(frameworks_script)
-    if contents.include?("set -u")
-      contents = contents.sub(/^set -u$/, "set +u")
-      File.write(frameworks_script, contents)
-      puts "Patched #{frameworks_script}: set -u → set +u (CocoaPods 1.16 workaround)"
     end
   end
 end
