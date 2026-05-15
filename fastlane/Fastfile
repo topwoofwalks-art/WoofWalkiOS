@@ -141,6 +141,14 @@ platform :ios do
       scheme: "WoofWalk",
       configuration: "Release",
       export_method: "app-store",
+      # The Xcode project pre-dated the developer account so it has no
+      # DEVELOPMENT_TEAM baked in. We pass it via xcargs rather than mutating
+      # project.pbxproj — keeps the project file clean and means there's
+      # nothing to commit when the team rotates. CODE_SIGN_STYLE=Manual is
+      # required because match generates explicit profiles; if Xcode is
+      # left in Automatic it'll try to generate its own profile and ignore
+      # match's.
+      xcargs: "DEVELOPMENT_TEAM=6439W9DW5X CODE_SIGN_STYLE=Manual",
       export_options: {
         provisioningProfiles: {
           "com.woofwalk.ios" => "match AppStore com.woofwalk.ios",
