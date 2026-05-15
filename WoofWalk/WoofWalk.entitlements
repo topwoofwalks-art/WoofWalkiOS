@@ -30,22 +30,17 @@
 		<string>webcredentials:woofwalk.app</string>
 	</array>
 	<!--
-	  Critical Alerts — required by `UNNotificationSound.defaultCriticalSound`,
-	  used by the panic-alarm push (FCM `type: "panicAlert"`). A walker
-	  triggering panic mid-walk fires an FCM to every accepted guardian;
-	  the guardian's phone needs to break through silent/Focus/DND so they
-	  hear the alert even if their phone is face-down on a desk or in
-	  Sleep focus. Mirrors Android's DND-bypass notification channel +
-	  `PanicAlarmActivity` full-screen takeover.
+	  Critical Alerts entitlement (com.apple.developer.usernotifications.
+	  critical-alerts) — REMOVED until Apple grants the off-portal request
+	  at https://developer.apple.com/contact/request/notifications-critical-alerts-entitlement
+	  The provisioning profile match builds against doesn't carry this
+	  entitlement, so including it here makes codesign reject the build.
+	  Re-add the key + <true/> after the request is approved and a new
+	  profile lands in `fastlane match`.
 
-	  Apple gates this entitlement behind a one-off entitlement request —
-	  https://developer.apple.com/contact/request/notifications-critical-alerts-entitlement
-	  Without the explicit grant, the OS silently downgrades to a normal
-	  notification (no critical-alert sound, no Focus bypass). The build
-	  still compiles + ships; the user just experiences a quieter alert
-	  until the entitlement is approved.
+	  PanicAlarmSheet still presents a full-screen takeover with a siren —
+	  it just won't break through silent / Focus / DND. Functional but
+	  quieter than Android's DND-bypass channel.
 	-->
-	<key>com.apple.developer.usernotifications.critical-alerts</key>
-	<true/>
 </dict>
 </plist>
