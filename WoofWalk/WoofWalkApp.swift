@@ -74,7 +74,7 @@ struct WoofWalkApp: App {
         // closure fires when the SDK is ready to serve ads; we don't
         // block on it because preloadAd() itself queues until ready.
         // Mirrors Android's MobileAds.initialize(...) on app start.
-        MobileAds.shared.start { _ in
+        GADMobileAds.sharedInstance().start { _ in
             print("[WoofWalk] AdMob initialised")
         }
 

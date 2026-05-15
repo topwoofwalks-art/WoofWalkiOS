@@ -31,56 +31,56 @@ struct SettingsView: View {
                 dataStorageSection
                 aboutSection
             }
-            .navigationTitle("Settings")
+            .navigationTitle(String(localized: "settings_title"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") {
+                    Button(String(localized: "action_done")) {
                         dismiss()
                     }
                 }
             }
-            .alert("About WoofWalk", isPresented: $showAboutDialog) {
-                Button("OK", role: .cancel) { }
+            .alert(String(localized: "settings_about_dialog_title"), isPresented: $showAboutDialog) {
+                Button(String(localized: "action_ok"), role: .cancel) { }
             } message: {
-                Text("WoofWalk v1.0.0\n\nA community-driven app for safe and enjoyable dog walking.")
+                Text(String(localized: "settings_about_dialog_message"))
             }
-            .alert("Delete Account?", isPresented: $showDeleteDialog) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
+            .alert(String(localized: "settings_delete_dialog_title"), isPresented: $showDeleteDialog) {
+                Button(String(localized: "action_cancel"), role: .cancel) { }
+                Button(String(localized: "action_delete"), role: .destructive) {
                     handleDeleteAccountTap()
                 }
             } message: {
-                Text("This will permanently delete your account and all WoofWalk data — dogs, walks, posts, friendships, messages, reviews, bookings, and consent records. This action cannot be undone.")
+                Text(String(localized: "settings_delete_dialog_message"))
             }
             // Password re-auth path. Apple requires recent
             // authentication for account deletion; if the last
             // sign-in is older than 5 minutes we prompt for the
             // password first, then delete on success.
-            .alert("Confirm Your Password", isPresented: $showReauthPasswordPrompt) {
-                SecureField("Password", text: $reauthPassword)
-                Button("Cancel", role: .cancel) { reauthPassword = "" }
-                Button("Confirm", role: .destructive) {
+            .alert(String(localized: "settings_reauth_password_title"), isPresented: $showReauthPasswordPrompt) {
+                SecureField(String(localized: "password"), text: $reauthPassword)
+                Button(String(localized: "action_cancel"), role: .cancel) { reauthPassword = "" }
+                Button(String(localized: "action_confirm"), role: .destructive) {
                     performDeleteWithPasswordReauth()
                 }
             } message: {
-                Text("For security, please enter your password to confirm account deletion.")
+                Text(String(localized: "settings_reauth_password_message"))
             }
             // Apple Sign-In users — we can't reauthenticate via
             // password, so we tell them to sign out + sign in again.
             // (A future iteration can present a SignInWithAppleButton
             // sheet inline; the current flow keeps the surface area
             // minimal but still GDPR-compliant.)
-            .alert("Sign In Again", isPresented: $showReauthAppleRequired) {
-                Button("OK", role: .cancel) { }
+            .alert(String(localized: "settings_reauth_apple_title"), isPresented: $showReauthAppleRequired) {
+                Button(String(localized: "action_ok"), role: .cancel) { }
             } message: {
-                Text("For your security, please sign out and sign back in with Apple before deleting your account.")
+                Text(String(localized: "settings_reauth_apple_message"))
             }
-            .alert("Couldn't Delete Account", isPresented: Binding(
+            .alert(String(localized: "settings_delete_error_title"), isPresented: Binding(
                 get: { deleteError != nil },
                 set: { if !$0 { deleteError = nil } }
             )) {
-                Button("OK", role: .cancel) { deleteError = nil }
+                Button(String(localized: "action_ok"), role: .cancel) { deleteError = nil }
             } message: {
                 Text(deleteError ?? "")
             }
@@ -91,7 +91,7 @@ struct SettingsView: View {
             }
             .overlay {
                 if isDeleting {
-                    ProgressView("Deleting account…")
+                    ProgressView(String(localized: "deleting_account"))
                         .padding()
                         .background(.regularMaterial)
                         .cornerRadius(12)
@@ -129,7 +129,7 @@ struct SettingsView: View {
         let password = reauthPassword
         reauthPassword = ""
         guard let email = authService.currentUserEmail, !email.isEmpty else {
-            deleteError = "Your account is missing an email address. Please contact support."
+            deleteError = String(localized: "settings_delete_missing_email")
             return
         }
         isDeleting = true
@@ -163,20 +163,20 @@ struct SettingsView: View {
     }
 
     private var generalSection: some View {
-        Section("General") {
-            Picker("Distance Unit", selection: $viewModel.settings.distanceUnit) {
+        Section(String(localized: "settings_section_general")) {
+            Picker(String(localized: "settings_distance_unit"), selection: $viewModel.settings.distanceUnit) {
                 ForEach(DistanceUnit.allCases, id: \.self) { unit in
                     Text(unit.displayName).tag(unit)
                 }
             }
 
-            Picker("Speed Unit", selection: $viewModel.settings.speedUnit) {
+            Picker(String(localized: "settings_speed_unit"), selection: $viewModel.settings.speedUnit) {
                 ForEach(SpeedUnit.allCases, id: \.self) { unit in
                     Text(unit.displayName).tag(unit)
                 }
             }
 
-            Picker("Theme", selection: $viewModel.settings.theme) {
+            Picker(String(localized: "settings_theme"), selection: $viewModel.settings.theme) {
                 ForEach(ThemeMode.allCases, id: \.self) { theme in
                     Text(theme.displayName).tag(theme)
                 }
@@ -186,7 +186,7 @@ struct SettingsView: View {
                 LanguageSelectionView()
             } label: {
                 HStack {
-                    Label("Language", systemImage: "globe")
+                    Label(String(localized: "settings_language"), systemImage: "globe")
                     Spacer()
                     Text(languageDisplayName)
                         .foregroundColor(.secondary)
@@ -203,44 +203,44 @@ struct SettingsView: View {
     }
 
     private var walkSettingsSection: some View {
-        Section("Walk Settings") {
+        Section(String(localized: "settings_section_walk")) {
             HStack {
-                Text("Default Walk Distance")
+                Text(String(localized: "settings_default_walk_distance"))
                 Spacer()
                 Text("\(Int(viewModel.settings.defaultWalkDistance)) \(viewModel.settings.distanceUnit.rawValue)")
                     .foregroundColor(.secondary)
             }
 
-            Picker("Auto-Pause Sensitivity", selection: $viewModel.settings.autoPauseSensitivity) {
+            Picker(String(localized: "settings_auto_pause_sensitivity"), selection: $viewModel.settings.autoPauseSensitivity) {
                 ForEach(AutoPauseSensitivity.allCases, id: \.self) { sensitivity in
                     Text(sensitivity.displayName).tag(sensitivity)
                 }
             }
 
-            Toggle("Background Tracking", isOn: $viewModel.settings.backgroundTracking)
+            Toggle(String(localized: "settings_background_tracking"), isOn: $viewModel.settings.backgroundTracking)
 
             NavigationLink {
                 RainModeSettingsView()
             } label: {
-                Label("Rain Mode", systemImage: "cloud.rain")
+                Label(String(localized: "settings_rain_mode"), systemImage: "cloud.rain")
             }
 
             NavigationLink {
                 WalkStatsDisplaySettingsView()
             } label: {
-                Label("Walk Stats Display", systemImage: "speedometer")
+                Label(String(localized: "settings_walk_stats_display"), systemImage: "speedometer")
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Voice Guidance", isOn: $voiceGuidanceEnabled)
-                Text("Spoken turn-by-turn directions during guided walks")
+                Toggle(String(localized: "settings_voice_guidance"), isOn: $voiceGuidanceEnabled)
+                Text(String(localized: "settings_voice_guidance_caption"))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Toggle("Fog of War Mode", isOn: $fogOfWarEnabled)
-                Text("Reveals map areas as you walk through them")
+                Toggle(String(localized: "settings_fog_of_war"), isOn: $fogOfWarEnabled)
+                Text(String(localized: "settings_fog_of_war_caption"))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -248,68 +248,68 @@ struct SettingsView: View {
     }
 
     private var mapPreferencesSection: some View {
-        Section("Map Preferences") {
-            Picker("Map Style", selection: $viewModel.settings.mapStyle) {
+        Section(String(localized: "settings_section_map")) {
+            Picker(String(localized: "settings_map_style"), selection: $viewModel.settings.mapStyle) {
                 ForEach(MapStyleType.allCases, id: \.self) { style in
                     Text(style.displayName).tag(style)
                 }
             }
 
-            Toggle("Show Traffic", isOn: $viewModel.settings.showTraffic)
+            Toggle(String(localized: "settings_show_traffic"), isOn: $viewModel.settings.showTraffic)
         }
     }
 
     private var notificationsSection: some View {
-        Section("Notifications") {
+        Section(String(localized: "settings_section_notifications")) {
             NavigationLink {
                 AlertSettingsView(viewModel: viewModel)
             } label: {
-                Label("Alert Settings", systemImage: "bell.badge.fill")
+                Label(String(localized: "settings_alert_settings"), systemImage: "bell.badge.fill")
             }
 
-            Toggle("Enable Notifications", isOn: $viewModel.settings.notificationsEnabled)
+            Toggle(String(localized: "settings_enable_notifications"), isOn: $viewModel.settings.notificationsEnabled)
 
-            Toggle("Hazard Alerts", isOn: $viewModel.settings.hazardAlertsEnabled)
+            Toggle(String(localized: "settings_hazard_alerts"), isOn: $viewModel.settings.hazardAlertsEnabled)
                 .disabled(!viewModel.settings.notificationsEnabled)
 
-            Toggle("Community Updates", isOn: $viewModel.settings.communityAlertsEnabled)
+            Toggle(String(localized: "settings_community_updates"), isOn: $viewModel.settings.communityAlertsEnabled)
                 .disabled(!viewModel.settings.notificationsEnabled)
 
-            Toggle("Walk Reminders", isOn: $viewModel.settings.walkRemindersEnabled)
+            Toggle(String(localized: "settings_walk_reminders"), isOn: $viewModel.settings.walkRemindersEnabled)
                 .disabled(!viewModel.settings.notificationsEnabled)
         }
     }
 
     private var privacySection: some View {
-        Section("Privacy & Security") {
-            Toggle("Profile Visibility", isOn: $viewModel.settings.profileVisible)
+        Section(String(localized: "settings_section_privacy")) {
+            Toggle(String(localized: "settings_profile_visibility"), isOn: $viewModel.settings.profileVisible)
 
-            Toggle("Location Sharing", isOn: $viewModel.settings.locationSharingEnabled)
+            Toggle(String(localized: "settings_location_sharing"), isOn: $viewModel.settings.locationSharingEnabled)
 
             NavigationLink {
                 PermissionsView()
             } label: {
-                Label("Permissions", systemImage: "lock.shield")
+                Label(String(localized: "settings_permissions"), systemImage: "lock.shield")
             }
         }
     }
 
     private var givingBackSection: some View {
-        Section("Features") {
+        Section(String(localized: "settings_section_features")) {
             NavigationLink(destination: CharitySettingsView()) {
-                Label("Charity Walks", systemImage: "heart.circle")
+                Label(String(localized: "settings_charity_walks"), systemImage: "heart.circle")
             }
             NavigationLink(destination: EmergencyContactsView()) {
-                Label("Emergency Contacts", systemImage: "exclamationmark.shield")
+                Label(String(localized: "settings_emergency_contacts"), systemImage: "exclamationmark.shield")
             }
             NavigationLink(destination: NotificationCenterScreen()) {
-                Label("Notifications", systemImage: "bell")
+                Label(String(localized: "settings_notifications"), systemImage: "bell")
             }
         }
     }
 
     private var dataStorageSection: some View {
-        Section("Data & Storage") {
+        Section(String(localized: "settings_section_data")) {
             Button {
                 viewModel.exportData { result in
                     switch result {
@@ -321,27 +321,27 @@ struct SettingsView: View {
                     }
                 }
             } label: {
-                Label("Export Data", systemImage: "square.and.arrow.up")
+                Label(String(localized: "settings_export_data"), systemImage: "square.and.arrow.up")
             }
 
             Button {
                 viewModel.clearCache()
             } label: {
-                Label("Clear Cache", systemImage: "trash")
+                Label(String(localized: "settings_clear_cache"), systemImage: "trash")
             }
 
             Button(role: .destructive) {
                 viewModel.resetToDefaults()
             } label: {
-                Label("Reset to Defaults", systemImage: "arrow.counterclockwise")
+                Label(String(localized: "settings_reset_defaults"), systemImage: "arrow.counterclockwise")
             }
         }
     }
 
     private var aboutSection: some View {
-        Section("About & Help") {
+        Section(String(localized: "settings_section_about")) {
             HStack {
-                Text("Version")
+                Text(String(localized: "settings_version"))
                 Spacer()
                 Text("1.0.0 (Build 1)")
                     .foregroundColor(.secondary)
@@ -350,25 +350,25 @@ struct SettingsView: View {
             Button {
                 showAboutDialog = true
             } label: {
-                Label("About WoofWalk", systemImage: "info.circle")
+                Label(String(localized: "settings_about_app"), systemImage: "info.circle")
             }
 
             Link(destination: URL(string: "https://woofwalk.app/privacy")!) {
-                Label("Privacy Policy", systemImage: "hand.raised")
+                Label(String(localized: "settings_privacy_policy"), systemImage: "hand.raised")
             }
 
             Link(destination: URL(string: "https://woofwalk.app/terms")!) {
-                Label("Terms of Service", systemImage: "doc.text")
+                Label(String(localized: "settings_terms_of_service"), systemImage: "doc.text")
             }
 
             Link(destination: URL(string: "https://woofwalk.app/support")!) {
-                Label("Help & Support", systemImage: "questionmark.circle")
+                Label(String(localized: "settings_help_support"), systemImage: "questionmark.circle")
             }
 
             Button(role: .destructive) {
                 showDeleteDialog = true
             } label: {
-                Label("Delete Account", systemImage: "trash")
+                Label(String(localized: "settings_delete_account"), systemImage: "trash")
             }
         }
     }

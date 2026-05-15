@@ -19,7 +19,7 @@ struct LoginView: View {
                     loginHeader
                     loginFormFields
                     loginButtons
-                    DividerWithText(text: "OR")
+                    DividerWithText(text: String(localized: "login_or_divider"))
                         .padding(.horizontal)
                     socialSignInSection
                     signupLink
@@ -28,7 +28,7 @@ struct LoginView: View {
             }
 
             if viewModel.loginUiState.isLoading {
-                LoadingOverlay(message: "Signing in...")
+                LoadingOverlay(message: String(localized: "signing_in"))
             }
         }
         .onAppear { checkBiometricAvailability() }
@@ -41,11 +41,11 @@ struct LoginView: View {
 
     private var loginHeader: some View {
         VStack(spacing: 8) {
-            Text("Welcome to WoofWalk")
+            Text(String(localized: "login_welcome_title"))
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .foregroundColor(.blue)
-            Text("Sign in to continue your walk")
+            Text(String(localized: "login_welcome_subtitle"))
                 .font(.body)
                 .foregroundColor(.secondary)
         }
@@ -59,8 +59,8 @@ struct LoginView: View {
                     get: { viewModel.loginUiState.email },
                     set: { viewModel.updateLoginEmail($0) }
                 ),
-                placeholder: "your@email.com",
-                label: "Email",
+                placeholder: String(localized: "login_email_placeholder"),
+                label: String(localized: "login_email_label"),
                 icon: "envelope",
                 keyboardType: .emailAddress,
                 error: viewModel.loginUiState.emailError
@@ -71,8 +71,8 @@ struct LoginView: View {
                     get: { viewModel.loginUiState.password },
                     set: { viewModel.updateLoginPassword($0) }
                 ),
-                placeholder: "Password",
-                label: "Password",
+                placeholder: String(localized: "login_password_label"),
+                label: String(localized: "login_password_label"),
                 error: viewModel.loginUiState.passwordError
             )
 
@@ -86,7 +86,7 @@ struct LoginView: View {
             HStack {
                 Spacer()
                 Button(action: onNavigateToForgotPassword) {
-                    Text("Forgot password?")
+                    Text(String(localized: "forgot_password"))
                         .font(.subheadline)
                         .foregroundColor(.blue)
                 }
@@ -98,7 +98,7 @@ struct LoginView: View {
     private var loginButtons: some View {
         VStack(spacing: 12) {
             PrimaryButton(
-                title: "Sign In",
+                title: String(localized: "login_button"),
                 isLoading: viewModel.loginUiState.isLoading,
                 action: viewModel.login
             )
@@ -132,10 +132,10 @@ struct LoginView: View {
 
     private var signupLink: some View {
         HStack {
-            Text("Don't have an account?")
+            Text(String(localized: "login_sign_up_prompt"))
                 .font(.body)
             Button(action: onNavigateToSignup) {
-                Text("Sign Up")
+                Text(String(localized: "login_sign_up_button"))
                     .font(.body)
                     .fontWeight(.semibold)
                     .foregroundColor(.blue)
@@ -174,13 +174,13 @@ struct BiometricButton: View {
     private var biometricText: String {
         switch biometricType {
         case .faceID:
-            return "Sign in with Face ID"
+            return String(localized: "login_with_face_id")
         case .touchID:
-            return "Sign in with Touch ID"
+            return String(localized: "login_with_touch_id")
         case .opticID:
-            return "Sign in with Optic ID"
+            return String(localized: "login_with_optic_id")
         case .none:
-            return "Sign in with Biometric"
+            return String(localized: "login_with_biometric")
         }
     }
 
@@ -233,7 +233,7 @@ struct GoogleSignInButton: View {
             HStack {
                 Image(systemName: "globe")
                     .font(.system(size: 20))
-                Text("Sign in with Google")
+                Text(String(localized: "login_with_google"))
                     .fontWeight(.semibold)
             }
             .frame(maxWidth: .infinity)

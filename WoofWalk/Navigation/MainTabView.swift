@@ -45,7 +45,7 @@ struct MainTabView: View {
                         }
                 }
                 .tabItem {
-                    Label(AppTab.map.rawValue, systemImage: AppTab.map.icon)
+                    Label(String(localized: "tab_map"), systemImage: AppTab.map.icon)
                 }
                 .tag(AppTab.map)
 
@@ -53,7 +53,7 @@ struct MainTabView: View {
                     FeedScreen()
                 }
                 .tabItem {
-                    Label(AppTab.feed.rawValue, systemImage: AppTab.feed.icon)
+                    Label(String(localized: "tab_feed"), systemImage: AppTab.feed.icon)
                 }
                 .tag(AppTab.feed)
 
@@ -61,7 +61,7 @@ struct MainTabView: View {
                     SocialHubScreen()
                 }
                 .tabItem {
-                    Label(AppTab.social.rawValue, systemImage: AppTab.social.icon)
+                    Label(String(localized: "tab_social"), systemImage: AppTab.social.icon)
                 }
                 .tag(AppTab.social)
 
@@ -69,7 +69,7 @@ struct MainTabView: View {
                     DiscoveryScreen()
                 }
                 .tabItem {
-                    Label(AppTab.discover.rawValue, systemImage: AppTab.discover.icon)
+                    Label(String(localized: "tab_discover"), systemImage: AppTab.discover.icon)
                 }
                 .tag(AppTab.discover)
 
@@ -77,7 +77,7 @@ struct MainTabView: View {
                     ProfileView()
                 }
                 .tabItem {
-                    Label(AppTab.profile.rawValue, systemImage: AppTab.profile.icon)
+                    Label(String(localized: "tab_profile"), systemImage: AppTab.profile.icon)
                 }
                 .tag(AppTab.profile)
             }

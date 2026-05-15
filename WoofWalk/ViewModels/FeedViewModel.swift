@@ -6,7 +6,12 @@ import CoreLocation
 import Combine
 
 enum FeedMode: String, CaseIterable, Identifiable {
+    // Order here drives the segmented-picker order on FeedScreen — mirror
+    // Android `FeedMode` enum (`FOR_YOU`, `TRENDING`, `NEARBY`, `FOLLOWING`)
+    // so the iOS tab strip matches the Android one for users with both
+    // installs (e.g. a household sharing a Family account).
     case forYou = "For You"
+    case trending = "Trending"
     case nearby = "Nearby"
     case following = "Following"
 
@@ -281,6 +286,8 @@ class FeedViewModel: ObservableObject {
         switch feedMode {
         case .forYou:
             loadForYouPosts()
+        case .trending:
+            loadTrendingPosts()
         case .nearby:
             loadNearbyPosts()
         case .following:
@@ -297,6 +304,10 @@ class FeedViewModel: ObservableObject {
             switch feedMode {
             case .forYou:
                 await loadMoreForYou()
+            case .trending:
+                // Trending is a single page of velocity-ranked posts; no
+                // pagination cursor that makes sense across re-rankings.
+                hasMorePages = false
             case .nearby:
                 await loadMoreNearby()
             case .following:
@@ -378,6 +389,121 @@ class FeedViewModel: ObservableObject {
             print("[Feed] Error loading more For You posts: \(error.localizedDescription)")
         }
     }
+
+    // MARK: - Trending
+
+    /// Trending: re-rank recent public posts by engagement velocity.
+    ///
+    /// Mirrors Android `FeedViewModel.kt:971-1000`:
+    ///   * window: 7 days (was 48h — widened so a quiet feed still has
+    ///     something to rank)
+    ///   * score: (likes×2 + comments×4 + reactions×3 + shares×1.5 + 0.1)
+    ///            ÷ (ageHours + 2)
+    ///   * top 30
+    ///
+    /// The `+0.1` floor and `+2` denominator keep posts with zero
+    /// engagement on the chart so the tab never renders blank during a
+    /// quiet pre-launch period — users reported "flickers then shows
+    /// nothing" with a strict threshold.
+    ///
+    /// Server-side filters: `visibility == "PUBLIC"`, `createdAt >= cutoff`,
+    /// `orderBy createdAt DESC`, limit 100. Block + mute are applied
+    /// client-side via `applyAuthorFilters` (same predicate every mode
+    /// uses).
+    private func loadTrendingPosts() {
+        listener?.remove()
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let cutoffMs = nowMs - Self.trendingWindowMs
+
+        // `createdAt` is sometimes a Firestore Timestamp (server-write
+        // path) and sometimes an Int ms (client-write path — see
+        // createPost above). Filter server-side on the int form because
+        // that's what the client write uses; client-side decode handles
+        // both shapes uniformly.
+        Task {
+            do {
+                let snapshot = try await db.collection("posts")
+                    .whereField("visibility", isEqualTo: "PUBLIC")
+                    .whereField("createdAt", isGreaterThan: cutoffMs)
+                    .order(by: "createdAt", descending: true)
+                    .limit(to: 100)
+                    .getDocuments()
+
+                let decoded = snapshot.documents.compactMap { try? $0.data(as: Post.self) }
+                let visible = self.applyAuthorFilters(decoded)
+                let ranked = Self.rankByTrendingVelocity(posts: visible, nowMs: nowMs)
+                self.posts = Array(ranked.prefix(30))
+                self.lastDocument = nil
+                self.hasMorePages = false  // single ranked page
+                self.isLoading = false
+            } catch {
+                let nsError = error as NSError
+                if nsError.domain == "FIRFirestoreErrorDomain" && nsError.code == 9 {
+                    print("[Feed] Trending composite index missing, falling back to client-side filter")
+                    await self.loadTrendingFallback(nowMs: nowMs, cutoffMs: cutoffMs)
+                } else {
+                    print("[Feed] Trending error: \(error.localizedDescription)")
+                    self.isLoading = false
+                }
+            }
+        }
+    }
+
+    /// Fallback when the (visibility, createdAt) composite index is
+    /// missing. Drop the createdAt server-side filter and apply it
+    /// client-side — cheaper than waiting for the index to build.
+    private func loadTrendingFallback(nowMs: Int64, cutoffMs: Int64) async {
+        do {
+            let snapshot = try await db.collection("posts")
+                .whereField("visibility", isEqualTo: "PUBLIC")
+                .limit(to: 200)
+                .getDocuments()
+
+            let decoded = snapshot.documents.compactMap { try? $0.data(as: Post.self) }
+            let inWindow = decoded.filter { post in
+                let createdMs: Int64
+                if let ts = post.createdAt {
+                    createdMs = Int64(ts.dateValue().timeIntervalSince1970 * 1000)
+                } else {
+                    return false
+                }
+                return createdMs >= cutoffMs
+            }
+            let visible = applyAuthorFilters(inWindow)
+            let ranked = Self.rankByTrendingVelocity(posts: visible, nowMs: nowMs)
+            self.posts = Array(ranked.prefix(30))
+            self.lastDocument = nil
+            self.hasMorePages = false
+            self.isLoading = false
+        } catch {
+            print("[Feed] Trending fallback error: \(error.localizedDescription)")
+            self.isLoading = false
+        }
+    }
+
+    /// Engagement-velocity scorer. Pure function, testable in isolation,
+    /// matches Android `FeedViewModel.kt` line-for-line.
+    private static func rankByTrendingVelocity(posts: [Post], nowMs: Int64) -> [Post] {
+        posts.sorted { lhs, rhs in
+            trendingScore(post: lhs, nowMs: nowMs) > trendingScore(post: rhs, nowMs: nowMs)
+        }
+    }
+
+    private static func trendingScore(post: Post, nowMs: Int64) -> Double {
+        let createdMs: Int64 = post.createdAt
+            .map { Int64($0.dateValue().timeIntervalSince1970 * 1000) }
+            ?? nowMs
+        let ageHours = max(0.5, Double(nowMs - createdMs) / 3_600_000.0)
+        let likes = Double(post.likeCount)
+        let comments = Double(post.commentCount)
+        let reactions = Double(post.reactionBy?.count ?? 0)
+        let shares = Double(post.shareCount ?? 0)
+        let engagement = likes * 2.0 + comments * 4.0 + reactions * 3.0 + shares * 1.5
+        return (engagement + 0.1) / (ageHours + 2.0)
+    }
+
+    /// 7-day trending window. Matches Android `TRENDING_WINDOW_MS`.
+    private static let trendingWindowMs: Int64 = 7 * 24 * 60 * 60 * 1000
 
     // MARK: - Nearby
 

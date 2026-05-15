@@ -2,18 +2,34 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
+/// 4-tab segment matching Android `FriendsScreen.kt`. Friends / Requests /
+/// Suggested / Sent. Tag order is load-bearing because we drive the segmented
+/// picker via raw values.
+enum FriendsTab: Int, CaseIterable, Identifiable {
+    case friends = 0
+    case requests = 1
+    case suggested = 2
+    case sent = 3
+
+    var id: Int { rawValue }
+}
+
 struct FriendsListScreen: View {
     @StateObject private var viewModel = FriendsListViewModel()
-    @State private var selectedSegment = 0
+    @State private var selectedTab: FriendsTab = .friends
     @State private var showAddFriend = false
     @State private var searchText = ""
 
     var body: some View {
         VStack(spacing: 0) {
-            // Segment control
-            Picker("", selection: $selectedSegment) {
-                Text("Friends").tag(0)
-                Text("Requests (\(viewModel.pendingRequests.count))").tag(1)
+            // 4-tab segment matches Android. Counts are surfaced inline on
+            // Requests + Sent so the user can see at a glance whether they
+            // have anything pending.
+            Picker("", selection: $selectedTab) {
+                Text(String(localized: "friends_segment_friends")).tag(FriendsTab.friends)
+                Text(String(format: String(localized: "friends_segment_requests_format"), Int64(viewModel.pendingRequests.count))).tag(FriendsTab.requests)
+                Text(String(localized: "friends_segment_suggested")).tag(FriendsTab.suggested)
+                Text(String(format: String(localized: "friends_segment_sent_format"), Int64(viewModel.sentRequests.count))).tag(FriendsTab.sent)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 16)
@@ -23,10 +39,13 @@ struct FriendsListScreen: View {
                 Spacer()
                 ProgressView()
                 Spacer()
-            } else if selectedSegment == 0 {
-                friendsList
             } else {
-                requestsList
+                switch selectedTab {
+                case .friends: friendsList
+                case .requests: requestsList
+                case .suggested: suggestedList
+                case .sent: sentList
+                }
             }
         }
         .overlay(alignment: .bottomTrailing) {
@@ -43,6 +62,13 @@ struct FriendsListScreen: View {
         .sheet(isPresented: $showAddFriend) {
             AddFriendSheet()
         }
+        .onChange(of: selectedTab) { newTab in
+            switch newTab {
+            case .suggested: viewModel.loadSuggestedIfNeeded()
+            case .sent: viewModel.loadSentIfNeeded()
+            default: break
+            }
+        }
     }
 
     @ViewBuilder
@@ -53,16 +79,16 @@ struct FriendsListScreen: View {
                 Image(systemName: "person.2.fill")
                     .font(.system(size: 56))
                     .foregroundColor(Color(red: 0/255, green: 160/255, blue: 176/255).opacity(0.3))
-                Text("No Friends Yet")
+                Text(String(localized: "friends_empty_title"))
                     .font(.title3)
                     .fontWeight(.semibold)
-                Text("Add friends to see their walks and chat with them.")
+                Text(String(localized: "friends_empty_subtitle"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                 Button(action: { showAddFriend = true }) {
-                    Label("Add Friends", systemImage: "person.badge.plus")
+                    Label(String(localized: "friends_add_friends_cta"), systemImage: "person.badge.plus")
                         .font(.subheadline.bold())
                         .foregroundColor(.white)
                         .padding(.horizontal, 24)
@@ -90,10 +116,10 @@ struct FriendsListScreen: View {
                 Image(systemName: "envelope.open.fill")
                     .font(.system(size: 48))
                     .foregroundColor(.secondary.opacity(0.3))
-                Text("No Pending Requests")
+                Text(String(localized: "friends_requests_empty_title"))
                     .font(.title3)
                     .fontWeight(.semibold)
-                Text("Friend requests will appear here.")
+                Text(String(localized: "friends_requests_empty_subtitle"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -104,6 +130,73 @@ struct FriendsListScreen: View {
                     request: request,
                     onAccept: { viewModel.acceptRequest(request) },
                     onDecline: { viewModel.declineRequest(request) }
+                )
+            }
+            .listStyle(.plain)
+        }
+    }
+
+    @ViewBuilder
+    private var suggestedList: some View {
+        if viewModel.isLoadingSuggested && viewModel.suggestedUsers.isEmpty {
+            Spacer()
+            ProgressView()
+            Spacer()
+        } else if viewModel.suggestedUsers.isEmpty {
+            VStack(spacing: 16) {
+                Spacer()
+                Image(systemName: "sparkles")
+                    .font(.system(size: 48))
+                    .foregroundColor(Color(red: 0/255, green: 160/255, blue: 176/255).opacity(0.4))
+                Text(String(localized: "friends_suggested_empty_title"))
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                Text(String(localized: "friends_suggested_empty_subtitle"))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                Spacer()
+            }
+        } else {
+            List(viewModel.suggestedUsers) { suggestion in
+                SuggestedUserRow(
+                    suggestion: suggestion,
+                    onAdd: { viewModel.sendRequest(toUserId: suggestion.id) }
+                )
+            }
+            .listStyle(.plain)
+            .refreshable { await viewModel.loadSuggested(force: true) }
+        }
+    }
+
+    @ViewBuilder
+    private var sentList: some View {
+        if viewModel.isLoadingSent && viewModel.sentRequests.isEmpty {
+            Spacer()
+            ProgressView()
+            Spacer()
+        } else if viewModel.sentRequests.isEmpty {
+            VStack(spacing: 16) {
+                Spacer()
+                Image(systemName: "paperplane.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(.secondary.opacity(0.3))
+                Text(String(localized: "friends_sent_empty_title"))
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                Text(String(localized: "friends_sent_empty_subtitle"))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                Spacer()
+            }
+        } else {
+            List(viewModel.sentRequests) { request in
+                SentRequestRow(
+                    request: request,
+                    onCancel: { viewModel.cancelSentRequest(request) }
                 )
             }
             .listStyle(.plain)
@@ -153,7 +246,7 @@ struct FriendRow: View {
                 Text(friend.displayName)
                     .font(.subheadline.bold())
                 if let lastActive = friend.lastActive {
-                    Text("Active \(FormatUtils.formatRelativeTime(lastActive))")
+                    Text(String(format: String(localized: "friends_active_format"), FormatUtils.formatRelativeTime(lastActive)))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -190,7 +283,7 @@ struct FriendRequestRow: View {
                 Text(request.fromDisplayName)
                     .font(.subheadline.bold())
                 if let date = request.requestedAt {
-                    Text("Requested \(FormatUtils.formatRelativeTime(date))")
+                    Text(String(format: String(localized: "friends_requested_format"), FormatUtils.formatRelativeTime(date)))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -218,15 +311,165 @@ struct FriendRequestRow: View {
     }
 }
 
+/// Result row for the Suggested tab. Mirrors `SuggestedUser` in Android
+/// `FriendRepository.getSuggestedUsers()` — id + display fields + the user's
+/// city (used in the subtitle as a "you might live near each other" hint).
+struct SuggestedUserInfo: Identifiable, Equatable {
+    let id: String
+    let displayName: String
+    let username: String
+    let photoUrl: String?
+    let city: String?
+    /// Set to true while the "Add friend" button is in-flight so the row
+    /// can swap the icon for a ProgressView. State lives on the model
+    /// (rather than the row) so the row stays stateless and the parent
+    /// view-model can update it without an `@State` round-trip.
+    var isSending: Bool = false
+}
+
+/// Outgoing friend request the current user has sent. Surfaced on the
+/// Sent tab so they can cancel a request that's been sitting pending.
+struct SentRequestInfo: Identifiable, Equatable {
+    /// Canonical friendship doc id (`{loId}_{hiId}`).
+    let id: String
+    /// The user we sent the request TO.
+    let toUserId: String
+    let toDisplayName: String
+    let toPhotoUrl: String?
+    let createdAt: Date?
+}
+
+struct SuggestedUserRow: View {
+    let suggestion: SuggestedUserInfo
+    let onAdd: () -> Void
+    private let brandColor = Color(red: 0/255, green: 160/255, blue: 176/255)
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(brandColor.opacity(0.12))
+                .frame(width: 48, height: 48)
+                .overlay {
+                    if let photoUrl = suggestion.photoUrl, let url = URL(string: photoUrl) {
+                        AsyncImage(url: url) { img in
+                            img.resizable().scaledToFill()
+                        } placeholder: {
+                            Image(systemName: "person.fill")
+                                .foregroundColor(brandColor)
+                        }
+                        .clipShape(Circle())
+                    } else {
+                        Image(systemName: "person.fill")
+                            .foregroundColor(brandColor)
+                    }
+                }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(suggestion.displayName)
+                    .font(.subheadline.bold())
+                if let city = suggestion.city, !city.isEmpty {
+                    Text(city)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else if !suggestion.username.isEmpty {
+                    Text("@\(suggestion.username)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            if suggestion.isSending {
+                ProgressView().frame(width: 32, height: 32)
+            } else {
+                Button(action: onAdd) {
+                    Label(String(localized: "friends_add_button"), systemImage: "person.badge.plus")
+                        .font(.caption.bold())
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(brandColor))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+struct SentRequestRow: View {
+    let request: SentRequestInfo
+    let onCancel: () -> Void
+    private let brandColor = Color(red: 0/255, green: 160/255, blue: 176/255)
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(brandColor.opacity(0.12))
+                .frame(width: 48, height: 48)
+                .overlay {
+                    if let photoUrl = request.toPhotoUrl, let url = URL(string: photoUrl) {
+                        AsyncImage(url: url) { img in
+                            img.resizable().scaledToFill()
+                        } placeholder: {
+                            Image(systemName: "person.fill")
+                                .foregroundColor(brandColor)
+                        }
+                        .clipShape(Circle())
+                    } else {
+                        Image(systemName: "person.fill")
+                            .foregroundColor(brandColor)
+                    }
+                }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(request.toDisplayName)
+                    .font(.subheadline.bold())
+                if let date = request.createdAt {
+                    Text(String(format: String(localized: "friends_sent_format"), FormatUtils.formatRelativeTime(date)))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text(String(localized: "friends_status_pending"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Button(action: onCancel) {
+                Text(String(localized: "action_cancel"))
+                    .font(.caption.bold())
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color(.systemGray5)))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 @MainActor
 class FriendsListViewModel: ObservableObject {
     @Published var friends: [FriendInfo] = []
     @Published var pendingRequests: [FriendRequestInfo] = []
+    @Published var sentRequests: [SentRequestInfo] = []
+    @Published var suggestedUsers: [SuggestedUserInfo] = []
     @Published var isLoading = false
+    @Published var isLoadingSent = false
+    @Published var isLoadingSuggested = false
 
     private let db = Firestore.firestore()
     private var friendsListener: ListenerRegistration?
     private var requestsListener: ListenerRegistration?
+    private var sentListener: ListenerRegistration?
+    private var suggestedLoadedAt: Date = .distantPast
+    private let suggestedCacheTTL: TimeInterval = 300  // 5 minutes
+    private let userRepository = UserRepository()
     private let currentUserId: String
 
     init() {
@@ -293,22 +536,244 @@ class FriendsListViewModel: ObservableObject {
     }
 
     func acceptRequest(_ request: FriendRequestInfo) {
-        let repo = UserRepository()
         Task {
-            try? await repo.acceptFriendRequest(friendshipId: request.id)
+            try? await userRepository.acceptFriendRequest(friendshipId: request.id)
         }
     }
 
     func declineRequest(_ request: FriendRequestInfo) {
-        let repo = UserRepository()
         Task {
-            try? await repo.rejectFriendRequest(friendshipId: request.id)
+            try? await userRepository.rejectFriendRequest(friendshipId: request.id)
+        }
+    }
+
+    // MARK: - Sent (outgoing) requests
+
+    /// One-shot lazy load — Sent tab is rarely opened, so we don't hold
+    /// a listener for it like Friends/Requests do.
+    func loadSentIfNeeded() {
+        guard sentListener == nil else { return }
+        loadSent()
+    }
+
+    private func loadSent() {
+        guard !currentUserId.isEmpty else { return }
+        isLoadingSent = true
+
+        // Outgoing pending requests = friendship docs with status PENDING
+        // where I'm the one who initiated (requestedBy == me).
+        sentListener = db.collection("friendships")
+            .whereField("requestedBy", isEqualTo: currentUserId)
+            .whereField("status", isEqualTo: "PENDING")
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self else { return }
+                self.isLoadingSent = false
+                if let error {
+                    print("[FriendsList] Sent requests error: \(error.localizedDescription)")
+                    return
+                }
+                let docs = snapshot?.documents ?? []
+                // Pull display names from /users for each recipient.
+                // Async fan-out — the snapshot publishes immediately with
+                // placeholder display names, then we patch each row as
+                // its profile resolves.
+                let bareRows: [SentRequestInfo] = docs.compactMap { doc in
+                    let data = doc.data()
+                    let userId1 = data["userId1"] as? String ?? ""
+                    let userId2 = data["userId2"] as? String ?? ""
+                    let toUserId = userId1 == self.currentUserId ? userId2 : userId1
+                    let createdAt = (data["createdAt"] as? Timestamp)?.dateValue()
+                    return SentRequestInfo(
+                        id: doc.documentID,
+                        toUserId: toUserId,
+                        toDisplayName: "Dog Walker",
+                        toPhotoUrl: nil,
+                        createdAt: createdAt
+                    )
+                }
+                self.sentRequests = bareRows
+                self.hydrateSentDisplayNames(for: bareRows)
+            }
+    }
+
+    private func hydrateSentDisplayNames(for rows: [SentRequestInfo]) {
+        Task { @MainActor in
+            for row in rows {
+                let toUserId = row.toUserId
+                do {
+                    let doc = try await db.collection("users").document(toUserId).getDocument()
+                    guard let data = doc.data() else { continue }
+                    let displayName = (data["displayName"] as? String)
+                        ?? (data["username"] as? String)
+                        ?? "Dog Walker"
+                    let photoUrl = data["photoUrl"] as? String
+                    if let idx = self.sentRequests.firstIndex(where: { $0.id == row.id }) {
+                        self.sentRequests[idx] = SentRequestInfo(
+                            id: row.id,
+                            toUserId: toUserId,
+                            toDisplayName: displayName,
+                            toPhotoUrl: photoUrl,
+                            createdAt: row.createdAt
+                        )
+                    }
+                } catch {
+                    // Non-fatal — row keeps its placeholder name.
+                    print("[FriendsList] Failed to hydrate sent row \(toUserId): \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    func cancelSentRequest(_ request: SentRequestInfo) {
+        Task {
+            do {
+                try await userRepository.cancelFriendRequest(friendshipId: request.id)
+                // Optimistic local removal — the snapshot listener will
+                // also drop it on the next tick.
+                self.sentRequests.removeAll { $0.id == request.id }
+            } catch {
+                print("[FriendsList] Cancel sent request failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    // MARK: - Suggested users
+
+    func loadSuggestedIfNeeded() {
+        let stale = Date().timeIntervalSince(suggestedLoadedAt) > suggestedCacheTTL
+        guard suggestedUsers.isEmpty || stale else { return }
+        Task { await loadSuggested(force: false) }
+    }
+
+    /// Suggested algorithm (simple-first port of Android
+    /// `FriendRepository.getSuggestedUsers`):
+    ///   * exclude self
+    ///   * exclude anyone we have a friendship doc with (any status)
+    ///   * exclude blocked users (either direction)
+    ///   * exclude hideFromSearch
+    ///   * surface 20 recent registrations, prefer same city as current
+    ///     user if we know their city
+    ///
+    /// Over-fetches 3× the limit because some rows get filtered
+    /// client-side (no point burning a composite index on a rare query).
+    func loadSuggested(force: Bool) async {
+        guard !currentUserId.isEmpty else { return }
+        if isLoadingSuggested { return }
+        isLoadingSuggested = true
+        defer { isLoadingSuggested = false }
+
+        // 1. Connected ids (any friendship doc in either direction).
+        var connectedIds = Set<String>()
+        var blockedIds = Set<String>()
+        do {
+            let side1 = try await db.collection("friendships")
+                .whereField("userId1", isEqualTo: currentUserId)
+                .getDocuments()
+            for doc in side1.documents {
+                if let id = doc.data()["userId2"] as? String { connectedIds.insert(id) }
+                if (doc.data()["status"] as? String) == "BLOCKED",
+                   let id = doc.data()["userId2"] as? String { blockedIds.insert(id) }
+            }
+            let side2 = try await db.collection("friendships")
+                .whereField("userId2", isEqualTo: currentUserId)
+                .getDocuments()
+            for doc in side2.documents {
+                if let id = doc.data()["userId1"] as? String { connectedIds.insert(id) }
+                if (doc.data()["status"] as? String) == "BLOCKED",
+                   let id = doc.data()["userId1"] as? String { blockedIds.insert(id) }
+            }
+        } catch {
+            print("[FriendsList] Suggested: failed to fetch friendship graph: \(error.localizedDescription)")
+        }
+
+        // 2. Our own city (used to bias suggestions toward the same area).
+        let myCity: String? = await {
+            do {
+                let doc = try await db.collection("users").document(currentUserId).getDocument()
+                if let addr = doc.data()?["address"] as? [String: Any] {
+                    return (addr["city"] as? String)?.lowercased()
+                }
+            } catch {
+                print("[FriendsList] Suggested: failed to fetch own profile: \(error.localizedDescription)")
+            }
+            return nil
+        }()
+
+        // 3. Candidates page — over-fetch by 3×.
+        let pageSize = 60
+        var candidates: [(SuggestedUserInfo, isSameCity: Bool)] = []
+        do {
+            let snap = try await db.collection("users")
+                .order(by: "createdAt", descending: true)
+                .limit(to: pageSize)
+                .getDocuments()
+            for doc in snap.documents {
+                let id = doc.documentID
+                if id == currentUserId { continue }
+                if connectedIds.contains(id) { continue }
+                if blockedIds.contains(id) { continue }
+                let data = doc.data()
+                if (data["hideFromSearch"] as? Bool) == true { continue }
+                let username = (data["username"] as? String) ?? ""
+                if username.isEmpty { continue }
+                let displayName = (data["displayName"] as? String) ?? username
+                let photoUrl = data["photoUrl"] as? String
+                let city = (data["address"] as? [String: Any])?["city"] as? String
+                let sameCity = myCity != nil && city?.lowercased() == myCity
+                candidates.append((
+                    SuggestedUserInfo(
+                        id: id,
+                        displayName: displayName,
+                        username: username,
+                        photoUrl: photoUrl,
+                        city: city,
+                        isSending: false
+                    ),
+                    isSameCity: sameCity
+                ))
+            }
+        } catch {
+            print("[FriendsList] Suggested fetch failed: \(error.localizedDescription)")
+        }
+
+        // 4. Sort: same-city first, then by recency (already createdAt-desc
+        //    from Firestore). Take top 20.
+        let ordered = candidates
+            .sorted { lhs, rhs in
+                if lhs.isSameCity != rhs.isSameCity { return lhs.isSameCity }
+                return false  // stable on equal city flag, preserves Firestore order
+            }
+            .prefix(20)
+            .map { $0.0 }
+
+        self.suggestedUsers = Array(ordered)
+        self.suggestedLoadedAt = Date()
+    }
+
+    /// Send a request from the Suggested tab. Flips the row's spinner on,
+    /// fires the canonical `UserRepository.sendFriendRequest`, then drops
+    /// the row out of Suggested (it'll now show up under Sent).
+    func sendRequest(toUserId: String) {
+        guard let idx = suggestedUsers.firstIndex(where: { $0.id == toUserId }) else { return }
+        suggestedUsers[idx].isSending = true
+
+        Task {
+            do {
+                try await userRepository.sendFriendRequest(toUserId: toUserId)
+                self.suggestedUsers.removeAll { $0.id == toUserId }
+            } catch {
+                if let i = self.suggestedUsers.firstIndex(where: { $0.id == toUserId }) {
+                    self.suggestedUsers[i].isSending = false
+                }
+                print("[FriendsList] Suggested send-request failed: \(error.localizedDescription)")
+            }
         }
     }
 
     deinit {
         friendsListener?.remove()
         requestsListener?.remove()
+        sentListener?.remove()
     }
 }
 
@@ -332,7 +797,7 @@ struct AddFriendSheet: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
-                    TextField("Search by username...", text: $searchText)
+                    TextField(String(localized: "friends_search_placeholder"), text: $searchText)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .onSubmit { performSearch() }
@@ -365,7 +830,7 @@ struct AddFriendSheet: View {
                         Image(systemName: "person.slash")
                             .font(.system(size: 40))
                             .foregroundColor(.secondary.opacity(0.4))
-                        Text("No users found")
+                        Text(String(localized: "friends_search_no_users"))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -376,7 +841,7 @@ struct AddFriendSheet: View {
                         Image(systemName: "person.2.fill")
                             .font(.system(size: 40))
                             .foregroundColor(brandColor.opacity(0.3))
-                        Text("Search for friends by username")
+                        Text(String(localized: "friends_search_prompt"))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -391,11 +856,11 @@ struct AddFriendSheet: View {
                     .listStyle(.plain)
                 }
             }
-            .navigationTitle("Add Friend")
+            .navigationTitle(String(localized: "friends_add_sheet_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(String(localized: "action_cancel")) { dismiss() }
                 }
             }
         }
@@ -452,7 +917,7 @@ struct AddFriendSheet: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Search failed. Please try again."
+                    errorMessage = String(localized: "error_search_failed")
                     isSearching = false
                 }
             }
@@ -532,12 +997,12 @@ struct SearchUserRow: View {
 
             switch result.status {
             case .accepted:
-                Label("Friends", systemImage: "checkmark.circle.fill")
+                Label(String(localized: "friends_status_friends"), systemImage: "checkmark.circle.fill")
                     .font(.caption.bold())
                     .foregroundColor(.green)
 
             case .pending:
-                Text("Pending")
+                Text(String(localized: "friends_status_pending"))
                     .font(.caption.bold())
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 12)

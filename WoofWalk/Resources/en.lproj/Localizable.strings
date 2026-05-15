@@ -1,0 +1,372 @@
+/*
+  Localizable.strings (en-GB)
+  WoofWalk iOS
+
+  UK English source-of-truth strings. Keys mirror the Android
+  `app/src/main/res/values/strings.xml` naming convention so a
+  future translation pipeline can drop in language packs across
+  both platforms with a single dictionary.
+
+  Phase 1 (this file) covers:
+    - Common UI / actions / errors / loading / empty-state shells
+    - Tabs + top-level navigation labels
+    - Auth (login, signup, forgot-password)
+    - Walk lifecycle + completion recap
+    - Booking flow shell
+    - Notifications, Settings, Profile, Friends list
+
+  Future phases extend per-screen sections in-place; do NOT
+  rename existing keys — they're load-bearing for both iOS
+  callers (`String(localized: "key")`) and the cross-platform
+  translation dictionary mapping back to Android string IDs.
+*/
+
+// MARK: - Application
+"app_name" = "WoofWalk";
+
+// MARK: - Common Actions
+"action_save" = "Save";
+"action_cancel" = "Cancel";
+"action_delete" = "Delete";
+"action_edit" = "Edit";
+"action_share" = "Share";
+"action_search" = "Search";
+"action_close" = "Close";
+"action_ok" = "OK";
+"action_back" = "Back";
+"action_next" = "Next";
+"action_skip" = "Skip";
+"action_done" = "Done";
+"action_continue" = "Continue";
+"action_confirm" = "Confirm";
+"action_not_now" = "Not Now";
+"action_try_again" = "Try again";
+"action_retry" = "Retry";
+"action_view_all" = "View all";
+"action_view_details" = "View details";
+
+// MARK: - Loading / Status
+"loading" = "Loading…";
+"loading_generic" = "Loading…";
+"please_wait" = "Please wait…";
+"signing_in" = "Signing in…";
+"creating_account" = "Creating your account…";
+"deleting_account" = "Deleting account…";
+
+// MARK: - Errors
+"error_generic" = "Something went wrong";
+"error_network" = "Please check your connection";
+"error_permission" = "Permission denied";
+"error_sign_in_required" = "Please sign in to continue";
+"error_email_required" = "Email is required";
+"error_invalid_email" = "Invalid email format";
+"error_password_required" = "Password is required";
+"error_search_failed" = "Search failed. Please try again.";
+
+// MARK: - Tabs / Navigation
+"tab_map" = "Map";
+"tab_feed" = "Feed";
+"tab_social" = "Social";
+"tab_discover" = "Services";
+"tab_profile" = "Profile";
+"tab_home" = "Home";
+"tab_bookings" = "Bookings";
+"tab_messages" = "Messages";
+"tab_invoices" = "Invoices";
+"tab_community" = "Community";
+"tab_qa" = "Q&A";
+"tab_friends" = "Friends";
+"tab_settings" = "Settings";
+"tab_notifications" = "Notifications";
+
+"nav_map" = "Map";
+"nav_feed" = "Feed";
+"nav_profile" = "Profile";
+"nav_walks" = "Walks";
+
+// MARK: - Authentication (Login)
+"login" = "Login";
+"logout" = "Logout";
+"log_out" = "Log Out";
+"sign_in" = "Sign In";
+"sign_up" = "Sign Up";
+"sign_out" = "Sign Out";
+"email" = "Email";
+"password" = "Password";
+"confirm_password" = "Confirm Password";
+"reset_password" = "Reset Password";
+"forgot_password" = "Forgot password?";
+
+"login_welcome_title" = "Welcome to WoofWalk";
+"login_welcome_subtitle" = "Sign in to continue your walk";
+"login_email_label" = "Email";
+"login_email_placeholder" = "your@email.com";
+"login_password_label" = "Password";
+"login_button" = "Sign In";
+"login_or_divider" = "OR";
+"login_with_google" = "Sign in with Google";
+"login_with_apple" = "Sign in with Apple";
+"login_with_face_id" = "Sign in with Face ID";
+"login_with_touch_id" = "Sign in with Touch ID";
+"login_with_optic_id" = "Sign in with Optic ID";
+"login_with_biometric" = "Sign in with Biometric";
+"login_sign_up_prompt" = "Don't have an account?";
+"login_sign_up_button" = "Sign Up";
+
+// MARK: - Authentication (Sign up)
+"signup_title" = "Join WoofWalk";
+"signup_subtitle" = "Create an account to start your adventure";
+"signup_email_label" = "Email";
+"signup_email_placeholder" = "your@email.com";
+"signup_username_label" = "Username";
+"signup_username_placeholder" = "dogwalker123";
+"signup_password_label" = "Password";
+"signup_password_placeholder" = "At least 6 characters";
+"signup_confirm_password_label" = "Confirm Password";
+"signup_confirm_password_placeholder" = "Re-enter password";
+"signup_marketing_opt_in" = "Send me tips, offers & dog walking news";
+"signup_button" = "Sign Up";
+"signup_or_divider" = "OR";
+"signup_with_google" = "Sign up with Google";
+"signup_already_have_account" = "Already have an account?";
+"signup_sign_in_link" = "Sign In";
+
+// MARK: - Forgot password
+"forgot_password_title" = "Forgot your password?";
+"forgot_password_description" = "Enter your email address and we'll send you instructions to reset your password.";
+"send_reset_link" = "Send Reset Link";
+
+// MARK: - Walk lifecycle
+"walk_start_cta" = "Start walk";
+"walk_stop_cta" = "Stop walk";
+"walk_pause_cta" = "Pause walk";
+"walk_resume_cta" = "Resume walk";
+"walk_distance" = "Distance";
+"walk_duration" = "Duration";
+"walk_pace" = "Pace";
+"walk_speed" = "Speed";
+"walk_track" = "Track";
+"walk_steps" = "Steps";
+"walk_rain_mode" = "Rain Mode";
+"walk_lost_label" = "LOST";
+
+// MARK: - Walk completion / recap
+"walk_complete_title" = "Walk Complete!";
+"walk_summary_intro" = "Great job! Here's your walk summary:";
+"walk_completed_title" = "Walk Completed!";
+"walk_share_button" = "Share Walk";
+"walk_done_button" = "Done";
+"walk_achievements_header" = "Achievements";
+"walk_paw_points_format" = "+%lld Paw Points";
+"walk_paw_points_short" = "+%lld points";
+"walk_milestone_bonus_format" = "+%lld bonus points";
+"walk_charity_points_format" = "You raised %lld points";
+"walk_charity_for_charity_format" = "for %@";
+"walk_charity_for_charity_generic" = "for charity";
+
+// MARK: - Booking flow
+"booking_book_now" = "Book now";
+"booking_confirm_cta" = "Confirm Booking";
+"booking_cancel_cta" = "Cancel booking";
+"booking_reschedule" = "Reschedule";
+"booking_payment" = "Payment";
+"booking_tip" = "Tip";
+"booking_review" = "Review";
+"booking_add_photos" = "Add photos";
+"booking_confirmed_title" = "Booking confirmed";
+
+"booking_step_service_title" = "What service do you need?";
+"booking_step_service_subtitle" = "Choose the type of care for your dog.";
+"booking_step_dogs_title" = "Which dogs?";
+"booking_step_dogs_empty_title" = "No dogs found";
+"booking_step_dogs_empty_subtitle" = "Add a dog to your profile first.";
+"booking_step_provider_title" = "Choose a provider";
+"booking_step_provider_subtitle" = "Select a provider near you.";
+"booking_step_provider_searching" = "Searching nearby providers…";
+"booking_step_provider_empty_title" = "No providers found";
+"booking_step_provider_empty_subtitle" = "Try a different service or check back later.";
+"booking_step_provider_base_price" = "base";
+"booking_step_when_title" = "Pick a date & time";
+"booking_step_when_lead_time" = "Bookings require at least 24 hours lead time.";
+"booking_step_when_too_soon" = "Selected time must be at least 24 hours from now.";
+"booking_step_boarding_title" = "Boarding stay";
+"booking_step_boarding_subtitle" = "Pick check-in and check-out dates. Bookings require at least 24 hours lead time. Drop-off is 14:00, pickup before 11:00.";
+"booking_step_boarding_invalid" = "Check-in must be at least 24 hours from now and check-out must be after check-in.";
+"booking_step_details_title" = "Additional details";
+"booking_step_review_title" = "Review your booking";
+"booking_review_check_in" = "Check-in";
+"booking_review_check_out" = "Check-out";
+"booking_review_check_in_default" = "14:00";
+"booking_review_check_out_default" = "11:00";
+"booking_review_total_nights" = "Total nights";
+"booking_review_ends_on" = "Ends on";
+"booking_review_total_occurrences" = "Total occurrences";
+"booking_review_total" = "Total";
+
+"booking_pay_now_summary_format" = "Pay %@ to the provider on the day. They'll confirm the booking shortly.";
+"booking_pay_received_summary" = "Payment received. Your booking is confirmed and the provider will be in touch shortly.";
+"booking_cash_unavailable_title" = "This business can't take cash bookings right now.";
+"booking_cash_unavailable_subtitle" = "Their cash wallet needs topping up. Send a message and we'll let them know you're waiting.";
+"booking_cash_unavailable_note_placeholder" = "Add a note — when do you need it?";
+"booking_cash_unavailable_notify_cta" = "Notify business";
+"booking_cash_unavailable_pay_card_cta" = "Pay by card instead";
+"booking_cash_unavailable_confirmation" = "You can keep the conversation open and check back any time.";
+"booking_cash_unavailable_view_conversation" = "View conversation";
+
+// MARK: - Notifications screen
+"notifications_title" = "Notifications";
+"notifications_empty_title" = "No Notifications";
+"notifications_empty_subtitle" = "You're all caught up!";
+"notifications_mark_all_read" = "Mark All Read";
+
+// MARK: - Empty states
+"empty_no_notifications" = "No notifications yet";
+"empty_no_friends" = "No friends yet";
+"empty_no_bookings" = "No bookings yet";
+"empty_no_posts" = "No posts yet";
+"empty_no_dogs" = "No dogs added yet";
+
+// MARK: - Profile screen
+"profile_title" = "Profile";
+"profile_welcome_signed_out" = "Welcome to WoofWalk";
+"profile_signed_out_subtitle" = "Sign in to see your profile";
+"profile_what_you_can_do" = "What you can do";
+"profile_feature_track_walks_title" = "Track Walks";
+"profile_feature_track_walks_desc" = "GPS-tracked walks with stats";
+"profile_feature_earn_badges_title" = "Earn Badges";
+"profile_feature_earn_badges_desc" = "Complete challenges and level up";
+"profile_feature_community_title" = "Join Community";
+"profile_feature_community_desc" = "Share walks and connect with walkers";
+"profile_feature_discover_title" = "Discover Places";
+"profile_feature_discover_desc" = "Find dog-friendly pubs, parks & vets";
+"profile_walk_streak" = "Walk Streak";
+"profile_streak_current" = "Current";
+"profile_streak_best" = "Best";
+"profile_streak_freezes" = "Freezes";
+"profile_recent_walks" = "Recent Walks";
+"profile_weekly_activity" = "Weekly Activity";
+"profile_badges_header" = "Badges";
+"profile_view_all_badges" = "View All Badges";
+"profile_all_badges_nav_title" = "All Badges";
+"profile_activity_header" = "Activity";
+"profile_activity_challenges" = "Challenges";
+"profile_activity_weekly_league" = "Weekly League";
+"profile_portal_title" = "WoofWalk Portal";
+"profile_portal_subtitle" = "Manage bookings, invoices & more";
+"profile_my_dogs" = "My Dogs";
+"profile_dog_nervous_badge" = "Nervous Dog";
+"profile_dog_breed_age_format" = "%@ • %lld years";
+"profile_level_format" = "Level %lld";
+"profile_points_format" = "%lld points";
+"profile_log_out_alert_title" = "Log Out";
+"profile_log_out_alert_message" = "Are you sure you want to log out?";
+
+// MARK: - Stat tiles (shared across profile)
+"stat_walks" = "Walks";
+"stat_distance" = "Distance";
+"stat_time" = "Time";
+"stat_points" = "Points";
+"stat_contributions" = "Contributions";
+"stat_badges" = "Badges";
+
+// MARK: - Settings
+"settings_title" = "Settings";
+"settings_section_general" = "General";
+"settings_section_walk" = "Walk Settings";
+"settings_section_map" = "Map Preferences";
+"settings_section_notifications" = "Notifications";
+"settings_section_privacy" = "Privacy & Security";
+"settings_section_features" = "Features";
+"settings_section_data" = "Data & Storage";
+"settings_section_about" = "About & Help";
+
+"settings_distance_unit" = "Distance Unit";
+"settings_speed_unit" = "Speed Unit";
+"settings_theme" = "Theme";
+"settings_language" = "Language";
+"settings_default_walk_distance" = "Default Walk Distance";
+"settings_auto_pause_sensitivity" = "Auto-Pause Sensitivity";
+"settings_background_tracking" = "Background Tracking";
+"settings_rain_mode" = "Rain Mode";
+"settings_walk_stats_display" = "Walk Stats Display";
+"settings_voice_guidance" = "Voice Guidance";
+"settings_voice_guidance_caption" = "Spoken turn-by-turn directions during guided walks";
+"settings_fog_of_war" = "Fog of War Mode";
+"settings_fog_of_war_caption" = "Reveals map areas as you walk through them";
+"settings_map_style" = "Map Style";
+"settings_show_traffic" = "Show Traffic";
+"settings_alert_settings" = "Alert Settings";
+"settings_enable_notifications" = "Enable Notifications";
+"settings_hazard_alerts" = "Hazard Alerts";
+"settings_community_updates" = "Community Updates";
+"settings_walk_reminders" = "Walk Reminders";
+"settings_profile_visibility" = "Profile Visibility";
+"settings_location_sharing" = "Location Sharing";
+"settings_permissions" = "Permissions";
+"settings_charity_walks" = "Charity Walks";
+"settings_emergency_contacts" = "Emergency Contacts";
+"settings_notifications" = "Notifications";
+"settings_export_data" = "Export Data";
+"settings_clear_cache" = "Clear Cache";
+"settings_reset_defaults" = "Reset to Defaults";
+"settings_version" = "Version";
+"settings_about_app" = "About WoofWalk";
+"settings_privacy_policy" = "Privacy Policy";
+"settings_terms_of_service" = "Terms of Service";
+"settings_help_support" = "Help & Support";
+"settings_delete_account" = "Delete Account";
+
+"settings_about_dialog_title" = "About WoofWalk";
+"settings_about_dialog_message" = "WoofWalk v1.0.0\n\nA community-driven app for safe and enjoyable dog walking.";
+"settings_delete_dialog_title" = "Delete Account?";
+"settings_delete_dialog_message" = "This will permanently delete your account and all WoofWalk data — dogs, walks, posts, friendships, messages, reviews, bookings, and consent records. This action cannot be undone.";
+"settings_reauth_password_title" = "Confirm Your Password";
+"settings_reauth_password_message" = "For security, please enter your password to confirm account deletion.";
+"settings_reauth_apple_title" = "Sign In Again";
+"settings_reauth_apple_message" = "For your security, please sign out and sign back in with Apple before deleting your account.";
+"settings_delete_error_title" = "Couldn't Delete Account";
+"settings_delete_missing_email" = "Your account is missing an email address. Please contact support.";
+
+// MARK: - Friends list
+"friends_title" = "Friends";
+"friends_segment_friends" = "Friends";
+"friends_segment_requests_format" = "Requests (%lld)";
+"friends_empty_title" = "No Friends Yet";
+"friends_empty_subtitle" = "Add friends to see their walks and chat with them.";
+"friends_add_friends_cta" = "Add Friends";
+"friends_requests_empty_title" = "No Pending Requests";
+"friends_requests_empty_subtitle" = "Friend requests will appear here.";
+"friends_active_format" = "Active %@";
+"friends_requested_format" = "Requested %@";
+"friends_add_sheet_title" = "Add Friend";
+"friends_search_placeholder" = "Search by username…";
+"friends_search_no_users" = "No users found";
+"friends_search_prompt" = "Search for friends by username";
+"friends_status_friends" = "Friends";
+"friends_status_pending" = "Pending";
+"friends_default_display_name" = "Dog Walker";
+"friends_segment_suggested" = "Suggested";
+"friends_segment_sent_format" = "Sent (%lld)";
+"friends_suggested_empty_title" = "No Suggestions Yet";
+"friends_suggested_empty_subtitle" = "We'll suggest people to follow as more dog walkers join your area.";
+"friends_sent_empty_title" = "No Sent Requests";
+"friends_sent_empty_subtitle" = "Friend requests you send will appear here while they're pending.";
+"friends_sent_format" = "Sent %@";
+"friends_add_button" = "Add";
+
+// MARK: - Auth biometric (Face/Touch/Optic ID)
+"biometric_face_id" = "Face ID";
+"biometric_touch_id" = "Touch ID";
+"biometric_optic_id" = "Optic ID";
+
+// MARK: - Error placeholder
+"generic_error_header" = "Error";
+
+// MARK: - Day-of-week (one-letter, profile chart)
+"day_abbrev_sun" = "S";
+"day_abbrev_mon" = "M";
+"day_abbrev_tue" = "T";
+"day_abbrev_wed" = "W";
+"day_abbrev_thu" = "T";
+"day_abbrev_fri" = "F";
+"day_abbrev_sat" = "S";

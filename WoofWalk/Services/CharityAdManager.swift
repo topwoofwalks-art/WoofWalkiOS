@@ -40,7 +40,7 @@ final class CharityAdManager: NSObject {
         #endif
     }
 
-    private var rewardedInterstitialAd: RewardedInterstitialAd?
+    private var rewardedInterstitialAd: GADRewardedInterstitialAd?
     private var isLoading = false
 
     /// One-shot ATT prompt — iOS 14.5+ requires explicit user
@@ -65,9 +65,9 @@ final class CharityAdManager: NSObject {
         }
         isLoading = true
 
-        let request = Request()
-        RewardedInterstitialAd.load(
-            with: adUnitID,
+        let request = GADRequest()
+        GADRewardedInterstitialAd.load(
+            withAdUnitID: adUnitID,
             request: request
         ) { [weak self] ad, error in
             guard let self = self else { return }
@@ -110,7 +110,7 @@ final class CharityAdManager: NSObject {
         self.pendingDismissed = onAdDismissed
         self.pendingFailed = onAdFailed
 
-        ad.present(from: rootViewController) {
+        ad.present(fromRootViewController: rootViewController) {
             let reward = ad.adReward
             print("[CharityAdManager] reward earned: \(reward.amount) \(reward.type)")
             onRewardEarned()
@@ -130,8 +130,8 @@ final class CharityAdManager: NSObject {
     private var pendingFailed: (() -> Void)?
 }
 
-extension CharityAdManager: FullScreenContentDelegate {
-    func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+extension CharityAdManager: GADFullScreenContentDelegate {
+    func adDidDismissFullScreenContent(_ ad: GADFullScreenPresentingAd) {
         print("[CharityAdManager] ad dismissed")
         rewardedInterstitialAd = nil
         let dismissed = pendingDismissed
@@ -141,7 +141,7 @@ extension CharityAdManager: FullScreenContentDelegate {
     }
 
     func ad(
-        _ ad: FullScreenPresentingAd,
+        _ ad: GADFullScreenPresentingAd,
         didFailToPresentFullScreenContentWithError error: Error
     ) {
         print("[CharityAdManager] ad failed to present: \(error.localizedDescription)")

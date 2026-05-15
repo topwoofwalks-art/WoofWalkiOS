@@ -12,6 +12,7 @@
 		'A1000001000000000000003' = {isa = PBXBuildFile; fileRef = A1000001000000000000004; };
 		'A1000001000000000000005' = {isa = PBXBuildFile; fileRef = A1000001000000000000006; };
 		'A1000001000000000000007' = {isa = PBXBuildFile; fileRef = A1000001000000000000008; };
+		'A1000001000000000000F01' = {isa = PBXBuildFile; fileRef = A1000001000000000000F02; };
 		'A1000001000000000000101' = {isa = PBXBuildFile; fileRef = A1000001000000000000100; };
 		'A1000001000000000000103' = {isa = PBXBuildFile; fileRef = A1000001000000000000102; };
 		'A1000001000000000000105' = {isa = PBXBuildFile; fileRef = A1000001000000000000104; };
@@ -539,6 +540,8 @@
 		'A1000001000000000000006' = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		'A1000001000000000000008' = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		'A1000001000000000000009' = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WoofWalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		'A1000001000000000000F03' = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		'A1000001000000000000F04' = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		'A1000001000000000000010' = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		'A1000001000000000099900' = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WoofWalk.entitlements; sourceTree = "<group>"; };
 		'A1000001000000000000100' = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDependencies.swift; sourceTree = "<group>"; };
@@ -1432,6 +1435,7 @@
 			children = (
 				A1000001000000000000006,
 				A1000001000000000000023,
+				A1000001000000000000F02,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -2076,6 +2080,18 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXVariantGroup section */
+		'A1000001000000000000F02' = {
+			isa = PBXVariantGroup;
+			children = (
+				A1000001000000000000F03,
+				A1000001000000000000F04,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin PBXNativeTarget section */
 		'A1000001000000000000024' = {
 			isa = PBXNativeTarget;
@@ -2137,6 +2153,11 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				"en-GB",
+				de,
+				fr,
+				es,
+				pl,
 				Base,
 			);
 			mainGroup = A1000001000000000000012;
@@ -2160,6 +2181,7 @@
 				A1000001000000000000007,
 				A1000001000000000000005,
 				A1000001000000000000652,
+				A1000001000000000000F01,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

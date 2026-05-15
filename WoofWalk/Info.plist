@@ -3,7 +3,16 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<string>en-GB</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en-GB</string>
+		<string>en</string>
+		<string>de</string>
+		<string>fr</string>
+		<string>es</string>
+		<string>pl</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>WoofWalk</string>
 	<key>CFBundleExecutable</key>

@@ -156,6 +156,35 @@ class WalkTrackingService: ObservableObject {
     private let safetyWatchRepository = SafetyWatchRepository.shared
     private var lastSafetyWatchPushTime: Date?
 
+    // MARK: - Live Share State
+
+    /// Firestore `live_share_links/{linkId}` doc id for the currently
+    /// active live share, if any. `nil` while no recipient is following.
+    /// Set by `beginLiveShare(linkId:url:)`, cleared by `endLiveShare()`
+    /// and `stopTracking()`.
+    @Published private(set) var currentLiveShareLinkId: String?
+
+    /// Recipient-facing URL of the currently active live share. Surfaced
+    /// to the share sheet so it can re-render the same URL on reopen
+    /// instead of creating a new doc.
+    @Published private(set) var currentLiveShareUrl: String?
+
+    /// 8 s periodic push timer (Android uses 10 s; the foreground location
+    /// service is already streaming GPS in real time so cadence is bounded
+    /// by Firestore write quota, not battery). Invalidated when the share
+    /// ends OR the walk stops.
+    private var liveShareUpdater: Timer?
+
+    /// Last accepted GPS fix — read by the live-share push timer so we
+    /// don't subscribe to LocationService.locationUpdatePublisher twice.
+    private var lastAcceptedCoord: CLLocationCoordinate2D?
+
+    /// 8 s push cadence. Android uses 10 s in `WalkTrackingViewModel`'s
+    /// throttle (`updateLiveShareLocation`). 8 s on iOS — slightly
+    /// tighter so the recipient page feels responsive; still well within
+    /// Firestore's 1 write/sec/doc budget even on shared docs.
+    private static let liveSharePushIntervalSec: TimeInterval = 8.0
+
     /// Last filtered GPS fix that moved >15 m from the previous accepted
     /// position. Drives the 5-min stationary check-in trigger.
     private var lastSignificantMovementAt: Date?
@@ -489,6 +518,14 @@ class WalkTrackingService: ObservableObject {
         lastSignificantLng = .nan
         safetyWatch = nil
         checkInPromptVisible = false
+        // Finalise any in-flight live share as a recap so the recipient
+        // page flips from "Live" to "Walk Complete!" instead of polling
+        // a stale GeoPoint. Internally invalidates the 8s timer + writes
+        // walkEnded=true with the final stats.
+        if currentLiveShareLinkId != nil {
+            endLiveShare()
+        }
+        lastAcceptedCoord = nil
 
         let endTime = Date()
         guard let start = startTime else { return nil }
@@ -746,6 +783,11 @@ class WalkTrackingService: ObservableObject {
         if update.gpsQuality == .poor {
             showGPSWarning()
         }
+
+        // Cache the latest accepted coord for the live-share push timer.
+        // The timer reads this instead of re-subscribing to the location
+        // publisher — same data, no duplicate Combine sink.
+        lastAcceptedCoord = filtered.coordinate
 
         // SafetyWatch hooks: push location every 10 s + track significant
         // movement so the 5-min stationary check-in trigger has an anchor.
@@ -1113,6 +1155,117 @@ class WalkTrackingService: ObservableObject {
         lines.append("")
         lines.append("(Sent via WoofWalk Watch Me — if I don't check in or hit the alert button, please give me a call.)")
         return lines.joined(separator: "\n")
+    }
+
+    // MARK: - Live Share lifecycle
+
+    /// Start pushing GPS location onto an existing `live_share_links/{linkId}`
+    /// doc. Called by `LiveShareView` after `ShareService.generateLiveShareLink`
+    /// creates the doc. Idempotent — calling again with the same linkId is
+    /// a no-op; a different linkId tears down the previous timer first.
+    ///
+    /// The 8 s cadence runs while the walk is active. When the app is
+    /// backgrounded the timer DOES continue because the foreground
+    /// location service keeps the process alive and is already streaming
+    /// GPS — there's no extra battery cost in piping that to Firestore.
+    func beginLiveShare(linkId: String, url: String) {
+        guard trackingState.isTracking else {
+            print("[LiveShare] beginLiveShare ignored — no active walk")
+            return
+        }
+        if currentLiveShareLinkId == linkId {
+            return  // already pushing
+        }
+        // Tear down any previous timer (e.g. user re-shared after stopping)
+        // before starting the new one.
+        liveShareUpdater?.invalidate()
+        liveShareUpdater = nil
+
+        currentLiveShareLinkId = linkId
+        currentLiveShareUrl = url
+
+        // Fire one push immediately so the recipient page exits its
+        // "Waiting for first GPS fix from X" state the moment we know
+        // where the walker is. Without this they'd see the loading
+        // spinner for up to 8 s on every share.
+        pushLiveShareLocationIfReady()
+
+        liveShareUpdater = Timer.scheduledTimer(
+            withTimeInterval: Self.liveSharePushIntervalSec,
+            repeats: true
+        ) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                self.pushLiveShareLocationIfReady()
+            }
+        }
+        print("[LiveShare] Started 8s push loop for linkId=\(linkId)")
+    }
+
+    /// Stop the push timer and finalise the live share as a recap. The
+    /// doc remains readable for 7 days so the recipient page can show
+    /// "Walk Complete!" + the final route. Mirrors Android
+    /// `WalkTrackingViewModel.endLiveShareOnWalkEnd`.
+    func endLiveShare() {
+        guard let linkId = currentLiveShareLinkId else { return }
+        liveShareUpdater?.invalidate()
+        liveShareUpdater = nil
+        currentLiveShareLinkId = nil
+        currentLiveShareUrl = nil
+
+        // Ship one final push with the latest stats + flip walkEnded=true
+        // so the recipient page renders the post-walk recap UI. Detached
+        // task so a slow network on walk-stop never blocks the stop flow.
+        let lat = lastAcceptedCoord?.latitude ?? lastLocation?.coordinate.latitude
+        let lng = lastAcceptedCoord?.longitude ?? lastLocation?.coordinate.longitude
+        let distance = totalDistanceMeters
+        let durationSec = Int64(trackingState.durationSeconds)
+        let routePoints: [[String: Double]] = trackPoints.map {
+            ["lat": $0.latitude, "lng": $0.longitude]
+        }
+        Task.detached(priority: .utility) {
+            // Final stats push (only if we ever had a fix) — guarantees
+            // the recap shows the last-known position, not a stale anchor.
+            if let lat, let lng {
+                await ShareService.shared.updateLiveShareLocation(
+                    linkId: linkId,
+                    lat: lat,
+                    lng: lng,
+                    distanceMeters: distance,
+                    durationSec: durationSec,
+                    routePoints: routePoints
+                )
+            }
+            await ShareService.shared.markLiveShareWalkEnded(linkId: linkId)
+        }
+        print("[LiveShare] Ended live share linkId=\(linkId)")
+    }
+
+    /// One push iteration. Skipped if we have no GPS fix yet or no
+    /// active link. Reads the latest accepted coord that
+    /// `acceptFilteredLocation` cached.
+    private func pushLiveShareLocationIfReady() {
+        guard let linkId = currentLiveShareLinkId else { return }
+        guard let coord = lastAcceptedCoord ?? lastLocation?.coordinate else {
+            // No fix yet — recipient will see "Waiting for first GPS fix"
+            // until the gate clears.
+            return
+        }
+        let distance = totalDistanceMeters
+        let durationSec = Int64(trackingState.durationSeconds)
+        let routePoints: [[String: Double]] = trackPoints.map {
+            ["lat": $0.latitude, "lng": $0.longitude]
+        }
+        Task.detached(priority: .utility) {
+            await ShareService.shared.updateLiveShareLocation(
+                linkId: linkId,
+                lat: coord.latitude,
+                lng: coord.longitude,
+                distanceMeters: distance,
+                durationSec: durationSec,
+                routePoints: routePoints
+            )
+        }
     }
 
     // MARK: - Walk Diagnostics + In-flight Markers

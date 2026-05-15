@@ -40,7 +40,7 @@ struct ProfileView: View {
                             Image(systemName: "exclamationmark.triangle")
                                 .font(.system(size: 60))
                                 .foregroundColor(.orange)
-                            Text("Error")
+                            Text(String(localized: "generic_error_header"))
                                 .font(.title)
                             Text(message)
                                 .foregroundColor(.secondary)
@@ -51,7 +51,7 @@ struct ProfileView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Profile")
+            .navigationTitle(String(localized: "profile_title"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -79,13 +79,13 @@ struct ProfileView: View {
             .sheet(isPresented: $showEditProfile) {
                 EditProfileView(viewModel: viewModel)
             }
-            .alert("Log Out", isPresented: $showLogoutAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Log Out", role: .destructive) {
+            .alert(String(localized: "profile_log_out_alert_title"), isPresented: $showLogoutAlert) {
+                Button(String(localized: "action_cancel"), role: .cancel) { }
+                Button(String(localized: "log_out"), role: .destructive) {
                     try? AuthService.shared.signOut()
                 }
             } message: {
-                Text("Are you sure you want to log out?")
+                Text(String(localized: "profile_log_out_alert_message"))
             }
         }
     }
@@ -104,25 +104,25 @@ struct ProfileView: View {
                         .foregroundColor(Color(red: 0/255, green: 160/255, blue: 176/255))
                 )
 
-            Text("Welcome to WoofWalk")
+            Text(String(localized: "profile_welcome_signed_out"))
                 .font(.title2.bold())
 
-            Text("Sign in to see your profile")
+            Text(String(localized: "profile_signed_out_subtitle"))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
             // Demo stats grid
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                StatCard(title: "Walks", value: "0", icon: "figure.walk", color: .blue)
-                StatCard(title: "Distance", value: "0 km", icon: "map", color: .green)
-                StatCard(title: "Time", value: "0h", icon: "clock", color: .orange)
-                StatCard(title: "Points", value: "0", icon: "star.fill", color: .purple)
+                StatCard(title: String(localized: "stat_walks"), value: "0", icon: "figure.walk", color: .blue)
+                StatCard(title: String(localized: "stat_distance"), value: "0 km", icon: "map", color: .green)
+                StatCard(title: String(localized: "stat_time"), value: "0h", icon: "clock", color: .orange)
+                StatCard(title: String(localized: "stat_points"), value: "0", icon: "star.fill", color: .purple)
             }
             .padding(.horizontal)
 
             // Sign in prompt
             Button(action: {}) {
-                Label("Sign In", systemImage: "person.crop.circle.badge.plus")
+                Label(String(localized: "sign_in"), systemImage: "person.crop.circle.badge.plus")
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal, 24)
@@ -133,14 +133,14 @@ struct ProfileView: View {
 
             // Feature highlights
             VStack(alignment: .leading, spacing: 12) {
-                Text("What you can do")
+                Text(String(localized: "profile_what_you_can_do"))
                     .font(.headline)
                     .padding(.horizontal)
 
-                featureRow(icon: "figure.walk", color: .blue, title: "Track Walks", desc: "GPS-tracked walks with stats")
-                featureRow(icon: "trophy.fill", color: .orange, title: "Earn Badges", desc: "Complete challenges and level up")
-                featureRow(icon: "person.3.fill", color: .purple, title: "Join Community", desc: "Share walks and connect with walkers")
-                featureRow(icon: "map.fill", color: .green, title: "Discover Places", desc: "Find dog-friendly pubs, parks & vets")
+                featureRow(icon: "figure.walk", color: .blue, title: String(localized: "profile_feature_track_walks_title"), desc: String(localized: "profile_feature_track_walks_desc"))
+                featureRow(icon: "trophy.fill", color: .orange, title: String(localized: "profile_feature_earn_badges_title"), desc: String(localized: "profile_feature_earn_badges_desc"))
+                featureRow(icon: "person.3.fill", color: .purple, title: String(localized: "profile_feature_community_title"), desc: String(localized: "profile_feature_community_desc"))
+                featureRow(icon: "map.fill", color: .green, title: String(localized: "profile_feature_discover_title"), desc: String(localized: "profile_feature_discover_desc"))
             }
             .padding(.top, 8)
         }
@@ -194,7 +194,7 @@ struct ProfileView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "star.fill")
                             .foregroundColor(.yellow)
-                        Text("Level \(user.level)")
+                        Text(String(format: String(localized: "profile_level_format"), Int64(user.level)))
                             .font(.headline)
                     }
 
@@ -205,7 +205,7 @@ struct ProfileView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "pawprint.fill")
                         .foregroundColor(.orange)
-                    Text("\(user.pawPoints) points")
+                    Text(String(format: String(localized: "profile_points_format"), Int64(user.pawPoints)))
                         .font(.headline)
                 }
             }
@@ -253,7 +253,7 @@ struct ProfileView: View {
         let streak = user.walkStreak ?? WalkStreak(currentStreak: 5, longestStreak: 14, freezesAvailable: 2)
 
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Walk Streak")
+            Text(String(localized: "profile_walk_streak"))
                 .font(.headline)
 
             HStack(spacing: 20) {
@@ -263,7 +263,7 @@ struct ProfileView: View {
                     Text("\(streak.currentStreak)")
                         .font(.title2)
                         .fontWeight(.bold)
-                    Text("Current")
+                    Text(String(localized: "profile_streak_current"))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -275,7 +275,7 @@ struct ProfileView: View {
                     Text("\(streak.longestStreak)")
                         .font(.title2)
                         .fontWeight(.bold)
-                    Text("Best")
+                    Text(String(localized: "profile_streak_best"))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -288,7 +288,7 @@ struct ProfileView: View {
                         Text("\(streak.freezesAvailable)")
                             .font(.title2)
                             .fontWeight(.bold)
-                        Text("Freezes")
+                        Text(String(localized: "profile_streak_freezes"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -312,42 +312,42 @@ struct ProfileView: View {
     private func statsGrid(data: ProfileData) -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
             StatCard(
-                title: "Walks",
+                title: String(localized: "stat_walks"),
                 value: "\(data.totalWalks)",
                 icon: "figure.walk",
                 color: .blue
             )
 
             StatCard(
-                title: "Distance",
+                title: String(localized: "stat_distance"),
                 value: String(format: "%.1f km", Double(data.totalDistance) / 1000.0),
                 icon: "map",
                 color: .green
             )
 
             StatCard(
-                title: "Time",
+                title: String(localized: "stat_time"),
                 value: "\(data.totalTime / 60)h",
                 icon: "clock",
                 color: .orange
             )
 
             StatCard(
-                title: "Points",
+                title: String(localized: "stat_points"),
                 value: "\(data.user.pawPoints)",
                 icon: "star.fill",
                 color: .purple
             )
 
             StatCard(
-                title: "Contributions",
+                title: String(localized: "stat_contributions"),
                 value: "\(data.contributions)",
                 icon: "star",
                 color: .pink
             )
 
             StatCard(
-                title: "Badges",
+                title: String(localized: "stat_badges"),
                 value: "\(data.user.badges.count)",
                 icon: "rosette",
                 color: .indigo
@@ -360,11 +360,11 @@ struct ProfileView: View {
     private func walkHistoryPreview() -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Recent Walks")
+                Text(String(localized: "profile_recent_walks"))
                     .font(.headline)
                 Spacer()
                 NavigationLink(destination: WalkHistoryView()) {
-                    Text("View All")
+                    Text(String(localized: "action_view_all"))
                         .font(.subheadline)
                         .foregroundColor(.blue)
                 }
@@ -430,7 +430,7 @@ struct ProfileView: View {
 
     private func weeklyActivityChart() -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Weekly Activity")
+            Text(String(localized: "profile_weekly_activity"))
                 .font(.headline)
 
             HStack(alignment: .bottom, spacing: 8) {
@@ -461,11 +461,11 @@ struct ProfileView: View {
 
     private func dogsSection(dogs: [DogProfile]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("My Dogs")
+            Text(String(localized: "profile_my_dogs"))
                 .font(.headline)
 
             if dogs.isEmpty {
-                Text("No dogs added yet")
+                Text(String(localized: "empty_no_dogs"))
                     .foregroundColor(.secondary)
                     .padding()
             } else {
@@ -487,7 +487,7 @@ struct ProfileView: View {
 
     private func badgesSection() -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Badges")
+            Text(String(localized: "profile_badges_header"))
                 .font(.headline)
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 16) {
@@ -497,7 +497,7 @@ struct ProfileView: View {
             }
 
             NavigationLink(destination: BadgesListView(badges: viewModel.badges)) {
-                Text("View All Badges")
+                Text(String(localized: "profile_view_all_badges"))
                     .font(.subheadline)
                     .foregroundColor(.blue)
             }
@@ -512,11 +512,11 @@ struct ProfileView: View {
 
     private func gamificationSection() -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Activity")
+            Text(String(localized: "profile_activity_header"))
                 .font(.headline)
 
             NavigationLink(destination: ChallengesScreen()) {
-                Label("Challenges", systemImage: "flag.checkered")
+                Label(String(localized: "profile_activity_challenges"), systemImage: "flag.checkered")
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .background(Color(.systemGray6))
@@ -525,7 +525,16 @@ struct ProfileView: View {
             .buttonStyle(.plain)
 
             NavigationLink(destination: LeagueView()) {
-                Label("Weekly League", systemImage: "trophy")
+                Label(String(localized: "profile_activity_weekly_league"), systemImage: "trophy")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+
+            NavigationLink(destination: LeaderboardScreen()) {
+                Label("Leaderboard", systemImage: "chart.bar.fill")
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
                     .background(Color(.systemGray6))
@@ -549,10 +558,10 @@ struct ProfileView: View {
         }) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("WoofWalk Portal")
+                    Text(String(localized: "profile_portal_title"))
                         .font(.headline)
                         .foregroundColor(.primary)
-                    Text("Manage bookings, invoices & more")
+                    Text(String(localized: "profile_portal_subtitle"))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -583,7 +592,7 @@ struct ProfileView: View {
         Button(action: { showLogoutAlert = true }) {
             HStack {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
-                Text("Log Out")
+                Text(String(localized: "log_out"))
             }
             .foregroundColor(.red)
             .frame(maxWidth: .infinity)
@@ -692,12 +701,12 @@ struct DogCard: View {
                 Text(dog.name)
                     .font(.headline)
 
-                Text("\(dog.breed) \u{2022} \(dog.age) years")
+                Text(String(format: String(localized: "profile_dog_breed_age_format"), dog.breed, Int64(dog.age)))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 
                 if dog.nervousDog {
-                    Label("Nervous Dog", systemImage: "exclamationmark.triangle.fill")
+                    Label(String(localized: "profile_dog_nervous_badge"), systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .foregroundColor(.orange)
                 }
@@ -773,7 +782,7 @@ struct BadgesListView: View {
             }
             .padding()
         }
-        .navigationTitle("All Badges")
+        .navigationTitle(String(localized: "profile_all_badges_nav_title"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

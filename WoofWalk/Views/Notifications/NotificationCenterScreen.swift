@@ -13,10 +13,10 @@ struct NotificationCenterScreen: View {
                         Image(systemName: "bell.slash")
                             .font(.system(size: 48))
                             .foregroundColor(.secondary)
-                        Text("No Notifications")
+                        Text(String(localized: "notifications_empty_title"))
                             .font(.title2)
                             .fontWeight(.semibold)
-                        Text("You're all caught up!")
+                        Text(String(localized: "notifications_empty_subtitle"))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -31,10 +31,10 @@ struct NotificationCenterScreen: View {
                     for index in offsets { viewModel.dismiss(viewModel.notifications[index].id) }
                 }
             }
-            .navigationTitle("Notifications")
+            .navigationTitle(String(localized: "notifications_title"))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Mark All Read") { viewModel.markAllRead() }
+                    Button(String(localized: "notifications_mark_all_read")) { viewModel.markAllRead() }
                         .font(.caption)
                 }
             }

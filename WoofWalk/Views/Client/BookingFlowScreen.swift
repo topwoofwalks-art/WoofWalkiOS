@@ -1097,7 +1097,7 @@ struct BookingFlowScreen: View {
             }
         }
         .alert("Booking Confirmed!", isPresented: $showSuccessAlert) {
-            Button("Done") {
+            Button(String(localized: "action_done")) {
                 dismiss()
             }
         } message: {
@@ -1107,16 +1107,16 @@ struct BookingFlowScreen: View {
             // the provider's confirm.
             if viewModel.paymentMethod == "cash" {
                 let total = CurrencyFormatter.shared.formatPrice(viewModel.priceBreakdown.total)
-                Text("Pay \(total) to the provider on the day. They'll confirm the booking shortly.")
+                Text(String(format: String(localized: "booking_pay_now_summary_format"), total))
             } else {
-                Text("Payment received. Your booking is confirmed and the provider will be in touch shortly.")
+                Text(String(localized: "booking_pay_received_summary"))
             }
         }
-        .alert("Error", isPresented: .init(
+        .alert(String(localized: "generic_error_header"), isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("OK") { viewModel.errorMessage = nil }
+            Button(String(localized: "action_ok")) { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -1269,7 +1269,7 @@ struct BookingFlowScreen: View {
                 Button {
                     viewModel.goToPreviousStep()
                 } label: {
-                    Text("Back")
+                    Text(String(localized: "action_back"))
                         .font(.body.bold())
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -1284,7 +1284,7 @@ struct BookingFlowScreen: View {
             Button {
                 viewModel.goToNextStep()
             } label: {
-                Text("Next")
+                Text(String(localized: "action_next"))
                     .font(.body.bold())
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -1308,11 +1308,11 @@ struct BookingFlowScreen: View {
     private var selectServiceStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("What service do you need?")
+                Text(String(localized: "booking_step_service_title"))
                     .font(.title3.bold())
                     .foregroundColor(.white)
 
-                Text("Choose the type of care for your dog.")
+                Text(String(localized: "booking_step_service_subtitle"))
                     .font(.subheadline)
                     .foregroundColor(.neutral60)
 
@@ -1372,7 +1372,7 @@ struct BookingFlowScreen: View {
     private var selectDogsStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Which dogs?")
+                Text(String(localized: "booking_step_dogs_title"))
                     .font(.title3.bold())
                     .foregroundColor(.white)
 
@@ -1404,11 +1404,11 @@ struct BookingFlowScreen: View {
                 .font(.system(size: 40))
                 .foregroundColor(.neutral50)
 
-            Text("No dogs found")
+            Text(String(localized: "booking_step_dogs_empty_title"))
                 .font(.headline)
                 .foregroundColor(.white)
 
-            Text("Add a dog to your profile first.")
+            Text(String(localized: "booking_step_dogs_empty_subtitle"))
                 .font(.subheadline)
                 .foregroundColor(.neutral60)
         }
@@ -1480,11 +1480,11 @@ struct BookingFlowScreen: View {
     private var selectProviderStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Choose a provider")
+                Text(String(localized: "booking_step_provider_title"))
                     .font(.title3.bold())
                     .foregroundColor(.white)
 
-                Text("Select a provider near you.")
+                Text(String(localized: "booking_step_provider_subtitle"))
                     .font(.subheadline)
                     .foregroundColor(.neutral60)
 
@@ -1492,7 +1492,7 @@ struct BookingFlowScreen: View {
                     VStack(spacing: 12) {
                         ProgressView()
                             .tint(.white)
-                        Text("Searching nearby providers...")
+                        Text(String(localized: "booking_step_provider_searching"))
                             .font(.subheadline)
                             .foregroundColor(.neutral60)
                     }
@@ -1515,11 +1515,11 @@ struct BookingFlowScreen: View {
                 .font(.system(size: 40))
                 .foregroundColor(.neutral50)
 
-            Text("No providers found")
+            Text(String(localized: "booking_step_provider_empty_title"))
                 .font(.headline)
                 .foregroundColor(.white)
 
-            Text("Try a different service or check back later.")
+            Text(String(localized: "booking_step_provider_empty_subtitle"))
                 .font(.subheadline)
                 .foregroundColor(.neutral60)
                 .multilineTextAlignment(.center)
@@ -1598,7 +1598,7 @@ struct BookingFlowScreen: View {
                         Text(provider.formattedPrice)
                             .font(.body.bold())
                             .foregroundColor(.success40)
-                        Text("base")
+                        Text(String(localized: "booking_step_provider_base_price"))
                             .font(.caption2)
                             .foregroundColor(.neutral50)
                     }
@@ -1644,11 +1644,11 @@ struct BookingFlowScreen: View {
     /// own check-in / check-out picker without nesting.
     @ViewBuilder
     private var standardDateTimeStep: some View {
-        Text("Pick a date & time")
+        Text(String(localized: "booking_step_when_title"))
             .font(.title3.bold())
             .foregroundColor(.white)
 
-        Text("Bookings require at least 24 hours lead time.")
+        Text(String(localized: "booking_step_when_lead_time"))
             .font(.subheadline)
             .foregroundColor(.neutral60)
 
@@ -1696,7 +1696,7 @@ struct BookingFlowScreen: View {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.caption)
-                Text("Selected time must be at least 24 hours from now.")
+                Text(String(localized: "booking_step_when_too_soon"))
                     .font(.caption)
             }
             .foregroundColor(.orange)
@@ -1716,11 +1716,11 @@ struct BookingFlowScreen: View {
     /// inside `boardingConfig`.
     @ViewBuilder
     private var boardingDateRangeStep: some View {
-        Text("Boarding stay")
+        Text(String(localized: "booking_step_boarding_title"))
             .font(.title3.bold())
             .foregroundColor(.white)
 
-        Text("Pick check-in and check-out dates. Bookings require at least 24 hours lead time. Drop-off is 14:00, pickup before 11:00.")
+        Text(String(localized: "booking_step_boarding_subtitle"))
             .font(.subheadline)
             .foregroundColor(.neutral60)
 
@@ -1805,7 +1805,7 @@ struct BookingFlowScreen: View {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.caption)
-                Text("Check-in must be at least 24 hours from now and check-out must be after check-in.")
+                Text(String(localized: "booking_step_boarding_invalid"))
                     .font(.caption)
             }
             .foregroundColor(.orange)
@@ -1840,7 +1840,7 @@ struct BookingFlowScreen: View {
     private var addDetailsStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Additional details")
+                Text(String(localized: "booking_step_details_title"))
                     .font(.title3.bold())
                     .foregroundColor(.white)
 
@@ -2009,7 +2009,7 @@ struct BookingFlowScreen: View {
     private var reviewConfirmStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Review your booking")
+                Text(String(localized: "booking_step_review_title"))
                     .font(.title3.bold())
                     .foregroundColor(.white)
 
@@ -2069,28 +2069,28 @@ struct BookingFlowScreen: View {
                 if viewModel.selectedService == .boarding,
                    let checkIn = viewModel.boardingCheckInDate,
                    let checkOut = viewModel.boardingCheckOutDate {
-                    reviewSection(title: "Boarding stay", icon: "calendar") {
+                    reviewSection(title: String(localized: "booking_step_boarding_title"), icon: "calendar") {
                         HStack {
-                            Text("Check-in")
+                            Text(String(localized: "booking_review_check_in"))
                                 .foregroundColor(.neutral60)
                             Spacer()
                             Text(checkIn, style: .date)
                                 .foregroundColor(.white)
-                            Text("14:00")
+                            Text(String(localized: "booking_review_check_in_default"))
                                 .foregroundColor(.neutral60)
                         }
                         HStack {
-                            Text("Check-out")
+                            Text(String(localized: "booking_review_check_out"))
                                 .foregroundColor(.neutral60)
                             Spacer()
                             Text(checkOut, style: .date)
                                 .foregroundColor(.white)
-                            Text("11:00")
+                            Text(String(localized: "booking_review_check_out_default"))
                                 .foregroundColor(.neutral60)
                         }
                         if let nights = viewModel.boardingNights, nights > 0 {
                             HStack {
-                                Text("Total nights")
+                                Text(String(localized: "booking_review_total_nights"))
                                     .foregroundColor(.neutral60)
                                 Spacer()
                                 Text("\(nights)")
@@ -2125,7 +2125,7 @@ struct BookingFlowScreen: View {
                         }
                         if let endDate = pattern.endDate {
                             HStack {
-                                Text("Ends on")
+                                Text(String(localized: "booking_review_ends_on"))
                                     .foregroundColor(.neutral60)
                                 Spacer()
                                 Text(endDate, style: .date)
@@ -2133,7 +2133,7 @@ struct BookingFlowScreen: View {
                             }
                         } else if let count = pattern.maxOccurrences, count > 0 {
                             HStack {
-                                Text("Total occurrences")
+                                Text(String(localized: "booking_review_total_occurrences"))
                                     .foregroundColor(.neutral60)
                                 Spacer()
                                 Text("\(count)")
@@ -2181,7 +2181,7 @@ struct BookingFlowScreen: View {
                         } else {
                             Image(systemName: "checkmark.seal.fill")
                                 .font(.body)
-                            Text("Confirm Booking")
+                            Text(String(localized: "booking_confirm_cta"))
                                 .font(.body.bold())
                         }
                     }
@@ -2382,7 +2382,7 @@ struct BookingFlowScreen: View {
                 Divider().background(Color.neutral30)
 
                 HStack {
-                    Text("Total")
+                    Text(String(localized: "booking_review_total"))
                         .font(.body.bold())
                         .foregroundColor(.white)
                     Spacer()
@@ -2460,16 +2460,16 @@ struct CashShortageNotifySheet: View {
                 Image(systemName: "banknote")
                     .font(.title)
                     .foregroundColor(.turquoise60)
-                Text("This business can't take cash bookings right now.")
+                Text(String(localized: "booking_cash_unavailable_title"))
                     .font(.title3.bold())
                     .foregroundColor(.white)
-                Text("Their cash wallet needs topping up. Send a message and we'll let them know you're waiting.")
+                Text(String(localized: "booking_cash_unavailable_subtitle"))
                     .font(.subheadline)
                     .foregroundColor(.neutral60)
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Add a note — when do you need it?")
+                Text(String(localized: "booking_cash_unavailable_note_placeholder"))
                     .font(.caption.bold())
                     .foregroundColor(.neutral60)
                 TextField("Optional", text: $note, axis: .vertical)
@@ -2500,7 +2500,7 @@ struct CashShortageNotifySheet: View {
                         ProgressView().tint(.white)
                     } else {
                         Image(systemName: "paperplane.fill")
-                        Text("Notify business")
+                        Text(String(localized: "booking_cash_unavailable_notify_cta"))
                             .font(.body.bold())
                     }
                 }
@@ -2518,7 +2518,7 @@ struct CashShortageNotifySheet: View {
             Button {
                 viewModel.switchToCardAndResubmit()
             } label: {
-                Text("Pay by card instead")
+                Text(String(localized: "booking_cash_unavailable_pay_card_cta"))
                     .font(.body.bold())
                     .foregroundColor(.turquoise60)
                     .frame(maxWidth: .infinity)
@@ -2531,7 +2531,7 @@ struct CashShortageNotifySheet: View {
             .disabled(isSubmitting)
             .buttonStyle(.plain)
 
-            Button("Not now", action: onDismiss)
+            Button(String(localized: "action_not_now"), action: onDismiss)
                 .font(.caption)
                 .foregroundColor(.neutral60)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -2558,7 +2558,7 @@ struct CashShortageNotifySheet: View {
                 .font(.title3.bold())
                 .foregroundColor(.white)
 
-            Text("You can keep the conversation open and check back any time.")
+            Text(String(localized: "booking_cash_unavailable_confirmation"))
                 .font(.subheadline)
                 .foregroundColor(.neutral60)
 
@@ -2572,7 +2572,7 @@ struct CashShortageNotifySheet: View {
             } label: {
                 HStack {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
-                    Text("View conversation")
+                    Text(String(localized: "booking_cash_unavailable_view_conversation"))
                         .font(.body.bold())
                 }
                 .foregroundColor(.white)
@@ -2585,7 +2585,7 @@ struct CashShortageNotifySheet: View {
             }
             .buttonStyle(.plain)
 
-            Button("Done", action: onDismiss)
+            Button(String(localized: "action_done"), action: onDismiss)
                 .font(.body.bold())
                 .foregroundColor(.neutral60)
                 .frame(maxWidth: .infinity)

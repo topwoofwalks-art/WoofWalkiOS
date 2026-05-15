@@ -8,6 +8,7 @@ struct FeedScreen: View {
     private var emptyStateIcon: String {
         switch viewModel.feedMode {
         case .forYou: return "pawprint.circle.fill"
+        case .trending: return "flame.circle.fill"
         case .nearby: return "location.circle.fill"
         case .following: return "person.2.circle.fill"
         }
@@ -16,6 +17,7 @@ struct FeedScreen: View {
     private var emptyStateTitle: String {
         switch viewModel.feedMode {
         case .forYou: return "No Posts Yet"
+        case .trending: return "Nothing Trending"
         case .nearby: return "No Nearby Posts"
         case .following: return "No Posts from Friends"
         }
@@ -24,6 +26,7 @@ struct FeedScreen: View {
     private var emptyStateMessage: String {
         switch viewModel.feedMode {
         case .forYou: return "Start a walk and share it with the community!"
+        case .trending: return "Posts gaining traction will appear here. Be the first to spark a conversation!"
         case .nearby: return "No one has posted within 25km yet. Be the first!"
         case .following: return "Add friends to see their posts here."
         }

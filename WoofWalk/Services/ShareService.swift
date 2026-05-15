@@ -1,5 +1,6 @@
 import UIKit
 import SwiftUI
+import FirebaseAuth
 import FirebaseFirestore
 
 // MARK: - View → UIImage rendering
@@ -274,26 +275,131 @@ class ShareService {
 
     // MARK: - Live share link
 
-    func generateLiveShareLink(walkId: String) async -> String {
-        let linkId = generateShortId()
+    /// Result of creating a live share — the recipient-facing URL plus the
+    /// Firestore doc id so the caller (WalkTrackingService) can push
+    /// location updates onto it for the duration of the walk.
+    struct LiveShareHandle {
+        let linkId: String
+        let url: String
+    }
+
+    /// Create a `live_share_links` doc in the shape Android writes. The
+    /// recipient page (https://woofwalk.app/live/{token}) is shared by
+    /// Android, iOS, and the portal so the schema MUST match Android
+    /// (`LiveShareRepository.kt`) — same collection name, same field
+    /// names, same types. Differing here means the portal renders a
+    /// blank page when the walker is on iOS.
+    func generateLiveShareLink(
+        walkId: String,
+        walkerFirstName: String = "",
+        dogNames: [String] = []
+    ) async -> LiveShareHandle? {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            print("[ShareService] Cannot create live share: no signed-in user")
+            return nil
+        }
+
+        let linkId = UUID().uuidString
+        let token = UUID().uuidString
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let expiresAtMs = nowMs + 4 * 3600 * 1000  // 4 hours
+
+        // Schema mirrors Android `LiveShareRepository.createShareLink` —
+        // `sessionId`/`userId`/`token`/`createdAt`/`expiresAt`/`isActive`/
+        // `walkerFirstName`/`dogNames`/`lastLat`/`lastLng`/`lastUpdatedAt`/
+        // `distanceMeters`/`durationSec`/`routePoints`/`walkEnded`.
         let docData: [String: Any] = [
-            "walkId": walkId,
-            "createdAt": FieldValue.serverTimestamp(),
-            "expiresAt": Timestamp(date: Date().addingTimeInterval(4 * 60 * 60)),
-            "active": true,
+            "id": linkId,
+            "sessionId": walkId,
+            "userId": uid,
+            "token": token,
+            "createdAt": nowMs,
+            "expiresAt": expiresAtMs,
+            "isActive": true,
+            "walkerFirstName": walkerFirstName,
+            "dogNames": dogNames,
+            "lastLat": 0.0,
+            "lastLng": 0.0,
+            "lastUpdatedAt": 0,
+            "distanceMeters": 0.0,
+            "durationSec": 0,
+            "routePoints": [[String: Double]](),
+            "walkEnded": false,
         ]
 
         do {
-            try await db.collection("liveShares").document(linkId).setData(docData)
+            try await db.collection("live_share_links").document(linkId).setData(docData)
         } catch {
-            print("Failed to create live share: \(error.localizedDescription)")
+            print("[ShareService] Failed to create live share: \(error.localizedDescription)")
+            return nil
         }
 
-        return "https://woofwalk.app/live/\(linkId)"
+        return LiveShareHandle(
+            linkId: linkId,
+            url: "https://woofwalk.app/live/\(token)"
+        )
     }
 
-    private func generateShortId() -> String {
-        let chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-        return String((0..<6).map { _ in chars.randomElement()! })
+    /// Push the latest GPS fix + walk stats onto an active live share.
+    /// Called periodically from `WalkTrackingService` for the duration
+    /// of the share. Route points are trimmed to the last 500 entries
+    /// to keep the doc under Firestore's 1 MiB ceiling — mirrors
+    /// Android `LiveShareRepository.updateLiveLocation`.
+    func updateLiveShareLocation(
+        linkId: String,
+        lat: Double,
+        lng: Double,
+        distanceMeters: Double,
+        durationSec: Int64,
+        routePoints: [[String: Double]]
+    ) async {
+        let trimmedPoints: [[String: Double]] = routePoints.count > 500
+            ? Array(routePoints.suffix(500))
+            : routePoints
+
+        do {
+            try await db.collection("live_share_links").document(linkId).updateData([
+                "lastLat": lat,
+                "lastLng": lng,
+                "lastUpdatedAt": Int64(Date().timeIntervalSince1970 * 1000),
+                "distanceMeters": distanceMeters,
+                "durationSec": durationSec,
+                "routePoints": trimmedPoints,
+            ])
+        } catch {
+            print("[ShareService] Failed to update live share location: \(error.localizedDescription)")
+        }
+    }
+
+    /// Mark the underlying walk as ended on a live share. Bumps
+    /// `expiresAt` to 7 days from now so the recap page stays reachable
+    /// after the live portion is over — recipient page's rules gate on
+    /// `expiresAt` alone, so the doc has to remain within its expiry
+    /// window for the "Walk Complete!" recap UI to render. Mirrors
+    /// Android `LiveShareRepository.markWalkEnded`.
+    func markLiveShareWalkEnded(linkId: String) async {
+        let recapExpiresAtMs = Int64(Date().timeIntervalSince1970 * 1000) + 7 * 24 * 3600 * 1000
+        do {
+            try await db.collection("live_share_links").document(linkId).updateData([
+                "walkEnded": true,
+                "isActive": false,
+                "expiresAt": recapExpiresAtMs,
+            ])
+        } catch {
+            print("[ShareService] Failed to mark live share walk ended: \(error.localizedDescription)")
+        }
+    }
+
+    /// Deactivate a live share without finalising it as a recap. Used
+    /// when the walker manually taps "Stop Sharing" before the walk
+    /// ends. Mirrors Android `LiveShareRepository.deactivateLink`.
+    func deactivateLiveShare(linkId: String) async {
+        do {
+            try await db.collection("live_share_links").document(linkId).updateData([
+                "isActive": false,
+            ])
+        } catch {
+            print("[ShareService] Failed to deactivate live share: \(error.localizedDescription)")
+        }
     }
 }

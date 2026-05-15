@@ -24,6 +24,7 @@ enum AppRoute: Hashable {
     // Social
     case socialHub
     case feed
+    case globalSearch
     case postDetail(postId: String)
     case createPost
     case createStory
@@ -161,6 +162,7 @@ enum AppRoute: Hashable {
         case .editDog(let id): hasher.combine("editDog"); hasher.combine(id)
         case .socialHub: hasher.combine("socialHub")
         case .feed: hasher.combine("feed")
+        case .globalSearch: hasher.combine("globalSearch")
         case .postDetail(let id): hasher.combine("postDetail"); hasher.combine(id)
         case .createPost: hasher.combine("createPost")
         case .createStory: hasher.combine("createStory")

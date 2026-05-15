@@ -44,6 +44,8 @@ struct RouteDestination: View {
             SocialHubScreen()
         case .feed:
             FeedScreen()
+        case .globalSearch:
+            GlobalSearchScreen()
         case .postDetail(let postId):
             PostDetailScreen(post: Post(id: postId))
         case .createPost:
@@ -217,6 +219,48 @@ struct RouteDestination: View {
         // Team invitation deeplink
         case .acceptInvite(let token):
             AcceptInviteScreen(token: token)
+
+        // Deep-link parity with Android — most reuse existing destinations.
+        case .lostDog:
+            PlaceholderView(title: "Lost dog", icon: "pawprint.fill")
+        case .watchWalk:
+            PlaceholderView(title: "Watch walk", icon: "eye")
+        case .payment(let bookingId):
+            BookingDetailScreen(bookingId: bookingId)
+        case .addTip(let bookingId):
+            BookingDetailScreen(bookingId: bookingId)
+        case .review(let bookingId):
+            BookingDetailScreen(bookingId: bookingId)
+        case .teamInvite(let orgId):
+            AcceptInviteScreen(token: orgId)
+        case .friendInvite(let userId):
+            PublicProfileScreen(userId: userId)
+        case .stripeConnect:
+            PlaceholderView(title: "Stripe Connect", icon: "creditcard")
+        case .oauthCallback:
+            PlaceholderView(title: "Signing in…", icon: "lock.shield")
+        case .communityDetail:
+            PlaceholderView(title: "Community", icon: "person.3")
+        case .communityPost:
+            PlaceholderView(title: "Community post", icon: "bubble.left.and.bubble.right")
+        case .question:
+            PlaceholderView(title: "Question", icon: "questionmark.circle")
+        case .eventDetail:
+            PlaceholderView(title: "Event", icon: "calendar")
+        case .challengeDeepLink(let challengeId):
+            ChallengeDetailScreen(challengeId: challengeId)
+        case .dogDeepLink(let dogId):
+            DogStatsDetailView(dogId: dogId, dogName: "")
+        case .share:
+            PlaceholderView(title: "Shared walk", icon: "square.and.arrow.up")
+        case .providerDeepLink(let providerId):
+            ProviderDetailScreen(providerId: providerId)
+        case .charityDeepLink:
+            CharitySettingsView()
+        case .settingsSection:
+            SettingsView()
+        case .referral:
+            PlaceholderView(title: "Referral", icon: "gift")
         }
     }
 }

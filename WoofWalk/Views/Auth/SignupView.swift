@@ -23,7 +23,7 @@ struct SignupView: View {
             }
 
             if viewModel.signupUiState.isLoading {
-                LoadingOverlay(message: "Creating your account...")
+                LoadingOverlay(message: String(localized: "creating_account"))
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -33,7 +33,7 @@ struct SignupView: View {
         }) {
             HStack {
                 Image(systemName: "chevron.left")
-                Text("Back")
+                Text(String(localized: "action_back"))
             }
         })
         .onDisappear { viewModel.clearSignupState() }
@@ -46,11 +46,11 @@ struct SignupView: View {
 
     private var headerSection: some View {
         VStack(spacing: 8) {
-            Text("Join WoofWalk")
+            Text(String(localized: "signup_title"))
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .foregroundColor(.blue)
-            Text("Create an account to start your adventure")
+            Text(String(localized: "signup_subtitle"))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -65,8 +65,8 @@ struct SignupView: View {
                     get: { viewModel.signupUiState.email },
                     set: { viewModel.updateSignupEmail($0) }
                 ),
-                placeholder: "your@email.com",
-                label: "Email",
+                placeholder: String(localized: "signup_email_placeholder"),
+                label: String(localized: "signup_email_label"),
                 icon: "envelope",
                 keyboardType: .emailAddress,
                 error: viewModel.signupUiState.emailError
@@ -77,8 +77,8 @@ struct SignupView: View {
                     get: { viewModel.signupUiState.username },
                     set: { viewModel.updateSignupUsername($0) }
                 ),
-                placeholder: "dogwalker123",
-                label: "Username",
+                placeholder: String(localized: "signup_username_placeholder"),
+                label: String(localized: "signup_username_label"),
                 icon: "person.circle",
                 error: viewModel.signupUiState.usernameError
             )
@@ -88,8 +88,8 @@ struct SignupView: View {
                     get: { viewModel.signupUiState.password },
                     set: { viewModel.updateSignupPassword($0) }
                 ),
-                placeholder: "At least 6 characters",
-                label: "Password",
+                placeholder: String(localized: "signup_password_placeholder"),
+                label: String(localized: "signup_password_label"),
                 error: viewModel.signupUiState.passwordError
             )
 
@@ -98,13 +98,13 @@ struct SignupView: View {
                     get: { viewModel.signupUiState.confirmPassword },
                     set: { viewModel.updateSignupConfirmPassword($0) }
                 ),
-                placeholder: "Re-enter password",
-                label: "Confirm Password",
+                placeholder: String(localized: "signup_confirm_password_placeholder"),
+                label: String(localized: "signup_confirm_password_label"),
                 error: viewModel.signupUiState.confirmPasswordError
             )
 
             Toggle(isOn: $viewModel.marketingOptIn) {
-                Text("Send me tips, offers & dog walking news")
+                Text(String(localized: "signup_marketing_opt_in"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -123,13 +123,13 @@ struct SignupView: View {
     private var signupButton: some View {
         VStack(spacing: 16) {
             PrimaryButton(
-                title: "Sign Up",
+                title: String(localized: "signup_button"),
                 isLoading: viewModel.signupUiState.isLoading,
                 action: viewModel.signup
             )
             .padding(.horizontal)
 
-            DividerWithText(text: "OR")
+            DividerWithText(text: String(localized: "signup_or_divider"))
                 .padding(.horizontal)
         }
     }
@@ -155,10 +155,10 @@ struct SignupView: View {
 
     private var loginLink: some View {
         HStack {
-            Text("Already have an account?")
+            Text(String(localized: "signup_already_have_account"))
                 .font(.body)
             Button(action: onNavigateToLogin) {
-                Text("Sign In")
+                Text(String(localized: "signup_sign_in_link"))
                     .font(.body)
                     .fontWeight(.semibold)
                     .foregroundColor(.blue)

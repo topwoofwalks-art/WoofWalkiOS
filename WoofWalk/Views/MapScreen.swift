@@ -108,7 +108,7 @@ struct MapScreen: View {
                     HStack(spacing: 6) {
                         Image(systemName: "cloud.rain.fill")
                             .font(.caption)
-                        Text("Rain Mode")
+                        Text(String(localized: "walk_rain_mode"))
                             .font(.caption.bold())
                     }
                     .padding(.horizontal, 12)
@@ -776,7 +776,7 @@ struct MapScreen: View {
                             .padding(8)
                             .background(Circle().fill(.red))
                             .shadow(radius: 3)
-                        Text("LOST")
+                        Text(String(localized: "walk_lost_label"))
                             .font(.system(size: 8, weight: .bold))
                             .foregroundColor(.red)
                     }

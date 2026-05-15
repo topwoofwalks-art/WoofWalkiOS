@@ -42,6 +42,10 @@ struct SocialHubScreen: View {
             .navigationTitle("Social")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
+                    NavigationLink(destination: GlobalSearchScreen()) {
+                        Image(systemName: "magnifyingglass")
+                    }
+
                     Button(action: { showCreatePost = true }) {
                         Image(systemName: "plus.circle.fill")
                             .foregroundColor(.turquoise60)

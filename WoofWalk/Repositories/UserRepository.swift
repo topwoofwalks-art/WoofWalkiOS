@@ -286,6 +286,35 @@ class UserRepository: ObservableObject {
         print("Friend request accepted: \(friendshipId)")
     }
 
+    /// Cancel an outgoing friend request the current user sent. Mirrors
+    /// the Sent-tab "Cancel" button on Android. Only allowed when the
+    /// doc is still PENDING and the current user is the original
+    /// requester — otherwise we'd be letting either side blow away an
+    /// accepted friendship via this codepath.
+    func cancelFriendRequest(friendshipId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+
+        let doc = try await db.collection("friendships").document(friendshipId).getDocument()
+        guard let data = doc.data() else {
+            throw NSError(domain: "UserRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Friendship not found"])
+        }
+
+        let status = data["status"] as? String ?? ""
+        let requestedBy = data["requestedBy"] as? String ?? ""
+
+        guard status == FriendStatus.pending.rawValue else {
+            throw NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "Can only cancel pending requests"])
+        }
+        guard requestedBy == userId else {
+            throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Only the sender can cancel a request"])
+        }
+
+        try await db.collection("friendships").document(friendshipId).delete()
+        print("Outgoing friend request cancelled: \(friendshipId)")
+    }
+
     /// Reject/decline an incoming friend request. Deletes the friendship doc.
     func rejectFriendRequest(friendshipId: String) async throws {
         guard let userId = auth.currentUser?.uid else {

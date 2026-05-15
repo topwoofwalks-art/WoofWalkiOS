@@ -110,14 +110,14 @@ struct WalkCompletionScreen: View {
             Text("💚")
                 .font(.system(size: 36))
             VStack(alignment: .leading, spacing: 4) {
-                Text("You raised \(charityPoints) points")
+                Text(String(format: String(localized: "walk_charity_points_format"), charityPoints))
                     .font(.headline)
                 if !charityName.isEmpty {
-                    Text("for \(charityName)")
+                    Text(String(format: String(localized: "walk_charity_for_charity_format"), charityName))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 } else {
-                    Text("for charity")
+                    Text(String(localized: "walk_charity_for_charity_generic"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -143,7 +143,7 @@ struct WalkCompletionScreen: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 64))
                 .foregroundColor(.green)
-            Text("Walk Complete!")
+            Text(String(localized: "walk_complete_title"))
                 .font(.largeTitle.bold())
             Text(dogNames.joined(separator: " & "))
                 .font(.subheadline)
@@ -156,7 +156,7 @@ struct WalkCompletionScreen: View {
         HStack {
             Image(systemName: "pawprint.fill")
                 .foregroundColor(.turquoise60)
-            Text("+\(displayedPoints) Paw Points")
+            Text(String(format: String(localized: "walk_paw_points_format"), Int64(displayedPoints)))
                 .font(.title3.bold())
                 .foregroundColor(.turquoise60)
                 .contentTransition(.numericText(countsDown: false))
@@ -167,7 +167,7 @@ struct WalkCompletionScreen: View {
 
     private var achievementsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Achievements")
+            Text(String(localized: "walk_achievements_header"))
                 .font(.headline)
                 .padding(.horizontal)
 
@@ -202,7 +202,7 @@ struct WalkCompletionScreen: View {
                 Image(systemName: "trophy.fill").foregroundColor(.yellow)
                 VStack(alignment: .leading) {
                     Text(milestone.title).font(.subheadline.bold())
-                    Text("+\(milestone.pawPointsBonus) bonus points").font(.caption).foregroundColor(.turquoise60)
+                    Text(String(format: String(localized: "walk_milestone_bonus_format"), Int64(milestone.pawPointsBonus))).font(.caption).foregroundColor(.turquoise60)
                 }
                 Spacer()
             }
@@ -215,7 +215,7 @@ struct WalkCompletionScreen: View {
     private var actionButtons: some View {
         VStack(spacing: 12) {
             Button(action: onShare) {
-                Label("Share Walk", systemImage: "square.and.arrow.up")
+                Label(String(localized: "walk_share_button"), systemImage: "square.and.arrow.up")
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -224,7 +224,7 @@ struct WalkCompletionScreen: View {
             }
 
             Button(action: onDone) {
-                Text("Done")
+                Text(String(localized: "walk_done_button"))
                     .font(.headline)
                     .foregroundColor(.turquoise60)
                     .frame(maxWidth: .infinity)
