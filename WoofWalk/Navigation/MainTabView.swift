@@ -7,6 +7,9 @@ struct MainTabView: View {
     @StateObject private var motionService = MotionActivityService.shared
     @StateObject private var updateChecker = AppUpdateChecker.shared
 
+    @State private var lostDogAlertPayload: [AnyHashable: Any]?
+    @State private var showLostDogAlert = false
+
     var body: some View {
         VStack(spacing: 0) {
             if updateChecker.updateAvailable {
@@ -92,6 +95,19 @@ struct MainTabView: View {
             // resolves the same destination regardless of source tab).
             if let route = note.userInfo?["route"] as? AppRoute {
                 navigator.navigate(to: route)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .lostDogAlertReceived)) { note in
+            guard let payload = note.userInfo, !payload.isEmpty else { return }
+            lostDogAlertPayload = payload
+            showLostDogAlert = true
+        }
+        .sheet(isPresented: $showLostDogAlert) {
+            if let payload = lostDogAlertPayload {
+                LostDogAlertSheet(payload: payload) {
+                    showLostDogAlert = false
+                    lostDogAlertPayload = nil
+                }
             }
         }
         .tint(.turquoise60)

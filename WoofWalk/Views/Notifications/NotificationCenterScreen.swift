@@ -74,8 +74,15 @@ struct NotificationRow: View {
 class NotificationCenterViewModel: ObservableObject {
     @Published var notifications: [NotificationRecord] = []
     @Published var isLoading = false
+    @Published var unreadCount: Int = 0
+
+    private var listener: ListenerRegistration?
 
     init() { load() }
+
+    deinit {
+        listener?.remove()
+    }
 
     func load() {
         guard let uid = Auth.auth().currentUser?.uid else {
@@ -83,11 +90,12 @@ class NotificationCenterViewModel: ObservableObject {
             return
         }
         isLoading = true
+        listener?.remove()
         let db = Firestore.firestore()
-        db.collection("notifications")
+        listener = db.collection("notifications")
             .whereField("userId", isEqualTo: uid)
             .order(by: "createdAt", descending: true)
-            .limit(to: 50)
+            .limit(to: 100)
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let self else { return }
                 self.isLoading = false
@@ -97,6 +105,17 @@ class NotificationCenterViewModel: ObservableObject {
                 }
                 self.notifications = (snapshot?.documents ?? []).compactMap { doc in
                     let data = doc.data()
+                    let createdRaw = data["createdAt"]
+                    let createdMs: Int64
+                    if let ts = createdRaw as? Timestamp {
+                        createdMs = Int64(ts.dateValue().timeIntervalSince1970 * 1000)
+                    } else if let n = createdRaw as? Int64 {
+                        createdMs = n
+                    } else if let n = createdRaw as? Double {
+                        createdMs = Int64(n)
+                    } else {
+                        createdMs = Int64(Date().timeIntervalSince1970 * 1000)
+                    }
                     return NotificationRecord(
                         id: doc.documentID,
                         type: data["type"] as? String ?? "",
@@ -106,9 +125,10 @@ class NotificationCenterViewModel: ObservableObject {
                         data: data["data"] as? [String: String] ?? [:],
                         read: data["read"] as? Bool ?? false,
                         delivered: data["delivered"] as? Bool ?? false,
-                        createdAt: data["createdAt"] as? Int64 ?? Int64(Date().timeIntervalSince1970 * 1000)
+                        createdAt: createdMs
                     )
                 }
+                self.unreadCount = self.notifications.filter { !$0.read }.count
             }
     }
 
@@ -116,13 +136,68 @@ class NotificationCenterViewModel: ObservableObject {
         if let idx = notifications.firstIndex(where: { $0.id == id }) {
             notifications[idx].read = true
         }
+        guard Auth.auth().currentUser != nil else {
+            print("[NotificationCenter] markAsRead skipped — not signed in")
+            return
+        }
+        Firestore.firestore()
+            .collection("notifications")
+            .document(id)
+            .updateData([
+                "read": true,
+                "readAt": FieldValue.serverTimestamp()
+            ]) { error in
+                if let error {
+                    print("[NotificationCenter] markAsRead failed: \(error.localizedDescription)")
+                }
+            }
     }
 
     func markAllRead() {
+        let unread = notifications.filter { !$0.read }
         for i in notifications.indices { notifications[i].read = true }
+        guard Auth.auth().currentUser != nil else {
+            print("[NotificationCenter] markAllRead skipped — not signed in")
+            return
+        }
+        if unread.isEmpty { return }
+        let db = Firestore.firestore()
+        let chunks = stride(from: 0, to: unread.count, by: 500).map {
+            Array(unread[$0..<min($0 + 500, unread.count)])
+        }
+        for chunk in chunks {
+            let batch = db.batch()
+            for note in chunk {
+                let ref = db.collection("notifications").document(note.id)
+                batch.updateData([
+                    "read": true,
+                    "readAt": FieldValue.serverTimestamp()
+                ], forDocument: ref)
+            }
+            batch.commit { error in
+                if let error {
+                    print("[NotificationCenter] markAllRead batch failed: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     func dismiss(_ id: String) {
         notifications.removeAll { $0.id == id }
+        guard Auth.auth().currentUser != nil else {
+            print("[NotificationCenter] dismiss skipped — not signed in")
+            return
+        }
+        Firestore.firestore()
+            .collection("notifications")
+            .document(id)
+            .updateData([
+                "read": true,
+                "readAt": FieldValue.serverTimestamp()
+            ]) { error in
+                if let error {
+                    print("[NotificationCenter] dismiss failed: \(error.localizedDescription)")
+                }
+            }
     }
 }

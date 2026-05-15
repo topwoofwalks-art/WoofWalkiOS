@@ -12,6 +12,15 @@ target 'WoofWalk' do
   pod 'Firebase/Analytics', '~> 10.29'
   pod 'Firebase/Functions', '~> 10.29'
 
+  # Firebase App Check — issues attestation tokens that the backend
+  # enforces alongside Auth. Android wires
+  # `PlayIntegrityAppCheckProviderFactory` in `WoofWalkApplication.kt`;
+  # iOS uses `AppAttestProvider` (iOS 14+) with a `DeviceCheckProvider`
+  # fallback for iOS 11-13. DEBUG builds use the debug provider so
+  # simulator + dev builds aren't rejected. Without this, Firestore /
+  # Functions / Storage calls fail once App Check enforcement is on.
+  pod 'FirebaseAppCheck', '~> 10.29'
+
   pod 'GoogleSignIn', '~> 7.1'
   pod 'GoogleMaps', '~> 9.0'
   pod 'GooglePlaces', '~> 9.0'

@@ -59,6 +59,7 @@ struct WatchMeSheet: View {
     @State private var walkerNote: String = ""
     @State private var expectedReturnAt: Date? = nil
     @State private var showContactPicker = false
+    @State private var showFriendPicker = false
     @State private var showTimePicker = false
     @State private var pendingTime = Date()
     @State private var showMaxGuardiansWarning = false
@@ -85,6 +86,18 @@ struct WatchMeSheet: View {
             ContactPickerView { name, phone in
                 addContactGuardian(name: name, phone: phone)
             }
+        }
+        .sheet(isPresented: $showFriendPicker) {
+            FriendPickerSheet(
+                alreadySelectedUids: Set(guardians.compactMap { $0.friendUid }),
+                onSelect: { friend in
+                    addFriendGuardian(
+                        name: friend.displayName,
+                        friendUid: friend.id,
+                        photoUrl: friend.photoUrl
+                    )
+                }
+            )
         }
         .alert("Maximum \(watchMeGuardianMaxCount) guardians per walk.", isPresented: $showMaxGuardiansWarning) {
             Button("OK", role: .cancel) {}
@@ -185,7 +198,7 @@ struct WatchMeSheet: View {
             // Friend picker primary path. WoofWalk friends get the in-app
             // push + alarm experience. Listed first because it's the
             // better safety experience.
-            Button(action: { /* TODO: friend picker — wire when friend list VM is available */ }) {
+            Button(action: { showFriendPicker = true }) {
                 HStack(spacing: 10) {
                     Image(systemName: "shield.fill")
                     Text("Pick a WoofWalk friend")
@@ -196,8 +209,6 @@ struct WatchMeSheet: View {
                 .background(SafetyColors.blue)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
-            .disabled(true)  // Friend picker not yet ported — phone path still works.
-            .opacity(0.5)
 
             Spacer().frame(height: 8)
 
@@ -414,6 +425,28 @@ struct WatchMeSheet: View {
         }
         if !alreadyAdded {
             guardians.append(WatchMeGuardian(name: name, phone: phone))
+        }
+    }
+
+    /// Append a WoofWalk-friend guardian. Friend guardians get the in-app
+    /// push + alarm experience (vs SMS for phone contacts), so we store
+    /// the uid and omit phone. Dedup by friendUid is exact — same friend
+    /// can never be added twice.
+    private func addFriendGuardian(name: String, friendUid: String, photoUrl: String?) {
+        if guardians.count >= watchMeGuardianMaxCount {
+            showMaxGuardiansWarning = true
+            return
+        }
+        let alreadyAdded = guardians.contains { $0.friendUid == friendUid }
+        if !alreadyAdded {
+            guardians.append(
+                WatchMeGuardian(
+                    name: name,
+                    phone: nil,
+                    friendUid: friendUid,
+                    photoUrl: photoUrl
+                )
+            )
         }
     }
 

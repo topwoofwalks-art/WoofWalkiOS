@@ -22,7 +22,7 @@ struct MapSheetModifiers: ViewModifier {
 
     var mapViewModel: MapViewModel
     var locationManager: LocationManager
-    var walkTrackingViewModel: WalkTrackingViewModel
+    var walkTrackingViewModel: WalkTrackingService
     var routingViewModel: RoutingViewModel
     var pooBagDropViewModel: PooBagDropViewModel
 
@@ -111,7 +111,7 @@ struct MapSheetModifiersGroup2: ViewModifier {
 
     let selectedLostDog: LostDogAnnotation?
     var locationManager: LocationManager
-    var walkTrackingViewModel: WalkTrackingViewModel
+    var walkTrackingViewModel: WalkTrackingService
     var routingViewModel: RoutingViewModel
     var pooBagDropViewModel: PooBagDropViewModel
     var mapViewModel: MapViewModel

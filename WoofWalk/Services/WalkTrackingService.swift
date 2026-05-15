@@ -4,6 +4,8 @@ import CoreMotion
 import Combine
 import UIKit
 import UserNotifications
+import FirebaseAuth
+import FirebaseFirestore
 
 struct WalkTrackingState {
     var isTracking: Bool = false
@@ -87,6 +89,38 @@ class WalkTrackingService: ObservableObject {
     /// "user is standing still" signal; cleared as soon as motion resumes.
     private var stationaryAnchor: CLLocationCoordinate2D?
 
+    // MARK: - Walk Diagnostics
+
+    /// Walk-id under which the current diagnostic doc is being built.
+    /// Set on `startTracking` from the caller-supplied sessionId; cleared
+    /// on `stopTracking`. Used as the Firestore doc id for the
+    /// `/users/{uid}/walk_diagnostics/{walkId}` write so iOS and Android
+    /// diagnostics for the same logical walk collide on the same doc.
+    private var diagnosticsWalkId: String?
+    /// Wall-clock ms when the walk started (matches `startTime` but
+    /// kept as Int64 to avoid recomputing for every snapshot).
+    private var diagnosticsStartedAtMs: Int64 = 0
+    /// Per-reason rejection counters. Kept as a String→Int dict so we
+    /// can drop it into Firestore without further mapping.
+    private var diagnosticsRejections: [String: Int] = [:]
+    /// DR-mode samples captured on each accepted fix. Capped at 1000
+    /// entries to keep the doc within Firestore's 1 MiB limit.
+    private var diagnosticsDrModeHistory: [Bool] = []
+    /// Permission flags captured at walk start.
+    private var diagForegroundLocAtStart: Bool = false
+    private var diagBackgroundLocAtStart: Bool = false
+    private var diagPreciseLocAtStart: Bool = false
+    private var diagLowPowerModeAtStart: Bool = false
+    private var diagMotionPermAtStart: Bool = false
+    /// Live mid-walk flags.
+    private var diagPermissionRevokedMidWalk: Bool = false
+    private var diagLocationServicesOffMidWalk: Bool = false
+    private var diagLowPowerModeEnteredMidWalk: Bool = false
+    private var diagAutoPauseTriggers: Int = 0
+    private var diagManualPauseToggles: Int = 0
+    private var diagServiceKillCount: Int = 0
+    private var diagWatchdogRecoveryCount: Int = 0
+
     // MARK: - Watch Me / SafetyWatch State
 
     /// Active safety watch for the current walk, or `nil` if Watch Me is off.
@@ -133,6 +167,26 @@ class WalkTrackingService: ObservableObject {
         self.motionService = motionService
         setupLocationSubscription()
         setupMotionSubscription()
+        setupBackgroundObserver()
+    }
+
+    /// Watch for the app being backgrounded mid-walk. We snapshot
+    /// diagnostics to Firestore at that point so that if the OS kills
+    /// us before stopTracking() runs (low memory, force-quit, runaway
+    /// background-task expiration) we still have a forensic record.
+    /// Mirrors the safety-net behaviour of Android's
+    /// `WalkDiagnosticsStore.heartbeat()`.
+    private func setupBackgroundObserver() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                self.snapshotDiagnosticsOnBackground()
+            }
+        }
     }
 
     private func setupLocationSubscription() {
@@ -181,6 +235,7 @@ class WalkTrackingService: ObservableObject {
         isAutoPaused = true
         trackingState.isPaused = true
         pauseStartedAt = Date()
+        diagAutoPauseTriggers += 1
         // Persist the pause-start timestamp so an app re-launch during the
         // 170-s confirmation window doesn't lose the timer. Mirrors
         // Android `WalkTrackingService.lastStationaryCheckTime` persistence.
@@ -281,7 +336,7 @@ class WalkTrackingService: ObservableObject {
 
     // MARK: - Tracking Control
 
-    func startTracking(sessionId: String? = nil) {
+    func startTracking(sessionId: String? = nil, dogIds: [String] = [], mode: String = "personal") {
         guard !trackingState.isTracking else {
             print("Already tracking")
             return
@@ -300,6 +355,37 @@ class WalkTrackingService: ObservableObject {
         lastLocationTime = nil
 
         let sid = sessionId ?? UUID().uuidString
+
+        // Reset all per-walk diagnostics state + capture the at-start
+        // permission / power snapshot. Mirrors Android's
+        // `WalkDiagnosticsStore.captureAtStart`.
+        diagnosticsWalkId = sid
+        diagnosticsStartedAtMs = Int64(startTime!.timeIntervalSince1970 * 1000)
+        diagnosticsRejections.removeAll()
+        diagnosticsDrModeHistory.removeAll()
+        diagPermissionRevokedMidWalk = false
+        diagLocationServicesOffMidWalk = false
+        diagLowPowerModeEnteredMidWalk = false
+        diagAutoPauseTriggers = 0
+        diagManualPauseToggles = 0
+        diagWatchdogRecoveryCount = 0
+        captureDiagnosticsAtStart()
+
+        // ── In-flight walk markers for backgrounded-crash recovery ──
+        // Mirrors Android `WalkBootReceiver` which reads Room for an
+        // unfinished session on BOOT_COMPLETED. iOS can't be restarted
+        // by the OS post-kill the same way, but we can still detect
+        // "previous launch had a walk in flight" on cold-start and
+        // offer to resume / finalise. Keys are cleared in
+        // `stopTracking()` so a clean stop doesn't leave a ghost.
+        UserDefaults.standard.set(sid, forKey: Self.inflightWalkIdKey)
+        UserDefaults.standard.set(Date().timeIntervalSince1970,
+                                  forKey: Self.inflightWalkStartedAtKey)
+        if let dogJson = try? JSONSerialization.data(withJSONObject: dogIds),
+           let dogStr = String(data: dogJson, encoding: .utf8) {
+            UserDefaults.standard.set(dogStr, forKey: Self.inflightWalkDogIdsKey)
+        }
+        UserDefaults.standard.set(mode, forKey: Self.inflightWalkModeKey)
 
         filterPipeline.start()
         motionService.start(sessionId: sid)
@@ -357,6 +443,7 @@ class WalkTrackingService: ObservableObject {
         pauseStartedAt = nil   // Manual pause does not arm the resume watcher
         stopResumeWatcher()
         timer?.invalidate()
+        diagManualPauseToggles += 1
         showNotification(title: "Walk Paused", body: "Tap to resume tracking")
         print("Walk tracking paused")
     }
@@ -369,6 +456,7 @@ class WalkTrackingService: ObservableObject {
         pauseStartedAt = nil
         stopResumeWatcher()
         startTimer()
+        diagManualPauseToggles += 1
         print("Walk tracking resumed")
     }
 
@@ -379,6 +467,13 @@ class WalkTrackingService: ObservableObject {
         if let sid = trackingState.sessionId {
             UserDefaults.standard.removeObject(forKey: "walkTracking.\(sid).pauseStartedAt")
         }
+
+        // Clear in-flight walk markers — a clean stop means there's
+        // nothing to recover on next launch.
+        UserDefaults.standard.removeObject(forKey: Self.inflightWalkIdKey)
+        UserDefaults.standard.removeObject(forKey: Self.inflightWalkStartedAtKey)
+        UserDefaults.standard.removeObject(forKey: Self.inflightWalkDogIdsKey)
+        UserDefaults.standard.removeObject(forKey: Self.inflightWalkModeKey)
 
         locationService.stopUpdatingLocation()
         locationService.stopUpdatingHeading()
@@ -440,10 +535,21 @@ class WalkTrackingService: ObservableObject {
             walkHistory = nil
         }
 
+        // Ship a final diagnostics snapshot. Captures live + processed
+        // distance so we can spot post-process divergence post-hoc.
+        let processedDistance = walkHistory.map { Double($0.distanceMeters) } ?? totalDistanceMeters
+        let trackPointCountFinal = walkHistory?.track.count ?? trackPoints.count
+        shipDiagnosticsSnapshot(
+            finalDistanceMeters: processedDistance,
+            trackPointCount: trackPointCountFinal,
+            isFinalWrite: true
+        )
+
         trackingState = WalkTrackingState()
         trackPoints.removeAll()
         totalDistanceMeters = 0
         startTime = nil
+        diagnosticsWalkId = nil
 
         if let walk = walkHistory {
             showWalkSavedNotification(walk: walk)
@@ -468,6 +574,7 @@ class WalkTrackingService: ObservableObject {
         let fixAge = Date().timeIntervalSince(update.timestamp)
         if fixAge > maxFixAgeSeconds {
             pipelineFixesRejectedFilter += 1
+            diagnosticsRejections[WalkDiagnostics.RejectionReason.stale.rawValue, default: 0] += 1
             print("[GPSGuard] Rejected stale fix: \(String(format: "%.1f", fixAge))s old (limit \(maxFixAgeSeconds)s)")
             return
         }
@@ -492,6 +599,7 @@ class WalkTrackingService: ObservableObject {
         // Run through permissive GPS filter pipeline (Kalman smoothing only, post-process after walk)
         guard let filtered = filterPipeline.process(rawLocation) else {
             pipelineFixesRejectedFilter += 1
+            diagnosticsRejections[WalkDiagnostics.RejectionReason.filter.rawValue, default: 0] += 1
             return
         }
 
@@ -509,6 +617,7 @@ class WalkTrackingService: ObservableObject {
             )
             if drift > 0.5 {
                 pipelineFixesRejectedStationaryGuard += 1
+                diagnosticsRejections[WalkDiagnostics.RejectionReason.stationaryGuard.rawValue, default: 0] += 1
                 print("[GPSGuard] Rejected stationary drift: \(String(format: "%.2f", drift))m from anchor")
                 return
             }
@@ -533,6 +642,7 @@ class WalkTrackingService: ObservableObject {
                 let steps = await self.motionService.recentSteps(inLast: 1.5)
                 if steps == 0 {
                     self.pipelineFixesRejectedStepGate += 1
+                    self.diagnosticsRejections[WalkDiagnostics.RejectionReason.stepGate.rawValue, default: 0] += 1
                     print("[GPSGuard] Rejected fix: \(String(format: "%.2f", capturedDistance))m moved but 0 steps in 1.5s")
                     return
                 }
@@ -558,6 +668,14 @@ class WalkTrackingService: ObservableObject {
         let currentTime = Date()
         pipelineFixesAccepted += 1
         lastAcceptedFixAt = currentTime
+        // DR-mode sample. iOS doesn't have a separate dead-reckoning
+        // pipeline yet (Android-only), so this is currently always
+        // false — but recording the false-vector lets us swap in a
+        // real DR signal later without changing the doc schema. Cap
+        // at 1000 samples to bound Firestore doc size.
+        if diagnosticsDrModeHistory.count < 1000 {
+            diagnosticsDrModeHistory.append(false)
+        }
         trackingState.gpsAccuracy = update.accuracy
         trackingState.gpsQuality = update.gpsQuality
         trackingState.currentSpeedMps = update.speed
@@ -995,6 +1113,289 @@ class WalkTrackingService: ObservableObject {
         lines.append("")
         lines.append("(Sent via WoofWalk Watch Me — if I don't check in or hit the alert button, please give me a call.)")
         return lines.joined(separator: "\n")
+    }
+
+    // MARK: - Walk Diagnostics + In-flight Markers
+
+    /// UserDefaults keys used by the backgrounded-crash recovery path
+    /// (Android `WalkBootReceiver` parity).
+    static let inflightWalkIdKey = "walkTracking.inflightWalkId"
+    static let inflightWalkStartedAtKey = "walkTracking.inflightWalkStartedAt"
+    static let inflightWalkDogIdsKey = "walkTracking.inflightWalkDogIds"
+    static let inflightWalkModeKey = "walkTracking.inflightWalkMode"
+
+    /// Capture the at-start permission / power snapshot for the
+    /// diagnostics doc. Runs once on `startTracking()` after the
+    /// counters have been reset.
+    private func captureDiagnosticsAtStart() {
+        let authStatus = locationService.authorizationStatus
+        diagForegroundLocAtStart = authStatus == .authorizedWhenInUse || authStatus == .authorizedAlways
+        diagBackgroundLocAtStart = authStatus == .authorizedAlways
+        diagPreciseLocAtStart = !locationService.hasReducedAccuracy
+        diagLowPowerModeAtStart = ProcessInfo.processInfo.isLowPowerModeEnabled
+        diagMotionPermAtStart = motionService.motionAuthorisationStatus == .authorized
+    }
+
+    /// Build a `WalkDiagnostics` from the current in-memory state.
+    /// Mirrors Android `WalkTrackingService.diagnosticsSnapshot()`.
+    private func diagnosticsSnapshot(finalDistanceMeters: Double? = nil,
+                                     trackPointCount: Int? = nil) -> WalkDiagnostics {
+        let now = Date()
+        var snapshot = WalkDiagnostics()
+        snapshot.walkId = diagnosticsWalkId ?? ""
+        snapshot.userId = Auth.auth().currentUser?.uid ?? ""
+        snapshot.startedAtMs = diagnosticsStartedAtMs
+        snapshot.endedAtMs = Int64(now.timeIntervalSince1970 * 1000)
+
+        snapshot.deviceManufacturer = "Apple"
+        snapshot.deviceModel = UIDevice.current.model
+        let osVersion = UIDevice.current.systemVersion
+        snapshot.iosVersion = osVersion
+        snapshot.iosMajorVersion = Int(osVersion.split(separator: ".").first.map(String.init) ?? "") ?? 0
+        if let info = Bundle.main.infoDictionary {
+            snapshot.appVersionName = info["CFBundleShortVersionString"] as? String ?? ""
+            snapshot.appVersionCode = Int(info["CFBundleVersion"] as? String ?? "") ?? 0
+        }
+
+        snapshot.foregroundLocationAtStart = diagForegroundLocAtStart
+        snapshot.backgroundLocationAtStart = diagBackgroundLocAtStart
+        snapshot.preciseLocationAtStart = diagPreciseLocAtStart
+        snapshot.lowPowerModeAtStart = diagLowPowerModeAtStart
+        snapshot.motionPermissionAtStart = diagMotionPermAtStart
+
+        snapshot.fixesReceived = pipelineFixesReceived
+        snapshot.fixesAccepted = pipelineFixesAccepted
+        snapshot.fixesRejected = diagnosticsRejections
+        snapshot.drModeHistory = diagnosticsDrModeHistory
+
+        // End-of-walk permission flicker capture — start vs. end lets
+        // us spot mid-walk revocations even if the live flag missed.
+        let endAuth = locationService.authorizationStatus
+        let endForeground = endAuth == .authorizedWhenInUse || endAuth == .authorizedAlways
+        let endBackground = endAuth == .authorizedAlways
+        snapshot.permissionsSnapshot = [
+            "foregroundLocation": endForeground,
+            "backgroundLocation": endBackground,
+            "preciseLocation": !locationService.hasReducedAccuracy,
+            "motion": motionService.motionAuthorisationStatus == .authorized,
+            "lowPowerMode": ProcessInfo.processInfo.isLowPowerModeEnabled,
+        ]
+        // Synthesise the mid-walk flags from the start vs. end deltas.
+        if diagForegroundLocAtStart && !endForeground {
+            diagPermissionRevokedMidWalk = true
+        }
+        if diagBackgroundLocAtStart && !endBackground {
+            diagPermissionRevokedMidWalk = true
+        }
+        if !diagLowPowerModeAtStart && ProcessInfo.processInfo.isLowPowerModeEnabled {
+            diagLowPowerModeEnteredMidWalk = true
+        }
+        snapshot.permissionRevokedMidWalk = diagPermissionRevokedMidWalk
+        snapshot.locationServicesOffMidWalk = diagLocationServicesOffMidWalk
+        snapshot.lowPowerModeEnteredMidWalk = diagLowPowerModeEnteredMidWalk
+        snapshot.autoPauseTriggers = diagAutoPauseTriggers
+        snapshot.manualPauseToggles = diagManualPauseToggles
+        snapshot.serviceKillCount = diagServiceKillCount
+        snapshot.watchdogRecoveryCount = diagWatchdogRecoveryCount
+
+        snapshot.totalDistanceMeters = totalDistanceMeters
+        snapshot.finalDistanceMeters = finalDistanceMeters ?? totalDistanceMeters
+        snapshot.trackPointCount = trackPointCount ?? trackPoints.count
+        snapshot.elevationGainMeters = totalElevationGain
+        if let start = startTime {
+            snapshot.wallClockDurationSec = Int(now.timeIntervalSince(start))
+        }
+
+        // 90-day Firestore TTL — mirrors Android commit 96c8ab3 on the
+        // server side. The TTL policy must be enabled once per project
+        // via `gcloud firestore fields ttls update expiresAt`.
+        snapshot.expiresAt = Timestamp(
+            date: Date(timeIntervalSince1970: now.timeIntervalSince1970 + (90 * 24 * 60 * 60))
+        )
+
+        return snapshot
+    }
+
+    /// Ship the current diagnostics state to Firestore at
+    /// `/users/{uid}/walk_diagnostics/{walkId}`. Async, fire-and-forget;
+    /// failures are non-fatal (logged only) so a diagnostics write
+    /// can never break the walk-stop user flow. Mirrors Android
+    /// `WalkSessionRepository.writeWalkDiagnostics`.
+    private func shipDiagnosticsSnapshot(
+        finalDistanceMeters: Double? = nil,
+        trackPointCount: Int? = nil,
+        isFinalWrite: Bool
+    ) {
+        guard let walkId = diagnosticsWalkId, !walkId.isEmpty else { return }
+        guard let uid = Auth.auth().currentUser?.uid else {
+            print("[WalkDiagnostics] Skipping write — no signed-in user")
+            return
+        }
+
+        let snapshot = diagnosticsSnapshot(
+            finalDistanceMeters: finalDistanceMeters,
+            trackPointCount: trackPointCount
+        )
+
+        Task.detached(priority: .background) {
+            do {
+                // Encode the struct via the Codable bridge so the
+                // `expiresAt` Timestamp and the rejection dict serialise
+                // cleanly, then merge a `serverTimestamp` sentinel for
+                // the actual server-clock write time.
+                let db = Firestore.firestore()
+                let docRef = db.collection("users")
+                    .document(uid)
+                    .collection("walk_diagnostics")
+                    .document(walkId)
+                var payload = try Firestore.Encoder().encode(snapshot)
+                // Strip any nil-valued keys our struct may have
+                // produced (e.g. serverTimestamp pre-write) so the
+                // server-clock sentinel below isn't overwritten by a
+                // null and the Timestamp? doesn't land as NSNull.
+                payload.removeValue(forKey: "serverTimestamp")
+                payload["serverTimestamp"] = FieldValue.serverTimestamp()
+                payload["isFinalWrite"] = isFinalWrite
+                try await docRef.setData(payload, merge: true)
+                print("[WalkDiagnostics] Shipped (final=\(isFinalWrite)) walkId=\(walkId)")
+            } catch {
+                // Non-fatal — diagnostics not landing must never break
+                // the walk flow.
+                print("[WalkDiagnostics] Failed to ship (final=\(isFinalWrite)): \(error)")
+            }
+        }
+    }
+
+    /// Background-during-walk snapshot writer. Wired to
+    /// `UIApplication.didEnterBackgroundNotification` so we capture
+    /// data even if the OS kills the app before stopTracking() runs.
+    private func snapshotDiagnosticsOnBackground() {
+        guard trackingState.isTracking else { return }
+        shipDiagnosticsSnapshot(isFinalWrite: false)
+    }
+
+    // MARK: - Backgrounded-crash recovery (Android parity)
+
+    /// True iff UserDefaults reports an in-flight walk that started
+    /// less than 6 hours ago. Surface called by `WoofWalkApp` on
+    /// cold-launch to decide whether to show the "Resume previous
+    /// walk?" sheet.
+    static func hasRecoverableInflightWalk() -> Bool {
+        guard let _ = UserDefaults.standard.string(forKey: inflightWalkIdKey),
+              let startedAt = UserDefaults.standard.object(forKey: inflightWalkStartedAtKey) as? Double else {
+            return false
+        }
+        let ageSec = Date().timeIntervalSince1970 - startedAt
+        return ageSec >= 0 && ageSec < (6 * 60 * 60)
+    }
+
+    /// Snapshot of the persisted in-flight walk for the recovery sheet.
+    /// `Identifiable` conformance keyed on walkId so the SwiftUI
+    /// `.sheet(item:)` modifier can drive the presentation.
+    struct InflightWalkSnapshot: Identifiable {
+        var id: String { walkId }
+        let walkId: String
+        let startedAt: Date
+        let dogIds: [String]
+        let mode: String
+    }
+
+    static func readInflightWalk() -> InflightWalkSnapshot? {
+        guard let walkId = UserDefaults.standard.string(forKey: inflightWalkIdKey),
+              let startedAtRaw = UserDefaults.standard.object(forKey: inflightWalkStartedAtKey) as? Double else {
+            return nil
+        }
+        let dogIds: [String] = {
+            guard let raw = UserDefaults.standard.string(forKey: inflightWalkDogIdsKey),
+                  let data = raw.data(using: .utf8),
+                  let parsed = try? JSONSerialization.jsonObject(with: data) as? [String] else {
+                return []
+            }
+            return parsed
+        }()
+        let mode = UserDefaults.standard.string(forKey: inflightWalkModeKey) ?? "personal"
+        return InflightWalkSnapshot(
+            walkId: walkId,
+            startedAt: Date(timeIntervalSince1970: startedAtRaw),
+            dogIds: dogIds,
+            mode: mode
+        )
+    }
+
+    /// Clear all in-flight markers. Called after the user declines the
+    /// resume sheet (and we've finalised the orphaned walk), or after
+    /// a successful resume hand-off.
+    static func clearInflightWalkMarkers() {
+        UserDefaults.standard.removeObject(forKey: inflightWalkIdKey)
+        UserDefaults.standard.removeObject(forKey: inflightWalkStartedAtKey)
+        UserDefaults.standard.removeObject(forKey: inflightWalkDogIdsKey)
+        UserDefaults.standard.removeObject(forKey: inflightWalkModeKey)
+    }
+
+    /// Resume a walk after a backgrounded-crash. Re-arms the in-memory
+    /// pipeline with the same sessionId so any track points written
+    /// later land in the same Firestore doc. Mirrors Android
+    /// `WalkBootReceiver.startForegroundService(EXTRA_AUTO_RESUME)`.
+    ///
+    /// Bumps `serviceKillCount` for the final diagnostics doc so we
+    /// can count OS-kill events per walk.
+    func resumeWalk(walkId: String) {
+        if trackingState.isTracking {
+            print("[WalkRecovery] Cannot resume — already tracking session \(trackingState.sessionId ?? "?")")
+            return
+        }
+        print("[WalkRecovery] Resuming previous walk \(walkId) after OS kill")
+        let snapshot = Self.readInflightWalk()
+        startTracking(
+            sessionId: walkId,
+            dogIds: snapshot?.dogIds ?? [],
+            mode: snapshot?.mode ?? "personal"
+        )
+        diagServiceKillCount += 1
+    }
+
+    /// Finalise an orphaned walk that the user chose NOT to resume.
+    /// Writes a best-effort diagnostics doc marking the walk as
+    /// `endReason: systemKilled` so we have telemetry on how often
+    /// the OS is killing walks mid-flight.
+    static func finaliseOrphanedWalk(_ snapshot: InflightWalkSnapshot) {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            print("[WalkRecovery] Cannot finalise orphan — no signed-in user")
+            clearInflightWalkMarkers()
+            return
+        }
+        let now = Date()
+        let expiresAt = Timestamp(
+            date: Date(timeIntervalSince1970: now.timeIntervalSince1970 + (90 * 24 * 60 * 60))
+        )
+        let payload: [String: Any] = [
+            "walkId": snapshot.walkId,
+            "userId": uid,
+            "startedAtMs": Int64(snapshot.startedAt.timeIntervalSince1970 * 1000),
+            "endedAtMs": Int64(now.timeIntervalSince1970 * 1000),
+            "endReason": "systemKilled",
+            "serviceKillCount": 1,
+            "deviceManufacturer": "Apple",
+            "deviceModel": UIDevice.current.model,
+            "iosVersion": UIDevice.current.systemVersion,
+            "expiresAt": expiresAt,
+            "serverTimestamp": FieldValue.serverTimestamp(),
+            "isFinalWrite": true,
+        ]
+        Task.detached(priority: .background) {
+            do {
+                let db = Firestore.firestore()
+                try await db.collection("users")
+                    .document(uid)
+                    .collection("walk_diagnostics")
+                    .document(snapshot.walkId)
+                    .setData(payload, merge: true)
+                print("[WalkRecovery] Finalised orphaned walk \(snapshot.walkId) as systemKilled")
+            } catch {
+                print("[WalkRecovery] Failed to finalise orphan: \(error)")
+            }
+            await MainActor.run { Self.clearInflightWalkMarkers() }
+        }
     }
 }
 

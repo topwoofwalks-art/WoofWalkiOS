@@ -1,5 +1,6 @@
 import SwiftUI
 import Firebase
+import FirebaseAppCheck
 import FirebaseAuth
 import StripePaymentSheet
 import GoogleMobileAds
@@ -18,7 +19,32 @@ struct WoofWalkApp: App {
     @StateObject private var authViewModel = AuthViewModel()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
+    /// Pending recovery snapshot detected on cold-launch. Surfaced as a
+    /// non-blocking overlay sheet after the first scene appears so the
+    /// user can resume / discard an in-flight walk that the OS killed
+    /// before stopTracking() could fire. Set in `init()` BEFORE the
+    /// scene mounts, consumed by `.sheet(item:)` on the root view.
+    /// Mirrors Android's `WalkBootReceiver` cold-resume flow.
+    @State private var pendingInflightWalk: WalkTrackingService.InflightWalkSnapshot?
+
     init() {
+        // Firebase App Check — issues attestation tokens that the backend
+        // (Firestore/Functions/Storage rules) enforces alongside Auth. Must
+        // run BEFORE `FirebaseApp.configure()` so the first SDK init picks
+        // up the provider. DEBUG builds use the debug provider (token
+        // surfaces in Xcode console, must be allow-listed in the Firebase
+        // console) so simulator + dev builds aren't rejected. Release
+        // builds use AppAttest on iOS 14+ with a DeviceCheck fallback —
+        // see WoofWalkAppCheckProviderFactory. Mirrors Android's
+        // `PlayIntegrityAppCheckProviderFactory` wiring in
+        // WoofWalkApplication.kt.
+        #if DEBUG
+        let providerFactory = AppCheckDebugProviderFactory()
+        #else
+        let providerFactory = WoofWalkAppCheckProviderFactory()
+        #endif
+        AppCheck.setAppCheckProviderFactory(providerFactory)
+
         if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
             FirebaseApp.configure()
         } else {
@@ -60,6 +86,16 @@ struct WoofWalkApp: App {
         // pending message queued on the Watch (during a window when
         // the phone wasn't running) flushes through.
         PhoneWatchSessionManager.shared.activate()
+
+        // Backgrounded-crash recovery — check for an in-flight walk
+        // marker left over from a previous launch that was killed
+        // before stopTracking() could fire. If present and started
+        // within the last 6 hours we'll surface a non-blocking
+        // "Resume previous walk?" sheet once the root scene appears.
+        // Mirrors Android's `WalkBootReceiver` cold-resume flow.
+        if WalkTrackingService.hasRecoverableInflightWalk() {
+            _pendingInflightWalk = State(initialValue: WalkTrackingService.readInflightWalk())
+        }
     }
 
     private var isTestMode: Bool {
@@ -112,6 +148,25 @@ struct WoofWalkApp: App {
                 }
                 .task {
                     await screenshotAutomation.runAutomation()
+                }
+                // Backgrounded-crash recovery sheet. Driven by the
+                // `pendingInflightWalk` snapshot captured in init().
+                // Non-blocking — appears as an overlay AFTER the first
+                // scene mounts so a user with no in-flight walk sees
+                // zero added launch latency. Mirrors Android's
+                // `WalkBootReceiver` resume flow.
+                .sheet(item: $pendingInflightWalk) { inflight in
+                    InflightWalkRecoverySheet(
+                        inflight: inflight,
+                        onResume: {
+                            WalkTrackingService.shared.resumeWalk(walkId: inflight.walkId)
+                            pendingInflightWalk = nil
+                        },
+                        onDiscard: {
+                            WalkTrackingService.finaliseOrphanedWalk(inflight)
+                            pendingInflightWalk = nil
+                        }
+                    )
                 }
         }
     }
@@ -421,6 +476,76 @@ struct WoofWalkApp: App {
             return AnyView(MainTabView())
         }
         return AnyView(AuthRootView(authViewModel: authViewModel))
+    }
+}
+
+/// Cold-launch sheet for recovering an in-flight walk that the OS
+/// killed before stopTracking() could fire. Mirrors Android's
+/// `WalkBootReceiver` resume prompt.
+struct InflightWalkRecoverySheet: View {
+    let inflight: WalkTrackingService.InflightWalkSnapshot
+    let onResume: () -> Void
+    let onDiscard: () -> Void
+
+    private var elapsedDescription: String {
+        let elapsed = Date().timeIntervalSince(inflight.startedAt)
+        let mins = Int(elapsed / 60)
+        if mins < 60 { return "\(mins) min ago" }
+        let hours = mins / 60
+        let rem = mins % 60
+        return "\(hours)h \(rem)m ago"
+    }
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "figure.walk")
+                .font(.system(size: 48, weight: .semibold))
+                .foregroundColor(.accentColor)
+                .padding(.top, 32)
+
+            Text("Resume previous walk?")
+                .font(.title2.weight(.semibold))
+
+            VStack(spacing: 4) {
+                Text("It looks like a walk was interrupted.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+                Text("Started \(elapsedDescription)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                if !inflight.dogIds.isEmpty {
+                    Text("\(inflight.dogIds.count) dog\(inflight.dogIds.count == 1 ? "" : "s") tagged")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.horizontal, 32)
+
+            Spacer(minLength: 16)
+
+            VStack(spacing: 12) {
+                Button(action: onResume) {
+                    Text("Resume walk")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+
+                Button(action: onDiscard) {
+                    Text("Discard")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
+        }
+        .presentationDetents([.medium])
     }
 }
 

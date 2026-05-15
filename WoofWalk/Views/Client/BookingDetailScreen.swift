@@ -1,6 +1,9 @@
 import SwiftUI
 import Combine
 import FirebaseAuth
+import FirebaseFirestore
+import FirebaseFunctions
+import StripePaymentSheet
 
 // MARK: - Booking Detail View Model
 
@@ -38,10 +41,24 @@ class BookingDetailViewModel: ObservableObject {
     @Published var isOnMyWay = false
     @Published var isSendingOnMyWay = false
 
+    // In-flight indicators for the new wired actions
+    @Published var isSubmittingTip = false
+    @Published var isSubmittingReview = false
+    @Published var isSubmittingReport = false
+
+    // Stripe PaymentSheet state — tip flow and switch-to-card flow both
+    // present a sheet built off a clientSecret from processTip /
+    // processBookingPayment. Cleared on completion / cancel / failure.
+    @Published var paymentClientSecret: String?
+    @Published var pendingPaymentBookingId: String?
+    @Published var presentPaymentSheet: Bool = false
+
     // Snackbar
     @Published var snackbarMessage: String?
 
     private let bookingRepository = BookingRepository()
+    private let stripeService = StripePaymentService()
+    private let functions = Functions.functions(region: "europe-west2")
     private var cancellables = Set<AnyCancellable>()
     private let bookingId: String
 
@@ -117,37 +134,219 @@ class BookingDetailViewModel: ObservableObject {
     }
 
     func submitReview() {
-        // In a real app, this would write to a reviews collection
-        showReviewSheet = false
-        snackbarMessage = "Review submitted - thank you!"
-        reviewRating = 5
-        reviewComment = ""
+        guard Auth.auth().currentUser != nil else {
+            snackbarMessage = "Sign in to leave a review"
+            return
+        }
+        guard let booking = booking else { return }
+        let rating = reviewRating
+        let comment = reviewComment.trimmingCharacters(in: .whitespacesAndNewlines)
+        isSubmittingReview = true
+        let providerId = booking.assignedTo ?? booking.businessId
+        let payload: [String: Any] = [
+            "bookingId": bookingId,
+            "providerId": providerId,
+            "rating": rating,
+            "comment": comment,
+            "photos": [String]()
+        ]
+        Task {
+            do {
+                _ = try await functions.httpsCallable("submitReview").call(payload)
+                await MainActor.run {
+                    self.isSubmittingReview = false
+                    self.showReviewSheet = false
+                    self.reviewRating = 5
+                    self.reviewComment = ""
+                    self.snackbarMessage = "Review submitted — thank you!"
+                }
+            } catch {
+                await MainActor.run {
+                    self.isSubmittingReview = false
+                    self.snackbarMessage = "Failed to submit review: \(error.localizedDescription)"
+                }
+            }
+        }
     }
 
     func addTip() {
-        // In a real app, this would trigger a payment flow
-        showTipSheet = false
-        snackbarMessage = "Tip of \(formatPrice(tipAmount)) added - thank you!"
-        tipAmount = 5.0
+        guard Auth.auth().currentUser != nil else {
+            snackbarMessage = "Sign in to add a tip"
+            return
+        }
+        guard tipAmount > 0 else { return }
+        isSubmittingTip = true
+        let amount = tipAmount
+        Task {
+            do {
+                let payload: [String: Any] = [
+                    "bookingId": bookingId,
+                    "amountGbp": amount
+                ]
+                let result = try await functions.httpsCallable("processTip").call(payload)
+                guard let response = result.data as? [String: Any],
+                      let secret = response["clientSecret"] as? String,
+                      !secret.isEmpty else {
+                    throw NSError(domain: "BookingDetail", code: -1,
+                                  userInfo: [NSLocalizedDescriptionKey: "Tip could not be prepared"])
+                }
+                await MainActor.run {
+                    self.isSubmittingTip = false
+                    self.showTipSheet = false
+                    self.paymentClientSecret = secret
+                    self.pendingPaymentBookingId = self.bookingId
+                    self.presentPaymentSheet = true
+                }
+            } catch {
+                await MainActor.run {
+                    self.isSubmittingTip = false
+                    self.snackbarMessage = "Tip failed: \(error.localizedDescription)"
+                }
+            }
+        }
     }
 
     func submitReport() {
-        // In a real app, this would write to a reports collection
-        showReportSheet = false
-        snackbarMessage = "Issue reported - we'll look into it"
-        reportText = ""
+        guard let uid = Auth.auth().currentUser?.uid else {
+            snackbarMessage = "Sign in to report an issue"
+            return
+        }
+        guard let booking = booking else { return }
+        let reason = reportText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !reason.isEmpty else { return }
+        isSubmittingReport = true
+        let reportedUserId = booking.assignedTo ?? booking.businessId
+        let payload: [String: Any] = [
+            "reporterId": uid,
+            "reportedUserId": reportedUserId,
+            "reason": reason,
+            "bookingId": bookingId,
+            "orgId": booking.businessId,
+            "status": "open",
+            "createdAt": Int64(Date().timeIntervalSince1970 * 1000)
+        ]
+        Firestore.firestore()
+            .collection("reports")
+            .addDocument(data: payload) { [weak self] error in
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.isSubmittingReport = false
+                    if let error {
+                        self.snackbarMessage = "Report failed: \(error.localizedDescription)"
+                    } else {
+                        self.showReportSheet = false
+                        self.reportText = ""
+                        self.snackbarMessage = "Issue reported — we'll look into it"
+                    }
+                }
+            }
     }
 
     func sendOnMyWay() {
         guard !isSendingOnMyWay else { return }
-        isSendingOnMyWay = true
-        // In a real app this would update the booking document / send a push
-        Task {
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            isOnMyWay = true
-            isSendingOnMyWay = false
-            snackbarMessage = "Your provider has been notified!"
+        guard Auth.auth().currentUser != nil else {
+            snackbarMessage = "Sign in to notify your provider"
+            return
         }
+        isSendingOnMyWay = true
+        Task {
+            do {
+                _ = try await functions
+                    .httpsCallable("sendOnMyWayNotification")
+                    .call(["bookingId": bookingId])
+                await MainActor.run {
+                    self.isOnMyWay = true
+                    self.isSendingOnMyWay = false
+                    self.snackbarMessage = "Your provider has been notified!"
+                }
+            } catch {
+                await MainActor.run {
+                    self.isSendingOnMyWay = false
+                    self.snackbarMessage = "Could not notify provider: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+
+    /// Switch an existing cash booking onto card payment by requesting a
+    /// Stripe PaymentIntent for the booking and presenting PaymentSheet.
+    /// The standard `processBookingPayment` callable resolves amount and
+    /// destination from the booking doc server-side; on PaymentSheet
+    /// success we call `confirmPayment` to flip the booking to paid.
+    func switchToCardAndPay() {
+        guard Auth.auth().currentUser != nil else {
+            snackbarMessage = "Sign in to pay by card"
+            return
+        }
+        isSubmittingTip = true
+        Task {
+            do {
+                let secret = try await stripeService.requestClientSecret(bookingId: bookingId)
+                await MainActor.run {
+                    self.isSubmittingTip = false
+                    self.paymentClientSecret = secret
+                    self.pendingPaymentBookingId = self.bookingId
+                    self.presentPaymentSheet = true
+                }
+            } catch {
+                await MainActor.run {
+                    self.isSubmittingTip = false
+                    self.snackbarMessage = "Payment setup failed: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+
+    /// Handle PaymentSheet result for both tip and switch-to-card flows.
+    /// Tips: on completed the server webhook flips state — no extra
+    /// confirm needed. Switch-to-card: call confirmPayment so the booking
+    /// flips to paid + the activity event fires (mirrors BookingFlowVM).
+    func handlePaymentSheetResult(_ result: PaymentSheetResult, isTip: Bool) {
+        switch result {
+        case .completed:
+            guard let secret = paymentClientSecret,
+                  let bid = pendingPaymentBookingId,
+                  let paymentIntentId = StripePaymentService.paymentIntentId(fromClientSecret: secret)
+            else {
+                clearPaymentState()
+                snackbarMessage = "Payment captured"
+                return
+            }
+            if isTip {
+                // processTip webhook handles bookkeeping server-side.
+                clearPaymentState()
+                snackbarMessage = "Tip sent — thank you!"
+            } else {
+                Task {
+                    do {
+                        try await stripeService.confirmOnServer(
+                            bookingId: bid,
+                            paymentIntentId: paymentIntentId
+                        )
+                        await MainActor.run {
+                            self.clearPaymentState()
+                            self.snackbarMessage = "Payment received — booking confirmed"
+                        }
+                    } catch {
+                        await MainActor.run {
+                            self.clearPaymentState()
+                            self.snackbarMessage = "Paid, but confirm failed — contact support"
+                        }
+                    }
+                }
+            }
+        case .canceled:
+            clearPaymentState()
+        case .failed(let error):
+            clearPaymentState()
+            snackbarMessage = "Payment failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func clearPaymentState() {
+        paymentClientSecret = nil
+        pendingPaymentBookingId = nil
+        presentPaymentSheet = false
     }
 
     func formatPrice(_ amount: Double) -> String {
@@ -166,6 +365,8 @@ struct BookingDetailScreen: View {
 
     @StateObject private var viewModel: BookingDetailViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var paymentSheet: PaymentSheet?
+    @State private var paymentSheetIsTip: Bool = false
 
     init(bookingId: String) {
         self.bookingId = bookingId
@@ -213,6 +414,39 @@ struct BookingDetailScreen: View {
             if let message = viewModel.snackbarMessage {
                 snackbar(message: message)
             }
+        }
+        .onChange(of: viewModel.paymentClientSecret) { newSecret in
+            guard let secret = newSecret, !secret.isEmpty else {
+                paymentSheet = nil
+                return
+            }
+            let booking = viewModel.booking
+            let isCashOrAwaiting = booking?.paymentMethodEnum == .cash
+                || booking?.statusEnum == .awaitingPayment
+            paymentSheetIsTip = !isCashOrAwaiting
+            var config = PaymentSheet.Configuration()
+            config.merchantDisplayName = "WoofWalk"
+            config.allowsDelayedPaymentMethods = false
+            paymentSheet = PaymentSheet(
+                paymentIntentClientSecret: secret,
+                configuration: config
+            )
+        }
+        .background(paymentSheetSentinel)
+    }
+
+    @ViewBuilder
+    private var paymentSheetSentinel: some View {
+        if let sheet = paymentSheet {
+            Color.clear
+                .frame(width: 0, height: 0)
+                .paymentSheet(
+                    isPresented: $viewModel.presentPaymentSheet,
+                    paymentSheet: sheet,
+                    onCompletion: { result in
+                        viewModel.handlePaymentSheetResult(result, isTip: paymentSheetIsTip)
+                    }
+                )
         }
     }
 
@@ -387,14 +621,27 @@ struct BookingDetailScreen: View {
             Text("You'll pay your provider \(priceText) in cash on the day. No card payment needed.")
                 .font(.body)
                 .foregroundColor(Color(hex: 0x1B5E20))
-            // Switch-to-card requires the iOS Stripe SDK integration that
-            // Android already has; surfacing the action here without that
-            // would let the user flip status to AWAITING_PAYMENT with no
-            // way to actually pay. Hide the CTA on iOS until Stripe-iOS
-            // lands; the cash-booking message is the entire fix scope here.
-            Text("To switch to card payment, open the booking on the WoofWalk Android app.")
-                .font(.footnote)
-                .foregroundColor(Color(hex: 0x2E7D32))
+            Button {
+                viewModel.switchToCardAndPay()
+            } label: {
+                HStack(spacing: 8) {
+                    if viewModel.isSubmittingTip {
+                        ProgressView().tint(.white)
+                    } else {
+                        Image(systemName: "creditcard.fill")
+                    }
+                    Text("Switch to card payment")
+                        .font(.subheadline.bold())
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color(hex: 0x2E7D32))
+                )
+            }
+            .disabled(viewModel.isSubmittingTip)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -413,9 +660,27 @@ struct BookingDetailScreen: View {
             Text("Confirm this booking by paying \(priceText). Your booking starts only after payment clears.")
                 .font(.body)
                 .foregroundColor(Color(hex: 0x8A5600))
-            Text("To complete payment, open the booking on the WoofWalk Android app.")
-                .font(.footnote)
-                .foregroundColor(Color(hex: 0xB26A00))
+            Button {
+                viewModel.switchToCardAndPay()
+            } label: {
+                HStack(spacing: 8) {
+                    if viewModel.isSubmittingTip {
+                        ProgressView().tint(.white)
+                    } else {
+                        Image(systemName: "creditcard.fill")
+                    }
+                    Text("Pay \(priceText) now")
+                        .font(.subheadline.bold())
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color(hex: 0xB26A00))
+                )
+            }
+            .disabled(viewModel.isSubmittingTip)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
@@ -1129,16 +1394,23 @@ struct BookingDetailScreen: View {
                 Button {
                     viewModel.addTip()
                 } label: {
-                    Text("Add \(viewModel.formatPrice(viewModel.tipAmount)) Tip")
-                        .font(.subheadline.bold())
-                        .foregroundColor(AppColors.Dark.onPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(AppColors.Dark.primary)
-                        )
+                    HStack(spacing: 8) {
+                        if viewModel.isSubmittingTip {
+                            ProgressView()
+                                .tint(AppColors.Dark.onPrimary)
+                        }
+                        Text("Add \(viewModel.formatPrice(viewModel.tipAmount)) Tip")
+                            .font(.subheadline.bold())
+                    }
+                    .foregroundColor(AppColors.Dark.onPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(AppColors.Dark.primary)
+                    )
                 }
+                .disabled(viewModel.isSubmittingTip)
             }
             .padding(24)
             .background(AppColors.Dark.background)
@@ -1206,16 +1478,23 @@ struct BookingDetailScreen: View {
                 Button {
                     viewModel.submitReview()
                 } label: {
-                    Text("Submit Review")
-                        .font(.subheadline.bold())
-                        .foregroundColor(AppColors.Dark.onPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(AppColors.Dark.primary)
-                        )
+                    HStack(spacing: 8) {
+                        if viewModel.isSubmittingReview {
+                            ProgressView()
+                                .tint(AppColors.Dark.onPrimary)
+                        }
+                        Text("Submit Review")
+                            .font(.subheadline.bold())
+                    }
+                    .foregroundColor(AppColors.Dark.onPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(AppColors.Dark.primary)
+                    )
                 }
+                .disabled(viewModel.isSubmittingReview)
             }
             .padding(24)
             .background(AppColors.Dark.background)
@@ -1260,17 +1539,23 @@ struct BookingDetailScreen: View {
                 Button {
                     viewModel.submitReport()
                 } label: {
-                    Text("Submit Report")
-                        .font(.subheadline.bold())
-                        .foregroundColor(AppColors.Dark.onPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(AppColors.Dark.primary)
-                        )
+                    HStack(spacing: 8) {
+                        if viewModel.isSubmittingReport {
+                            ProgressView()
+                                .tint(AppColors.Dark.onPrimary)
+                        }
+                        Text("Submit Report")
+                            .font(.subheadline.bold())
+                    }
+                    .foregroundColor(AppColors.Dark.onPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(AppColors.Dark.primary)
+                    )
                 }
-                .disabled(viewModel.reportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(viewModel.isSubmittingReport || viewModel.reportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .opacity(viewModel.reportText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
             }
             .padding(24)

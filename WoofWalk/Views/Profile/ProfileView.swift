@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
+    @StateObject private var unreadNotifications = UnreadNotificationsService.shared
     @State private var showEditProfile = false
     @State private var showLogoutAlert = false
 
@@ -56,7 +57,18 @@ struct ProfileView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 16) {
                         NavigationLink(destination: NotificationCenterScreen()) {
-                            Image(systemName: "bell")
+                            ZStack(alignment: .topTrailing) {
+                                Image(systemName: "bell")
+                                if unreadNotifications.unreadCount > 0 {
+                                    Text(unreadNotifications.unreadCount > 99 ? "99+" : "\(unreadNotifications.unreadCount)")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 5)
+                                        .padding(.vertical, 2)
+                                        .background(Capsule().fill(Color.red))
+                                        .offset(x: 8, y: -6)
+                                }
+                            }
                         }
                         Button(action: { showEditProfile = true }) {
                             Image(systemName: "pencil")
