@@ -1,11 +1,14 @@
 import SwiftUI
+import FirebaseAuth
+import FirebaseFunctions
 
 struct DataManagementView: View {
     @StateObject private var viewModel = DataManagementViewModel()
-    @State private var showExportDialog = false
     @State private var showClearCacheDialog = false
     @State private var showDeleteDataDialog = false
+    @State private var showExportShare = false
     @State private var exportURL: URL?
+    @State private var exportError: String?
 
     var body: some View {
         List {
@@ -35,7 +38,15 @@ struct DataManagementView: View {
         } message: {
             Text("This will permanently delete all walks, photos, and local data. This cannot be undone.")
         }
-        .sheet(isPresented: $showExportDialog) {
+        .alert("Export Failed", isPresented: Binding(
+            get: { exportError != nil },
+            set: { if !$0 { exportError = nil } }
+        )) {
+            Button("OK", role: .cancel) { exportError = nil }
+        } message: {
+            Text(exportError ?? "")
+        }
+        .sheet(isPresented: $showExportShare) {
             if let url = exportURL {
                 ShareSheet(activityItems: [url])
             }
@@ -106,6 +117,15 @@ struct DataManagementView: View {
         }
     }
 
+    // GDPR Article 20: right to data portability. A single CF call
+    // (`exportUserData`) returns the user's complete bundle (profile,
+    // dogs, posts, friendships, bookings, reviews, meet-and-greets,
+    // consents, ...). We write it to a temp file and surface via the
+    // platform share sheet.
+    //
+    // The three legacy "scope" buttons (All / Walks / Settings) were
+    // stubs that wrote `{"exported": "all_data"}` to disk — GDPR
+    // non-compliant. Consolidated to one real export.
     private var dataExportSection: some View {
         Section {
             Button {
@@ -113,46 +133,25 @@ struct DataManagementView: View {
                     switch result {
                     case .success(let url):
                         exportURL = url
-                        showExportDialog = true
-                    case .failure:
-                        break
+                        showExportShare = true
+                    case .failure(let error):
+                        exportError = error.localizedDescription
                     }
                 }
             } label: {
-                Label("Export All Data", systemImage: "square.and.arrow.up")
-            }
-
-            Button {
-                viewModel.exportWalkHistory { result in
-                    switch result {
-                    case .success(let url):
-                        exportURL = url
-                        showExportDialog = true
-                    case .failure:
-                        break
+                HStack {
+                    Label("Export All My Data", systemImage: "square.and.arrow.up")
+                    Spacer()
+                    if viewModel.isExporting {
+                        ProgressView()
                     }
                 }
-            } label: {
-                Label("Export Walk History", systemImage: "figure.walk.circle")
             }
-
-            Button {
-                viewModel.exportSettings { result in
-                    switch result {
-                    case .success(let url):
-                        exportURL = url
-                        showExportDialog = true
-                    case .failure:
-                        break
-                    }
-                }
-            } label: {
-                Label("Export Settings", systemImage: "gearshape")
-            }
+            .disabled(viewModel.isExporting)
         } header: {
-            Text("Data Export")
+            Text("Data Export (GDPR)")
         } footer: {
-            Text("Export your data to share with other apps or back up to cloud storage.")
+            Text("Download a JSON copy of all data WoofWalk holds about you — profile, dogs, posts, friendships, bookings, reviews, meet-and-greets, and consent records. Your right under GDPR Article 20.")
         }
     }
 
@@ -166,7 +165,7 @@ struct DataManagementView: View {
         } header: {
             Text("Danger Zone")
         } footer: {
-            Text("This will permanently delete all walks, photos, and local data from this device. Cloud data will not be affected.")
+            Text("This will permanently delete all walks, photos, and local data from this device. Cloud data will not be affected — use Delete Account in Settings to remove cloud data.")
         }
     }
 }
@@ -179,6 +178,9 @@ class DataManagementViewModel: ObservableObject {
     @Published var cacheSize: Int64 = 0
     @Published var autoClearCache: Bool = false
     @Published var offlineMapsEnabled: Bool = false
+    @Published var isExporting: Bool = false
+
+    private lazy var functions = Functions.functions(region: "europe-west2")
 
     func calculateStorageUsage() {
         let fileManager = FileManager.default
@@ -240,60 +242,114 @@ class DataManagementViewModel: ObservableObject {
         calculateStorageUsage()
     }
 
+    enum ExportError: LocalizedError {
+        case notSignedIn
+        case malformedResponse
+        case writeFailed(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .notSignedIn:
+                return "You must be signed in to export your data."
+            case .malformedResponse:
+                return "Server returned an unexpected response. Please try again."
+            case .writeFailed(let detail):
+                return "Could not save export file: \(detail)"
+            }
+        }
+    }
+
+    // Calls the `exportUserData` CF (europe-west2), which returns
+    // `{ ok: true, bundle: { ... } }`. We serialise the bundle as
+    // pretty-printed JSON and drop it in the temp dir so iOS' share
+    // sheet can hand it to Files / Mail / AirDrop / etc.
+    //
+    // Matches Android's `UserRepository.exportUserData()` source-of-truth
+    // path. The CF mirrors GDPR Article 20 scope; if it ever grows to
+    // emit a Cloud Storage signed URL (large exports), the response
+    // contract becomes `{ ok: true, downloadUrl, expiresAt }` and we
+    // detect+stream in the same callback below.
     func exportAllData(completion: @escaping (Result<URL, Error>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let data = try JSONEncoder().encode(["exported": "all_data"])
-                let tempURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("woofwalk_full_export_\(Date().timeIntervalSince1970).json")
-                try data.write(to: tempURL)
+        guard Auth.auth().currentUser != nil else {
+            completion(.failure(ExportError.notSignedIn))
+            return
+        }
 
-                DispatchQueue.main.async {
-                    completion(.success(tempURL))
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    completion(.failure(error))
+        isExporting = true
+
+        functions
+            .httpsCallable("exportUserData")
+            .call([:]) { [weak self] result, error in
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    self.isExporting = false
+
+                    if let error = error {
+                        completion(.failure(error))
+                        return
+                    }
+
+                    guard let data = result?.data as? [String: Any] else {
+                        completion(.failure(ExportError.malformedResponse))
+                        return
+                    }
+
+                    // If the CF ever switches to signed-URL delivery,
+                    // stream it down rather than serialising the inline
+                    // bundle. Detect via the presence of `downloadUrl`.
+                    if let downloadUrlString = data["downloadUrl"] as? String,
+                       let downloadUrl = URL(string: downloadUrlString) {
+                        self.streamSignedExport(from: downloadUrl, completion: completion)
+                        return
+                    }
+
+                    guard let bundle = data["bundle"] else {
+                        completion(.failure(ExportError.malformedResponse))
+                        return
+                    }
+
+                    do {
+                        let json = try JSONSerialization.data(
+                            withJSONObject: bundle,
+                            options: [.prettyPrinted, .sortedKeys]
+                        )
+                        let filename = "woofwalk_data_export_\(Int(Date().timeIntervalSince1970)).json"
+                        let tempURL = FileManager.default.temporaryDirectory
+                            .appendingPathComponent(filename)
+                        try json.write(to: tempURL, options: .atomic)
+                        completion(.success(tempURL))
+                    } catch {
+                        completion(.failure(ExportError.writeFailed(error.localizedDescription)))
+                    }
                 }
             }
-        }
     }
 
-    func exportWalkHistory(completion: @escaping (Result<URL, Error>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let data = try JSONEncoder().encode(["exported": "walks"])
-                let tempURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("woofwalk_walks_\(Date().timeIntervalSince1970).json")
-                try data.write(to: tempURL)
-
-                DispatchQueue.main.async {
-                    completion(.success(tempURL))
-                }
-            } catch {
-                DispatchQueue.main.async {
+    private func streamSignedExport(from url: URL, completion: @escaping (Result<URL, Error>) -> Void) {
+        URLSession.shared.downloadTask(with: url) { tempLocation, _, error in
+            Task { @MainActor in
+                if let error = error {
                     completion(.failure(error))
+                    return
+                }
+                guard let tempLocation = tempLocation else {
+                    completion(.failure(ExportError.malformedResponse))
+                    return
+                }
+                // Move out of the system-managed location into our own
+                // tempDirectory so the OS doesn't reap it before the
+                // share-sheet presenter reads it.
+                let filename = "woofwalk_data_export_\(Int(Date().timeIntervalSince1970)).json"
+                let destination = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(filename)
+                try? FileManager.default.removeItem(at: destination)
+                do {
+                    try FileManager.default.moveItem(at: tempLocation, to: destination)
+                    completion(.success(destination))
+                } catch {
+                    completion(.failure(ExportError.writeFailed(error.localizedDescription)))
                 }
             }
-        }
-    }
-
-    func exportSettings(completion: @escaping (Result<URL, Error>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let data = try JSONEncoder().encode(["exported": "settings"])
-                let tempURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("woofwalk_settings_\(Date().timeIntervalSince1970).json")
-                try data.write(to: tempURL)
-
-                DispatchQueue.main.async {
-                    completion(.success(tempURL))
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    completion(.failure(error))
-                }
-            }
-        }
+        }.resume()
     }
 }

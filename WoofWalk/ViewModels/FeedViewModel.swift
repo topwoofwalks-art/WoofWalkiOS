@@ -40,6 +40,24 @@ class FeedViewModel: ObservableObject {
     private let socialGraphTTL: TimeInterval = 300 // 5 minutes
     private var socialGraphLoading = false
 
+    // MARK: - Filter cache (block + mute)
+    //
+    // Mirrors Android FeedRepository.FilterState. Blocks are stored
+    // symmetrically in `friendships` with status == "BLOCKED"; mutes
+    // are stored at `feed_preferences/{uid}.mutedUsers`. Both are read
+    // once per session (refreshed every 5 min, or eagerly when the
+    // user blocks/mutes/unblocks/unmutes someone) so the per-snapshot
+    // filter step is O(N) over the posts batch, not O(N×Firestore-read).
+    //
+    // The visibility predicate (`visibility == PUBLIC`) is enforced
+    // server-side via the query — these client-side filters are the
+    // second layer for author-level hiding.
+    private var blockedUserIds: Set<String> = []
+    private var mutedUserIds: Set<String> = []
+    private var filterCacheAt: Date = .distantPast
+    private let filterCacheTTL: TimeInterval = 300 // 5 minutes
+    private var filterCacheLoading = false
+
     // Anti-spam: link detection (mirrors Android FeedRepository.LINK_PATTERN)
     private static let linkPattern = try! NSRegularExpression(
         pattern: #"(https?://|www\.|[a-zA-Z0-9-]+\.(com|co\.uk|org|net|io|app|dev|me|uk|info|biz|shop|store)(/\S*)?)"#,
@@ -52,8 +70,92 @@ class FeedViewModel: ObservableObject {
 
     init() {
         loadSocialGraph()
+        loadBlockedAndMutedUserIds()
         loadPosts()
         observeLocation()
+    }
+
+    // MARK: - Block / Mute filter
+
+    /// Read `friendships` (status == BLOCKED, both sides) and
+    /// `feed_preferences/{uid}.mutedUsers` into in-memory sets. Mirrors
+    /// Android FeedRepository.currentFilterState exactly. Cached for 5
+    /// minutes; eagerly invalidated when the user mutes / blocks /
+    /// unmutes / unblocks via the repo helpers in UserRepository.
+    func loadBlockedAndMutedUserIds(force: Bool = false) {
+        guard let uid = auth.currentUser?.uid else { return }
+        if !force && Date().timeIntervalSince(filterCacheAt) < filterCacheTTL { return }
+        if filterCacheLoading { return }
+        filterCacheLoading = true
+
+        Task {
+            // Blocks — symmetric: either side of the canonical friendship
+            // doc qualifies. Firestore can't OR across userId1/userId2,
+            // so two reads union'd client-side.
+            async let blocks1 = blockedIdsAsSide(uid: uid, sideField: "userId1", otherField: "userId2")
+            async let blocks2 = blockedIdsAsSide(uid: uid, sideField: "userId2", otherField: "userId1")
+
+            // Mutes — one doc per user at /feed_preferences/{uid}.
+            async let mutesResult = fetchMutedUsers(uid: uid)
+
+            let (b1, b2, mutes) = await (blocks1, blocks2, mutesResult)
+            self.blockedUserIds = b1.union(b2)
+            self.mutedUserIds = mutes
+            self.filterCacheAt = Date()
+            self.filterCacheLoading = false
+            print("[Feed] Filters cached: \(self.blockedUserIds.count) blocked, \(self.mutedUserIds.count) muted")
+        }
+    }
+
+    /// Invalidate the block/mute cache so the next feed load re-reads
+    /// Firestore. Call after a successful block / mute / unblock /
+    /// unmute action — mirrors Android FeedRepository.invalidateFilterCache.
+    func invalidateFilterCache() {
+        filterCacheAt = .distantPast
+        loadBlockedAndMutedUserIds(force: true)
+        // Also rebuild the visible posts so blocked-user posts disappear
+        // immediately instead of waiting for the next pagination tick.
+        refresh()
+    }
+
+    private func blockedIdsAsSide(uid: String, sideField: String, otherField: String) async -> Set<String> {
+        do {
+            let snapshot = try await db.collection("friendships")
+                .whereField(sideField, isEqualTo: uid)
+                .whereField("status", isEqualTo: "BLOCKED")
+                .getDocuments()
+            var ids = Set<String>()
+            for doc in snapshot.documents {
+                if let other = doc.data()[otherField] as? String { ids.insert(other) }
+            }
+            return ids
+        } catch {
+            print("[Feed] Failed to load blocked IDs (\(sideField)): \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    private func fetchMutedUsers(uid: String) async -> Set<String> {
+        do {
+            let doc = try await db.collection("feed_preferences").document(uid).getDocument()
+            let muted = (doc.data()?["mutedUsers"] as? [String]) ?? []
+            return Set(muted)
+        } catch {
+            print("[Feed] Failed to load muted users: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    /// Drop posts authored by blocked or muted users. Centralised so
+    /// every feed mode (For You / Nearby / Following / fallback) uses
+    /// the same predicate. Visibility ("PUBLIC") is enforced
+    /// server-side via the query.
+    private func applyAuthorFilters(_ posts: [Post]) -> [Post] {
+        guard !blockedUserIds.isEmpty || !mutedUserIds.isEmpty else { return posts }
+        return posts.filter {
+            !blockedUserIds.contains($0.authorId)
+                && !mutedUserIds.contains($0.authorId)
+        }
     }
 
     // MARK: - Location Observation
@@ -207,8 +309,20 @@ class FeedViewModel: ObservableObject {
     // MARK: - For You
 
     /// For You: all posts sorted by recency, using snapshot listener for real-time updates on first page.
+    ///
+    /// Server-side visibility filter (`visibility == "PUBLIC"`) mirrors
+    /// Android FeedRepository.getFeed — FRIENDS / PRIVATE posts are
+    /// reachable via profile / friend-only views, never the global
+    /// feed. Block + mute filtering is applied client-side after
+    /// decode (the canonical Android pattern; Firestore doesn't
+    /// support `where not-in` over large arrays).
+    ///
+    /// Composite index required: (visibility ASC, createdAt DESC).
+    /// If the index is missing Firestore emits FIRFirestoreErrorCode 9
+    /// and we degrade to the unsorted-but-filtered fallback.
     private func loadForYouPosts() {
         let query: Query = db.collection("posts")
+            .whereField("visibility", isEqualTo: "PUBLIC")
             .order(by: "createdAt", descending: true)
             .limit(to: pageSize)
 
@@ -232,7 +346,8 @@ class FeedViewModel: ObservableObject {
                 return
             }
 
-            self.posts = documents.compactMap { try? $0.data(as: Post.self) }
+            let decoded = documents.compactMap { try? $0.data(as: Post.self) }
+            self.posts = self.applyAuthorFilters(decoded)
             self.lastDocument = documents.last
             self.hasMorePages = documents.count >= self.pageSize
         }
@@ -246,6 +361,7 @@ class FeedViewModel: ObservableObject {
 
         do {
             let snapshot = try await db.collection("posts")
+                .whereField("visibility", isEqualTo: "PUBLIC")
                 .order(by: "createdAt", descending: true)
                 .limit(to: pageSize)
                 .start(afterDocument: lastDoc)
@@ -255,7 +371,7 @@ class FeedViewModel: ObservableObject {
             let existingIds = Set(posts.compactMap { $0.id })
             let deduplicated = newPosts.filter { $0.id != nil && !existingIds.contains($0.id!) }
 
-            posts.append(contentsOf: deduplicated)
+            posts.append(contentsOf: applyAuthorFilters(deduplicated))
             lastDocument = snapshot.documents.last
             hasMorePages = snapshot.documents.count >= pageSize
         } catch {
@@ -285,13 +401,17 @@ class FeedViewModel: ObservableObject {
 
         Task {
             do {
+                // visibility==PUBLIC + orderBy(createdAt DESC) reuses the
+                // same composite index as the For-You feed. Block+mute
+                // filtering happens via applyAuthorFilters after decode.
                 let snapshot = try await db.collection("posts")
+                    .whereField("visibility", isEqualTo: "PUBLIC")
                     .order(by: "createdAt", descending: true)
                     .limit(to: 100)
                     .getDocuments()
 
                 let allPosts = snapshot.documents.compactMap { try? $0.data(as: Post.self) }
-                let nearbyPosts = allPosts.filter { post in
+                let nearbyPosts = applyAuthorFilters(allPosts).filter { post in
                     guard let lat = post.latitude, let lng = post.longitude else { return false }
                     return Self.haversineDistanceKm(lat1: userLat, lon1: userLng, lat2: lat, lon2: lng) <= 25.0
                 }
@@ -317,13 +437,14 @@ class FeedViewModel: ObservableObject {
         do {
             let currentCount = posts.count
             let snapshot = try await db.collection("posts")
+                .whereField("visibility", isEqualTo: "PUBLIC")
                 .order(by: "createdAt", descending: true)
                 .limit(to: 200)
                 .getDocuments()
 
             let allPosts = snapshot.documents.compactMap { try? $0.data(as: Post.self) }
             let existingIds = Set(posts.compactMap { $0.id })
-            let nearbyPosts = allPosts.filter { post in
+            let nearbyPosts = applyAuthorFilters(allPosts).filter { post in
                 guard let id = post.id, !existingIds.contains(id) else { return false }
                 guard let lat = post.latitude, let lng = post.longitude else { return false }
                 return Self.haversineDistanceKm(lat1: userLat, lon1: userLng, lat2: lat, lon2: lng) <= 25.0
@@ -361,6 +482,16 @@ class FeedViewModel: ObservableObject {
     }
 
     /// Firestore `whereField(in:)` supports max 30 values. Chunk and merge.
+    ///
+    /// Visibility filtering is applied client-side here (rather than
+    /// server-side via `whereField("visibility", isEqualTo: "PUBLIC")`)
+    /// because combining `in` on `authorId` with `==` on `visibility`
+    /// and `orderBy("createdAt")` requires a 3-field composite index.
+    /// Following is bounded to the user's friend graph (≤ hundreds of
+    /// authors) so the client-side filter cost is negligible.
+    /// FRIENDS-visibility posts are dropped to mirror the Android
+    /// global-feed behaviour — future iteration: keep FRIENDS when the
+    /// author is in the friend graph.
     private func loadFollowingPostsForIds(_ ids: [String]) {
         let chunks = ids.chunked(into: 30)
 
@@ -403,9 +534,13 @@ class FeedViewModel: ObservableObject {
                 }
             }
 
+            // Client-side filters: visibility (PUBLIC only) + block/mute.
+            let publicOnly = allPosts.filter { ($0.visibility ?? "PUBLIC") == "PUBLIC" }
+            let filtered = applyAuthorFilters(publicOnly)
+
             // Deduplicate and sort by recency
             var seen = Set<String>()
-            let deduplicated = allPosts.filter { post in
+            let deduplicated = filtered.filter { post in
                 guard let id = post.id, !seen.contains(id) else { return false }
                 seen.insert(id)
                 return true
@@ -461,7 +596,12 @@ class FeedViewModel: ObservableObject {
             }
         }
 
-        let deduplicated = newPosts.filter { post in
+        // Client-side filters mirror loadFollowingPostsForIds — visibility
+        // restricted to PUBLIC (FRIENDS posts deferred) and block/mute
+        // applied.
+        let publicOnly = newPosts.filter { ($0.visibility ?? "PUBLIC") == "PUBLIC" }
+        let filtered = applyAuthorFilters(publicOnly)
+        let deduplicated = filtered.filter { post in
             guard let id = post.id else { return false }
             return !existingIds.contains(id)
         }.sorted {
@@ -476,7 +616,11 @@ class FeedViewModel: ObservableObject {
 
     private func loadPostsUnsorted() {
         listener?.remove()
+        // Even in the no-index fallback the visibility predicate is
+        // applied — a single equality + no order-by needs no composite
+        // index. Block + mute filtering happens client-side.
         listener = db.collection("posts")
+            .whereField("visibility", isEqualTo: "PUBLIC")
             .limit(to: pageSize)
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let self else { return }
@@ -488,7 +632,8 @@ class FeedViewModel: ObservableObject {
                 }
 
                 let decoded = (snapshot?.documents ?? []).compactMap { try? $0.data(as: Post.self) }
-                self.posts = decoded.sorted { ($0.createdAt?.dateValue() ?? .distantPast) > ($1.createdAt?.dateValue() ?? .distantPast) }
+                let filtered = self.applyAuthorFilters(decoded)
+                self.posts = filtered.sorted { ($0.createdAt?.dateValue() ?? .distantPast) > ($1.createdAt?.dateValue() ?? .distantPast) }
                 self.lastDocument = snapshot?.documents.last
                 self.hasMorePages = (snapshot?.documents.count ?? 0) >= self.pageSize
             }
@@ -498,6 +643,7 @@ class FeedViewModel: ObservableObject {
         listener?.remove()
         resetPagination()
         loadSocialGraph() // Refresh social graph on pull-to-refresh
+        loadBlockedAndMutedUserIds(force: true) // Re-read block + mute lists
         loadPosts()
     }
 

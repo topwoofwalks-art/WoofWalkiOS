@@ -1,8 +1,29 @@
 import Foundation
 import Combine
+import FirebaseAuth
+import FirebaseFunctions
 
 @MainActor
 class SettingsViewModel: ObservableObject {
+    private lazy var functions = Functions.functions(region: "europe-west2")
+
+    enum ExportError: LocalizedError {
+        case notSignedIn
+        case malformedResponse
+        case writeFailed(String)
+
+        var errorDescription: String? {
+            switch self {
+            case .notSignedIn:
+                return "You must be signed in to export your data."
+            case .malformedResponse:
+                return "Server returned an unexpected response. Please try again."
+            case .writeFailed(let detail):
+                return "Could not save export file: \(detail)"
+            }
+        }
+    }
+
     @Published var settings: UserSettings
 
     private let userDefaultsKey = "userSettings"
@@ -130,22 +151,74 @@ class SettingsViewModel: ObservableObject {
         URLCache.shared.removeAllCachedResponses()
     }
 
+    // GDPR Article 20 — wired to the same `exportUserData` CF as
+    // `DataManagementView`. The previous implementation encoded only
+    // local `UserSettings` to disk, leaving the user's actual Firestore
+    // data (dogs, posts, bookings, friendships, ...) inaccessible.
     func exportData(completion: @escaping (Result<URL, Error>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let data = try JSONEncoder().encode(self.settings)
-                let tempURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("woofwalk_data_\(Date().timeIntervalSince1970).json")
-                try data.write(to: tempURL)
+        guard Auth.auth().currentUser != nil else {
+            completion(.failure(ExportError.notSignedIn))
+            return
+        }
 
-                DispatchQueue.main.async {
-                    completion(.success(tempURL))
+        functions
+            .httpsCallable("exportUserData")
+            .call([:]) { result, error in
+                Task { @MainActor in
+                    if let error = error {
+                        completion(.failure(error))
+                        return
+                    }
+
+                    guard let data = result?.data as? [String: Any] else {
+                        completion(.failure(ExportError.malformedResponse))
+                        return
+                    }
+
+                    if let downloadUrlString = data["downloadUrl"] as? String,
+                       let downloadUrl = URL(string: downloadUrlString) {
+                        URLSession.shared.downloadTask(with: downloadUrl) { tempLocation, _, downloadError in
+                            Task { @MainActor in
+                                if let downloadError = downloadError {
+                                    completion(.failure(downloadError))
+                                    return
+                                }
+                                guard let tempLocation = tempLocation else {
+                                    completion(.failure(ExportError.malformedResponse))
+                                    return
+                                }
+                                let dest = FileManager.default.temporaryDirectory
+                                    .appendingPathComponent("woofwalk_data_export_\(Int(Date().timeIntervalSince1970)).json")
+                                try? FileManager.default.removeItem(at: dest)
+                                do {
+                                    try FileManager.default.moveItem(at: tempLocation, to: dest)
+                                    completion(.success(dest))
+                                } catch {
+                                    completion(.failure(ExportError.writeFailed(error.localizedDescription)))
+                                }
+                            }
+                        }.resume()
+                        return
+                    }
+
+                    guard let bundle = data["bundle"] else {
+                        completion(.failure(ExportError.malformedResponse))
+                        return
+                    }
+
+                    do {
+                        let json = try JSONSerialization.data(
+                            withJSONObject: bundle,
+                            options: [.prettyPrinted, .sortedKeys]
+                        )
+                        let tempURL = FileManager.default.temporaryDirectory
+                            .appendingPathComponent("woofwalk_data_export_\(Int(Date().timeIntervalSince1970)).json")
+                        try json.write(to: tempURL, options: .atomic)
+                        completion(.success(tempURL))
+                    } catch {
+                        completion(.failure(ExportError.writeFailed(error.localizedDescription)))
+                    }
                 }
-            } catch {
-                DispatchQueue.main.async {
-                    completion(.failure(error))
-                }
-            }
         }
     }
 }

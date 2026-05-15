@@ -2,6 +2,7 @@ import Foundation
 import FirebaseCore
 import FirebaseAuth
 import FirebaseFirestore
+import FirebaseFunctions
 import GoogleSignIn
 import AuthenticationServices
 import CryptoKit
@@ -53,8 +54,39 @@ class AuthService: NSObject, ObservableObject {
 
     private let auth = Auth.auth()
     private let firestore = Firestore.firestore()
+    private lazy var functions = Functions.functions(region: "europe-west2")
     private var authStateHandle: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
+
+    /// Apple/GDPR-friendly threshold. If the user's most recent
+    /// sign-in is older than this, Firebase rejects sensitive
+    /// operations with `requiresRecentLogin` and the caller must
+    /// re-authenticate. Apple's account-deletion guidance is even
+    /// tighter; we keep a 5-minute window to be safe.
+    static let recentLoginThreshold: TimeInterval = 5 * 60
+
+    /// True when the current user's last-sign-in is fresh enough for
+    /// a Firebase sensitive operation (delete, change email, etc.).
+    /// Callers use this to decide whether to prompt for re-auth
+    /// before calling `deleteAccount()`.
+    var needsReauthForDeletion: Bool {
+        guard let lastSignIn = auth.currentUser?.metadata.lastSignInDate else {
+            return true
+        }
+        return Date().timeIntervalSince(lastSignIn) > Self.recentLoginThreshold
+    }
+
+    /// Provider IDs on the current user (e.g. "password", "apple.com",
+    /// "google.com"). Drives the re-auth UI — password users get a
+    /// password prompt; Apple users get the Apple Sign-In sheet.
+    var providerIds: [String] {
+        guard let user = auth.currentUser else { return [] }
+        return user.providerData.map { $0.providerID }
+    }
+
+    var currentUserEmail: String? {
+        auth.currentUser?.email
+    }
 
     private override init() {
         super.init()
@@ -281,22 +313,110 @@ class AuthService: NSObject, ObservableObject {
         }
     }
 
+    /// Re-authenticate the current Apple-Sign-In user. Required before
+    /// `deleteAccount()` for Apple-provider users whose last sign-in
+    /// is stale. Caller provides the fresh Apple authorization from a
+    /// `SignInWithAppleButton` flow.
+    func reauthenticateWithApple(authorization: ASAuthorization) async throws {
+        guard let user = auth.currentUser else {
+            throw AuthError.userNotFound
+        }
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let nonce = currentNonce,
+              let appleIDToken = appleIDCredential.identityToken,
+              let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+            throw AuthError.appleSignInFailed
+        }
+        let credential = OAuthProvider.credential(
+            withProviderID: "apple.com",
+            idToken: idTokenString,
+            rawNonce: nonce
+        )
+        do {
+            try await user.reauthenticate(with: credential)
+        } catch let error as NSError {
+            throw mapAuthError(error)
+        }
+    }
+
+    /// GDPR Article 17: right to erasure. Replaces the prior
+    /// client-only delete (which deleted `users/{uid}` and the auth
+    /// user, leaving dogs / posts / friendships / messages /
+    /// notifications / community memberships / bookings / reviews
+    /// orphaned in Firestore).
+    ///
+    /// Calls the `requestAccountDeletion` callable (europe-west2),
+    /// which:
+    ///   1. Verifies the confirmation phrase (`DELETE <email>`).
+    ///   2. Blocks if the user owns an organisation or has an open
+    ///      unclaimed-listing removal request.
+    ///   3. Calls `admin.auth().deleteUser(uid)`, which fires the
+    ///      `onUserDelete` trigger, which cascades across:
+    ///         users/{uid}, users/{uid}/* (subcollections),
+    ///         dogs (primaryOwnerId == uid),
+    ///         posts (authorId == uid),
+    ///         post likes/comments by uid,
+    ///         friendships (userId1/userId2 == uid),
+    ///         messageThreads (participantIds contains uid) +
+    ///           thread message bodies authored by uid,
+    ///         blocks (blockerId/blockedId == uid),
+    ///         feed_preferences/{uid},
+    ///         notifications (targetUid == uid),
+    ///         devices (userId == uid),
+    ///         walks (ownerId == uid),
+    ///         walk_diagnostics (uid == uid),
+    ///         communities/*/members (memberId == uid),
+    ///         qa_questions (askerId == uid),
+    ///         meet_greet_threads (clientUid == uid),
+    ///         reviews (reviewerId == uid),
+    ///         paymentMethods (addedByUid == uid) +
+    ///           stripe_pm_mappings (CF-only),
+    ///         user_consents (userId == uid),
+    ///         bookings (clientId == uid) — anonymised to
+    ///           "Deleted user", retained for business records,
+    ///         storage://users/{uid}/* and storage://dog-photos/{uid}/*.
+    ///
+    /// After success we sign out locally so the auth-state listener
+    /// flips `isAuthenticated -> false` and the UI routes to the
+    /// auth screen.
     func deleteAccount() async throws {
         guard let user = auth.currentUser else {
             throw AuthError.userNotFound
         }
+        guard let email = user.email, !email.isEmpty else {
+            // The CF rejects accounts without a verified email
+            // (the confirmation phrase requires one). Surface a
+            // clean error rather than a generic "internal" failure.
+            throw AuthError.unknownError("Add and verify an email address before deleting your account.")
+        }
 
-        let userId = user.uid
+        let payload: [String: Any] = [
+            "confirm": true,
+            "confirmationPhrase": "DELETE \(email)"
+        ]
 
         do {
-            try await firestore.collection("users").document(userId).delete()
-            try await user.delete()
-
-            KeychainManager.shared.deleteToken(forKey: "authToken")
-            KeychainManager.shared.deleteToken(forKey: "refreshToken")
+            _ = try await functions
+                .httpsCallable("requestAccountDeletion")
+                .call(payload)
         } catch let error as NSError {
-            throw mapAuthError(error)
+            // Firebase CF errors arrive as NSError with the
+            // `FunctionsErrorDomain` domain. `requiresRecentLogin`
+            // surfaces server-side as `failed-precondition`; the
+            // client check in `needsReauthForDeletion` should prevent
+            // hitting this path, but we map it cleanly just in case.
+            if error.domain == FunctionsErrorDomain,
+               let code = FunctionsErrorCode(rawValue: error.code),
+               code == .unauthenticated {
+                throw AuthError.unknownError("Please sign in again, then retry deleting your account.")
+            }
+            throw AuthError.unknownError(error.localizedDescription)
         }
+
+        // CF deleted the auth user — local Firebase SDK still holds a
+        // stale handle. Call signOut to clear caches + tokens and
+        // trigger the auth-state listener -> route to AuthScreen.
+        try? signOut()
     }
 
     func refreshToken() async throws -> String {

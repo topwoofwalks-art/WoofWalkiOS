@@ -118,6 +118,31 @@ enum AppRoute: Hashable {
     // Team invitation deeplink (woofwalk://accept-invite?token=...)
     case acceptInvite(token: String)
 
+    // Deep-link parity with Android (MainActivity.parseWoofWalkScheme):
+    // hosts that didn't already have an AppRoute case mapped one-to-one
+    // to an existing destination. Adding explicit cases keeps the iOS
+    // router pure-functional and unit-testable.
+    case lostDog(alertId: String)              // woofwalk://lost-dog/{alertId}
+    case watchWalk(token: String)              // woofwalk://watch-walk/{token} (Watch Me share)
+    case payment(bookingId: String)            // woofwalk://payment/{bookingId}
+    case addTip(bookingId: String)             // woofwalk://add_tip/{bookingId} (and `add-tip`)
+    case review(bookingId: String)             // woofwalk://review/{bookingId}
+    case teamInvite(orgId: String)             // woofwalk://team_invite/{orgId} (and `team-invite`)
+    case friendInvite(userId: String)          // woofwalk://friend-invite/{userId} (and `add`/`invite`)
+    case stripeConnect                         // woofwalk://stripe_connect
+    case oauthCallback                         // woofwalk://oauth
+    case communityDetail(communityId: String)  // woofwalk://community/{communityId}
+    case communityPost(communityId: String, postId: String) // woofwalk://community/{id}/post/{postId}
+    case question(questionId: String)          // woofwalk://q/{questionId} and woofwalk://qa/{id}
+    case eventDetail(eventId: String)          // woofwalk://event/{eventId}
+    case challengeDeepLink(challengeId: String) // woofwalk://challenge/{challengeId}
+    case dogDeepLink(dogId: String)            // woofwalk://dog/{dogId}
+    case share(shareToken: String)             // woofwalk://share/{token}
+    case providerDeepLink(providerId: String)  // woofwalk://provider/{providerId}
+    case charityDeepLink(charityId: String)    // woofwalk://charity/{charityId}
+    case settingsSection(section: String)      // woofwalk://settings/{section}
+    case referral(code: String)                // woofwalk://referral/{code}
+
     func hash(into hasher: inout Hasher) {
         switch self {
         case .map: hasher.combine("map")
@@ -203,6 +228,26 @@ enum AppRoute: Hashable {
         case .clientCashRequest(let id): hasher.combine("clientCashRequest"); hasher.combine(id)
         case .businessCashRequest(let id): hasher.combine("businessCashRequest"); hasher.combine(id)
         case .acceptInvite(let token): hasher.combine("acceptInvite"); hasher.combine(token)
+        case .lostDog(let id): hasher.combine("lostDog"); hasher.combine(id)
+        case .watchWalk(let token): hasher.combine("watchWalk"); hasher.combine(token)
+        case .payment(let id): hasher.combine("payment"); hasher.combine(id)
+        case .addTip(let id): hasher.combine("addTip"); hasher.combine(id)
+        case .review(let id): hasher.combine("review"); hasher.combine(id)
+        case .teamInvite(let id): hasher.combine("teamInvite"); hasher.combine(id)
+        case .friendInvite(let id): hasher.combine("friendInvite"); hasher.combine(id)
+        case .stripeConnect: hasher.combine("stripeConnect")
+        case .oauthCallback: hasher.combine("oauthCallback")
+        case .communityDetail(let id): hasher.combine("communityDetail"); hasher.combine(id)
+        case .communityPost(let cId, let pId): hasher.combine("communityPost"); hasher.combine(cId); hasher.combine(pId)
+        case .question(let id): hasher.combine("question"); hasher.combine(id)
+        case .eventDetail(let id): hasher.combine("eventDetail"); hasher.combine(id)
+        case .challengeDeepLink(let id): hasher.combine("challengeDeepLink"); hasher.combine(id)
+        case .dogDeepLink(let id): hasher.combine("dogDeepLink"); hasher.combine(id)
+        case .share(let token): hasher.combine("share"); hasher.combine(token)
+        case .providerDeepLink(let id): hasher.combine("providerDeepLink"); hasher.combine(id)
+        case .charityDeepLink(let id): hasher.combine("charityDeepLink"); hasher.combine(id)
+        case .settingsSection(let s): hasher.combine("settingsSection"); hasher.combine(s)
+        case .referral(let c): hasher.combine("referral"); hasher.combine(c)
         }
     }
 

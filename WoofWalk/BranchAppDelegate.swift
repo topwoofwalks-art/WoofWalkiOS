@@ -1,5 +1,6 @@
 import UIKit
 import SwiftUI
+import FirebaseMessaging
 
 /// Lightweight `UIApplicationDelegate` we mount via
 /// `@UIApplicationDelegateAdaptor` in `WoofWalkApp` purely to forward
@@ -41,11 +42,24 @@ final class BranchAppDelegate: NSObject, UIApplicationDelegate {
         restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
     ) -> Bool {
         // Universal links — Branch consumes its own `*.app.link`
-        // domains here. Non-Branch URLs (e.g. our Firebase-hosted
-        // accept-invite emails) will return false and fall through to
-        // SwiftUI's .onContinueUserActivity, which existing iOS code
-        // can handle when/if needed.
-        return BranchReferralService.shared.handleUserActivity(userActivity)
+        // domains first. If Branch ignores the activity (i.e. it's our
+        // own `https://woofwalk.app/...` Universal Link), we forward
+        // the `webpageURL` to the same parser as the custom-scheme
+        // handler so all 19 Android-parity hosts resolve identically
+        // regardless of whether the link arrived as `woofwalk://x/y`
+        // or `https://woofwalk.app/x/y`. Mirrors the Android manifest's
+        // dual scheme/App-Links intent-filter coverage.
+        if BranchReferralService.shared.handleUserActivity(userActivity) {
+            return true
+        }
+        if userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+           let webURL = userActivity.webpageURL {
+            Task { @MainActor in
+                WoofWalkApp.handleDeeplink(url: webURL)
+            }
+            return true
+        }
+        return false
     }
 
     func application(
@@ -58,5 +72,40 @@ final class BranchAppDelegate: NSObject, UIApplicationDelegate {
         // woofwalk://accept-invite routes still flow through SwiftUI's
         // `.onOpenURL` handler in WoofWalkApp.body, untouched.
         return BranchReferralService.shared.handleOpenURL(url, options: options)
+    }
+
+    // MARK: - APNs / FCM registration
+    //
+    // APNs hands us the device token on the UIApplicationDelegate, not on
+    // any SwiftUI surface — so this is the only place we can forward it
+    // to FirebaseMessaging. Setting `Messaging.apnsToken` is what triggers
+    // the FCM-token callback in `NotificationService` (the
+    // `MessagingDelegate.messaging(_:didReceiveRegistrationToken:)`
+    // method), which in turn writes the FCM token to
+    // `users/{uid}/devices/{installationId}` for server-side targeting —
+    // mirroring `WoofWalkMessagingService.onNewToken` on Android.
+
+    func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        Messaging.messaging().apnsToken = deviceToken
+        NotificationService.shared.didReceiveRemoteNotificationToken(deviceToken)
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        print("[BranchAppDelegate] APNs registration failed: \(error.localizedDescription)")
+    }
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        NotificationService.shared.handleRemoteNotification(userInfo: userInfo)
+        completionHandler(.newData)
     }
 }

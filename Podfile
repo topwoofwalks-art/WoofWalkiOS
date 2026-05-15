@@ -7,7 +7,7 @@ target 'WoofWalk' do
   pod 'Firebase/Auth', '~> 10.29'
   pod 'Firebase/Firestore', '~> 10.29'
   pod 'Firebase/Storage', '~> 10.29'
-  pod 'Firebase/Messaging', '~> 10.29'
+  pod 'FirebaseMessaging', '~> 10.29'
   pod 'Firebase/Crashlytics', '~> 10.29'
   pod 'Firebase/Analytics', '~> 10.29'
   pod 'Firebase/Functions', '~> 10.29'

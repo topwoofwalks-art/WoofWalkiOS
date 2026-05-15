@@ -1,11 +1,18 @@
 import SwiftUI
+import AuthenticationServices
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
+    @ObservedObject private var authService = AuthService.shared
     @Environment(\.dismiss) private var dismiss
 
     @State private var showAboutDialog = false
     @State private var showDeleteDialog = false
+    @State private var showReauthPasswordPrompt = false
+    @State private var showReauthAppleRequired = false
+    @State private var reauthPassword: String = ""
+    @State private var deleteError: String?
+    @State private var isDeleting = false
     @State private var showExportDialog = false
     @State private var exportURL: URL?
 
@@ -41,13 +48,115 @@ struct SettingsView: View {
             .alert("Delete Account?", isPresented: $showDeleteDialog) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
+                    handleDeleteAccountTap()
                 }
             } message: {
-                Text("This will permanently delete your account and all associated data. This action cannot be undone.")
+                Text("This will permanently delete your account and all WoofWalk data — dogs, walks, posts, friendships, messages, reviews, bookings, and consent records. This action cannot be undone.")
+            }
+            // Password re-auth path. Apple requires recent
+            // authentication for account deletion; if the last
+            // sign-in is older than 5 minutes we prompt for the
+            // password first, then delete on success.
+            .alert("Confirm Your Password", isPresented: $showReauthPasswordPrompt) {
+                SecureField("Password", text: $reauthPassword)
+                Button("Cancel", role: .cancel) { reauthPassword = "" }
+                Button("Confirm", role: .destructive) {
+                    performDeleteWithPasswordReauth()
+                }
+            } message: {
+                Text("For security, please enter your password to confirm account deletion.")
+            }
+            // Apple Sign-In users — we can't reauthenticate via
+            // password, so we tell them to sign out + sign in again.
+            // (A future iteration can present a SignInWithAppleButton
+            // sheet inline; the current flow keeps the surface area
+            // minimal but still GDPR-compliant.)
+            .alert("Sign In Again", isPresented: $showReauthAppleRequired) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("For your security, please sign out and sign back in with Apple before deleting your account.")
+            }
+            .alert("Couldn't Delete Account", isPresented: Binding(
+                get: { deleteError != nil },
+                set: { if !$0 { deleteError = nil } }
+            )) {
+                Button("OK", role: .cancel) { deleteError = nil }
+            } message: {
+                Text(deleteError ?? "")
             }
             .sheet(isPresented: $showExportDialog) {
                 if let url = exportURL {
                     SettingsShareSheet(items: [url])
+                }
+            }
+            .overlay {
+                if isDeleting {
+                    ProgressView("Deleting account…")
+                        .padding()
+                        .background(.regularMaterial)
+                        .cornerRadius(12)
+                }
+            }
+        }
+    }
+
+    private func handleDeleteAccountTap() {
+        // Recent-login gate — Apple's account-deletion guidance and
+        // Firebase's `requiresRecentLogin` both demand a fresh
+        // credential before deleting. If the user just signed in,
+        // skip straight to the CF call; otherwise route them through
+        // the matching provider's re-auth.
+        guard authService.needsReauthForDeletion else {
+            performDelete()
+            return
+        }
+        let providers = authService.providerIds
+        if providers.contains("password") {
+            showReauthPasswordPrompt = true
+        } else if providers.contains("apple.com") || providers.contains("google.com") {
+            // Google + Apple users — easiest path is "sign out and
+            // back in" since we don't keep their refresh token.
+            showReauthAppleRequired = true
+        } else {
+            // Anonymous or unusual provider — try the CF directly;
+            // the server will reject with `unauthenticated` if needed
+            // and we'll surface that as the standard error message.
+            performDelete()
+        }
+    }
+
+    private func performDeleteWithPasswordReauth() {
+        let password = reauthPassword
+        reauthPassword = ""
+        guard let email = authService.currentUserEmail, !email.isEmpty else {
+            deleteError = "Your account is missing an email address. Please contact support."
+            return
+        }
+        isDeleting = true
+        Task {
+            do {
+                try await authService.reauthenticate(email: email, password: password)
+                try await authService.deleteAccount()
+                await MainActor.run { isDeleting = false }
+            } catch {
+                await MainActor.run {
+                    isDeleting = false
+                    deleteError = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func performDelete() {
+        isDeleting = true
+        Task {
+            do {
+                try await authService.deleteAccount()
+                await MainActor.run { isDeleting = false }
+            } catch {
+                await MainActor.run {
+                    isDeleting = false
+                    deleteError = error.localizedDescription
                 }
             }
         }

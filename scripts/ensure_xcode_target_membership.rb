@@ -48,16 +48,29 @@ source_build_phase.files.each do |build_file|
   end
 end
 
+# Directories deliberately excluded from the iOS app build (commit
+# 6ad2f32 "Exclude Database layer (SwiftData/iOS 17) and AppDependencies
+# from build"). These contain parallel SwiftData implementations of
+# files that ALSO live in the canonical Repositories/ folder — globbing
+# them in would land same-basename .stringsdata outputs in the build
+# and trip "Multiple commands produce" errors.
+EXCLUDED_PATH_PREFIXES = %w[
+  WoofWalk/Database
+  WoofWalk/AppDependencies
+].freeze
+
 # Walk the source tree and find every .swift file not yet in the target.
 missing = []
 Dir.glob("#{SOURCE_ROOT}/**/*.swift").each do |path|
+  normalised = path.tr("\\", "/")
+  next if EXCLUDED_PATH_PREFIXES.any? { |prefix| normalised.start_with?(prefix + "/") }
   begin
     abs_path = File.realpath(path)
   rescue Errno::ENOENT
     next
   end
   next if existing_paths.include?(abs_path)
-  missing << path.tr("\\", "/")
+  missing << normalised
 end
 
 if missing.empty?

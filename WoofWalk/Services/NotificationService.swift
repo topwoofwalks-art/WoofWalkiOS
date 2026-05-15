@@ -1,8 +1,11 @@
 import Foundation
 import UserNotifications
 import UIKit
+import FirebaseMessaging
+import FirebaseAuth
+import FirebaseFirestore
 
-class NotificationService: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
+class NotificationService: NSObject, ObservableObject, UNUserNotificationCenterDelegate, MessagingDelegate {
     static let shared = NotificationService()
 
     @Published var isAuthorized = false
@@ -38,6 +41,7 @@ class NotificationService: NSObject, ObservableObject, UNUserNotificationCenterD
 
     func configure() {
         UNUserNotificationCenter.current().delegate = self
+        Messaging.messaging().delegate = self
         registerCategories()
         checkAuthorizationStatus()
     }
@@ -206,17 +210,99 @@ class NotificationService: NSObject, ObservableObject, UNUserNotificationCenterD
     func didReceiveRemoteNotificationToken(_ deviceToken: Data) {
         let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
         print("[NotificationService] APNs token: \(token)")
-        // Forward to Firebase Messaging when available
     }
 
     func didReceiveFCMToken(_ token: String?) {
         DispatchQueue.main.async {
             self.fcmToken = token
         }
-        if let token = token {
-            print("[NotificationService] FCM token: \(token)")
-            // TODO: Send token to backend for targeting
+        guard let token = token else { return }
+        print("[NotificationService] FCM token: \(token)")
+        persistFCMTokenToFirestore(token)
+    }
+
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        didReceiveFCMToken(fcmToken)
+    }
+
+    // MARK: - Firestore device-token sync
+
+    /// Stable per-install identifier mirroring Android's
+    /// `Settings.Secure.ANDROID_ID` use in `WoofWalkMessagingService`.
+    /// `identifierForVendor` resets on full uninstall, which matches the
+    /// Android behaviour and keeps the `users/{uid}/devices/{id}` doc
+    /// scoped to a single physical install.
+    private static let installationIdKey = "WoofWalk.installationId"
+
+    private var installationId: String {
+        let defaults = UserDefaults.standard
+        if let existing = defaults.string(forKey: Self.installationIdKey), !existing.isEmpty {
+            return existing
         }
+        let fresh = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        defaults.set(fresh, forKey: Self.installationIdKey)
+        return fresh
+    }
+
+    private var appVersionString: String {
+        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
+        return "\(short) (\(build))"
+    }
+
+    private func persistFCMTokenToFirestore(_ token: String) {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            print("[NotificationService] Skipping FCM token write — no signed-in user")
+            return
+        }
+        let deviceId = installationId
+        let payload: [String: Any] = [
+            "token": token,
+            "platform": "ios",
+            "updatedAt": FieldValue.serverTimestamp(),
+            "appVersion": appVersionString
+        ]
+        Firestore.firestore()
+            .collection("users")
+            .document(uid)
+            .collection("devices")
+            .document(deviceId)
+            .setData(payload, merge: true) { error in
+                if let error = error {
+                    print("[NotificationService] Failed to write FCM token: \(error.localizedDescription)")
+                } else {
+                    print("[NotificationService] FCM token written to users/\(uid)/devices/\(deviceId)")
+                }
+            }
+    }
+
+    // MARK: - Incoming remote notification routing
+    //
+    // Server payloads carry a `type` string (see Android
+    // `WoofWalkMessagingService.onMessageReceived`). We re-broadcast each
+    // type onto a `NotificationCenter` name that the relevant SwiftUI
+    // screen already observes, and run the `actionUrl` deep-link mapper
+    // afterwards so cash-request and other URL-driven flows still route
+    // even when `type` is set.
+    func handleRemoteNotification(userInfo: [AnyHashable: Any]) {
+        let type = (userInfo["type"] as? String) ?? ""
+        switch type {
+        case "lost_dog_alert", "lostDogAlert":
+            NotificationCenter.default.post(name: .lostDogAlertReceived, object: nil, userInfo: userInfo)
+        case "walk_started", "WALK_STARTED":
+            NotificationCenter.default.post(name: .startWalkFromNotification, object: nil, userInfo: userInfo)
+        case "walk_update", "walk_completed", "WALK_UPDATE", "WALK_COMPLETED":
+            NotificationCenter.default.post(name: .viewWalkFromNotification, object: nil, userInfo: userInfo)
+        case "booking_reminder", "BOOKING_CONFIRMED", "BOOKING_CANCELLED",
+             "BOOKING_REQUEST", "BOOKING_REMINDER", "bookingUpdate":
+            NotificationCenter.default.post(name: .viewBookingFromNotification, object: nil, userInfo: userInfo)
+        case "chat_message", "CHAT_MESSAGE", "MESSAGE_NEW", "MESSAGE_REPLY":
+            NotificationCenter.default.post(name: .replyFromNotification, object: nil, userInfo: userInfo)
+        default:
+            NotificationCenter.default.post(name: .openFromNotification, object: nil, userInfo: userInfo)
+        }
+
+        routeFromActionUrl(in: userInfo)
     }
 
     // MARK: - Action Handling
@@ -301,6 +387,13 @@ extension Notification.Name {
     static let replyFromNotification = Notification.Name("replyFromNotification")
     static let markReadFromNotification = Notification.Name("markReadFromNotification")
     static let openFromNotification = Notification.Name("openFromNotification")
+
+    /// Posted by `NotificationService` when an FCM payload of type
+    /// `lost_dog_alert` lands. The lost-dog map screen observes this so
+    /// an in-app banner / map pin can render while the user is on a
+    /// foreground tab. Mirrors Android's
+    /// `WoofWalkMessagingService.handleLostDogAlert` notification path.
+    static let lostDogAlertReceived = Notification.Name("lostDogAlertReceived")
 
     /// Posted by `NotificationService` when an FCM payload's `actionUrl`
     /// resolves to a known `AppRoute`. `userInfo["route"]` is the resolved

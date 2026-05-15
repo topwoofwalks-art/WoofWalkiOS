@@ -454,6 +454,117 @@ class UserRepository: ObservableObject {
         return data
     }
 
+    // MARK: - Block / Mute (feed visibility controls)
+    //
+    // Block: stored symmetrically in /friendships with status=BLOCKED
+    // and requestedBy=blocker. Mirrors Android FriendRepository.blockUser
+    // exactly so the same Cloud Functions / triggers / portal queries
+    // see one schema across platforms.
+    //
+    // Mute: stored as an array union on /feed_preferences/{uid}.mutedUsers.
+    // Mirrors Android FeedRepository.muteUser / unmuteUser. The feed
+    // viewmodel reads this on session start (and after each block /
+    // mute action) into an in-memory Set for O(1) post filtering.
+
+    /// Block another user. Their posts disappear from the current
+    /// user's feed and friend requests/messages from them are blocked.
+    /// The action is symmetric (both sides hidden from each other)
+    /// because the underlying /friendships doc covers both directions.
+    func blockUser(_ targetUserId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+        guard userId != targetUserId else {
+            throw NSError(domain: "UserRepository", code: 400, userInfo: [NSLocalizedDescriptionKey: "Cannot block yourself"])
+        }
+
+        let pair = canonicalPair(userId, targetUserId)
+        let docId = "\(pair.lo)_\(pair.hi)"
+
+        // setData overwrites any existing PENDING / ACCEPTED state —
+        // blocking implicitly drops the friendship. requestedBy stays
+        // the blocker so unblockUser can gate on it.
+        try await db.collection("friendships").document(docId).setData([
+            "userId1": pair.lo,
+            "userId2": pair.hi,
+            "status": FriendStatus.blocked.rawValue,
+            "requestedBy": userId,
+            "createdAt": FieldValue.serverTimestamp()
+        ])
+        print("[UserRepository] User blocked: \(docId)")
+    }
+
+    /// Unblock a previously blocked user. Only the original blocker
+    /// (tracked via `requestedBy` on the friendship doc) can unblock —
+    /// mirrors Android FriendRepository.unblockUser.
+    func unblockUser(_ targetUserId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+
+        let pair = canonicalPair(userId, targetUserId)
+        let docId = "\(pair.lo)_\(pair.hi)"
+        let docRef = db.collection("friendships").document(docId)
+        let snap = try await docRef.getDocument()
+
+        guard let data = snap.data() else {
+            throw NSError(domain: "UserRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Block not found"])
+        }
+        let status = data["status"] as? String ?? ""
+        let requestedBy = data["requestedBy"] as? String ?? ""
+
+        guard status == FriendStatus.blocked.rawValue else {
+            throw NSError(domain: "UserRepository", code: 409, userInfo: [NSLocalizedDescriptionKey: "User is not blocked"])
+        }
+        // Canonicalised docs sort (userId1, userId2) lexicographically,
+        // so userId1 doesn't identify the blocker. Gate on requestedBy
+        // — otherwise the blocked party could lift the block whenever
+        // their uid happened to sort to userId1.
+        guard requestedBy == userId else {
+            throw NSError(domain: "UserRepository", code: 403, userInfo: [NSLocalizedDescriptionKey: "Not authorized to unblock this user"])
+        }
+
+        try await docRef.delete()
+        print("[UserRepository] User unblocked: \(docId)")
+    }
+
+    /// Mute a user — their posts disappear from the feed without the
+    /// stronger consequences of blocking (DMs / friend requests still
+    /// work; they don't know they've been muted). Stored as an
+    /// array-union on /feed_preferences/{uid}.mutedUsers, mirroring
+    /// Android FeedRepository.muteUser.
+    func muteUser(_ targetUserId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+        guard userId != targetUserId else {
+            throw NSError(domain: "UserRepository", code: 400, userInfo: [NSLocalizedDescriptionKey: "Cannot mute yourself"])
+        }
+
+        // setData(merge:true) instead of updateData — first-ever mute
+        // creates the prefs doc, subsequent mutes union into it. Matches
+        // Android's `update` which assumes the doc exists; using merge
+        // here covers the first-mute bootstrap without an extra read.
+        try await db.collection("feed_preferences").document(userId).setData([
+            "mutedUsers": FieldValue.arrayUnion([targetUserId]),
+            "updatedAt": FieldValue.serverTimestamp()
+        ], merge: true)
+        print("[UserRepository] User muted: \(targetUserId)")
+    }
+
+    /// Unmute a user. arrayRemove on the same prefs doc.
+    func unmuteUser(_ targetUserId: String) async throws {
+        guard let userId = auth.currentUser?.uid else {
+            throw NSError(domain: "UserRepository", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])
+        }
+
+        try await db.collection("feed_preferences").document(userId).updateData([
+            "mutedUsers": FieldValue.arrayRemove([targetUserId]),
+            "updatedAt": FieldValue.serverTimestamp()
+        ])
+        print("[UserRepository] User unmuted: \(targetUserId)")
+    }
+
 }
 
 // Array.chunked(into:) is now in Extensions/Array+Chunked.swift — single

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Associated Domains — Universal Links from `https://woofwalk.app/*`
+	  open the app directly instead of bouncing through Safari. Mirrors
+	  Android's `<intent-filter android:autoVerify="true">` block in
+	  AndroidManifest.xml for the same domain.
+
+	  Apple fetches `https://woofwalk.app/.well-known/apple-app-site-association`
+	  on first launch + on every app install. The AASA file is published
+	  by Firebase Hosting (see `firebase.json` rewrites) and lists this
+	  app's appID prefix + bundle id so iOS knows we own the domain.
+
+	  Branch.io's `*.app.link` subdomains are listed too so deferred
+	  deep-link payloads from invite emails / web banners route through
+	  Branch first, then fall through to our own parser for non-Branch
+	  paths.
+
+	  The `webcredentials:` entry lets Safari AutoFill the user's saved
+	  woofwalk.app password back into the iOS sign-in form (parity with
+	  Android's Smart Lock — keeps cross-platform users on one credential).
+	-->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:woofwalk.app</string>
+		<string>applinks:woofwalk.app.link</string>
+		<string>applinks:woofwalk-alternate.app.link</string>
+		<string>webcredentials:woofwalk.app</string>
+	</array>
+</dict>
+</plist>
