@@ -57,13 +57,11 @@ extension DocumentSnapshot {
     }
 }
 
-extension QueryDocumentSnapshot {
-    func decodeCommunity() -> Community? { (self as DocumentSnapshot).decodeCommunity() }
-    func decodeCommunityPost() -> CommunityPost? { (self as DocumentSnapshot).decodeCommunityPost() }
-    func decodeCommunityMember() -> CommunityMember? { (self as DocumentSnapshot).decodeCommunityMember() }
-    func decodeCommunityComment() -> CommunityComment? { (self as DocumentSnapshot).decodeCommunityComment() }
-    func decodeCommunityEvent() -> CommunityEvent? { (self as DocumentSnapshot).decodeCommunityEvent() }
-    func decodeCommunityJoinRequest() -> CommunityJoinRequest? { (self as DocumentSnapshot).decodeCommunityJoinRequest() }
-    func decodeCommunityReport() -> CommunityReport? { (self as DocumentSnapshot).decodeCommunityReport() }
-    func decodeCommunityChatMessage() -> CommunityChatMessage? { (self as DocumentSnapshot).decodeCommunityChatMessage() }
-}
+// QueryDocumentSnapshot inherits from DocumentSnapshot, so the extension
+// above already supplies these methods to QuerySnapshot.documents[i] via
+// Swift's normal extension-inheritance. We previously had an explicit
+// QueryDocumentSnapshot extension that re-forwarded each method by casting
+// to DocumentSnapshot, but Release builds correctly rejected it: Swift
+// can't override inherited extension methods, and call sites became
+// ambiguous between the inherited and re-declared method. Deleted whole
+// block 2026-05-15 — call sites work unchanged.

@@ -340,13 +340,20 @@ struct CommunityPostDetailScreen: View {
         }
     }
 
-    @ViewBuilder
-    private func commentTree(comment: CommunityComment, depth: Int) -> some View {
-        commentRow(comment: comment, depth: depth)
+    // Recursive comment tree. Returns AnyView so the recursion has a
+    // concrete return type — `some View` doesn't work here because the
+    // opaque type would have to be defined in terms of itself (Swift
+    // 5.7+ catches this as a Release-build error; Debug had been silent).
+    private func commentTree(comment: CommunityComment, depth: Int) -> AnyView {
         let replies = viewModel.replies(to: comment.id ?? "")
-        ForEach(replies) { reply in
-            commentTree(comment: reply, depth: depth + 1)
-        }
+        return AnyView(
+            Group {
+                commentRow(comment: comment, depth: depth)
+                ForEach(replies) { reply in
+                    commentTree(comment: reply, depth: depth + 1)
+                }
+            }
+        )
     }
 
     private func commentRow(comment: CommunityComment, depth: Int) -> some View {
