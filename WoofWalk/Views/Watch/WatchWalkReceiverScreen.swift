@@ -433,11 +433,9 @@ struct WatchWalkReceiverScreen: View {
             // fixes update the marker but don't fight the user's pan/zoom.
             if !hasCenteredOnFix, parsed.hasFix {
                 hasCenteredOnFix = true
-                cameraPosition = .region(
-                    MKCoordinateRegion(
-                        center: CLLocationCoordinate2D(latitude: parsed.lastLat, longitude: parsed.lastLng),
-                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                    )
+                region = MKCoordinateRegion(
+                    center: CLLocationCoordinate2D(latitude: parsed.lastLat, longitude: parsed.lastLng),
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                 )
             }
         } catch {

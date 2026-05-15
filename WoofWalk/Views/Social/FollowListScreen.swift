@@ -262,13 +262,5 @@ private struct FollowListRow: View {
     }
 }
 
-// MARK: - Array chunk helper (private to this file to avoid touching shared utils)
-
-private extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        guard size > 0 else { return [self] }
-        return stride(from: 0, to: count, by: size).map {
-            Array(self[$0 ..< Swift.min($0 + size, count)])
-        }
-    }
-}
+// `chunked(into:)` is provided by the canonical Array extension at
+// `Extensions/Array+Chunked.swift`. Do not re-declare it here.

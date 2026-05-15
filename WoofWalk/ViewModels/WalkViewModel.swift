@@ -569,11 +569,18 @@ class WalkLocationManager: ObservableObject {
         print("Location tracking started — dogIds=\(dogIds.count) mode=\(mode.rawValue)")
         // Bridge into the shared WalkTrackingService so diagnostics +
         // crash-recovery + auto-resume see the same context.
-        WalkTrackingService.shared.startTracking(
-            sessionId: nil,
-            dogIds: dogIds,
-            mode: mode.serviceToken
-        )
+        // `WalkTrackingService.startTracking` is @MainActor; this method
+        // is callable from a nonisolated context (Combine subscribers,
+        // background queues), so hop to the main actor explicitly.
+        let dogIdsSnapshot = dogIds
+        let modeToken = mode.serviceToken
+        Task { @MainActor in
+            WalkTrackingService.shared.startTracking(
+                sessionId: nil,
+                dogIds: dogIdsSnapshot,
+                mode: modeToken
+            )
+        }
     }
 
     func pauseTracking() {

@@ -39,8 +39,19 @@ struct WatchedWalksScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await refresh() }
         .refreshable { await refresh() }
-        .navigationDestination(item: $openedToken) { token in
-            WatchWalkReceiverScreen(token: token)
+        // iOS-16-compatible push: bind a Bool to whether we have a pending
+        // token, and read the token at destination-build time. iOS 17's
+        // `.navigationDestination(item:)` would be cleaner but we still
+        // ship to iOS 16.
+        .navigationDestination(
+            isPresented: Binding(
+                get: { openedToken != nil },
+                set: { isOpen in if !isOpen { openedToken = nil } }
+            )
+        ) {
+            if let token = openedToken {
+                WatchWalkReceiverScreen(token: token)
+            }
         }
     }
 

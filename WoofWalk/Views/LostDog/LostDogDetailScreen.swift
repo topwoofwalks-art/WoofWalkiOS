@@ -432,11 +432,9 @@ struct LostDogDetailScreen: View {
             alert = parsed
             loadState = .loaded
             if let lat = parsed.lat, let lng = parsed.lng, lat != 0 || lng != 0 {
-                cameraPosition = .region(
-                    MKCoordinateRegion(
-                        center: CLLocationCoordinate2D(latitude: lat, longitude: lng),
-                        span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
-                    )
+                region = MKCoordinateRegion(
+                    center: CLLocationCoordinate2D(latitude: lat, longitude: lng),
+                    span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
                 )
             }
         } catch {

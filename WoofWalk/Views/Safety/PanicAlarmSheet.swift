@@ -38,7 +38,7 @@ struct PanicAlarmSheet: View {
 
     @State private var audioPlayer: AVAudioPlayer?
     @State private var systemSoundTimer: Timer?
-    @State private var cameraPosition: MapCameraPosition
+    @State private var region: MKCoordinateRegion
 
     init(payload: [AnyHashable: Any], onDismiss: @escaping () -> Void) {
         self.payload = payload
@@ -55,7 +55,7 @@ struct PanicAlarmSheet: View {
             center = CLLocationCoordinate2D(latitude: 54.5, longitude: -2.5)
             span = MKCoordinateSpan(latitudeDelta: 8, longitudeDelta: 8)
         }
-        _cameraPosition = State(initialValue: .region(MKCoordinateRegion(center: center, span: span)))
+        _region = State(initialValue: MKCoordinateRegion(center: center, span: span))
     }
 
     private var walkerFirstName: String {
@@ -128,8 +128,11 @@ struct PanicAlarmSheet: View {
                 // Map preview of last-known fix (or fallback message).
                 Group {
                     if let fix = lastFix {
-                        Map(position: $cameraPosition) {
-                            Annotation(walkerFirstName, coordinate: fix) {
+                        Map(
+                            coordinateRegion: $region,
+                            annotationItems: [PanicPin(coordinate: fix)]
+                        ) { pin in
+                            MapAnnotation(coordinate: pin.coordinate) {
                                 ZStack {
                                     Circle()
                                         .fill(Color.white)
@@ -140,7 +143,6 @@ struct PanicAlarmSheet: View {
                                 }
                             }
                         }
-                        .mapStyle(.standard(elevation: .flat))
                         .frame(height: 220)
                         .cornerRadius(14)
                         .padding(.horizontal, 20)
@@ -332,6 +334,15 @@ struct PanicAlarmSheet: View {
         }
         return 0
     }
+}
+
+// MARK: - Map annotation
+
+/// Identifiable wrapper for the single "walker last fix" pin on the
+/// iOS-16-compatible `Map(coordinateRegion:annotationItems:)` API.
+private struct PanicPin: Identifiable {
+    let id = UUID()
+    let coordinate: CLLocationCoordinate2D
 }
 
 // MARK: - Colours

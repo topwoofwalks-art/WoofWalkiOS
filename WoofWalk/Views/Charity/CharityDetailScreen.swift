@@ -308,19 +308,22 @@ struct CharityDetailScreen: View {
                 .limit(to: 100)
                 .getDocuments()
 
-            var rows: [LeaderboardRowModel] = []
-            for doc in snap.documents {
-                let data = doc.data()
-                let cid = data["charityId"] as? String ?? ""
-                guard cid == charityId else { continue }
-                let pts: Int64
-                if let n = data["points"] as? Int64 { pts = n }
-                else if let n = data["points"] as? Int { pts = Int64(n) }
-                else if let n = data["points"] as? Double { pts = Int64(n) }
-                else { pts = 0 }
-                rows.append(LeaderboardRowModel(id: doc.documentID, userId: doc.documentID, points: pts))
-                if rows.count >= 20 { break }
-            }
+            // Build the list immutably so the value can be safely captured
+            // by the @MainActor closure below under strict concurrency.
+            let rows: [LeaderboardRowModel] = snap.documents
+                .compactMap { doc -> LeaderboardRowModel? in
+                    let data = doc.data()
+                    let cid = data["charityId"] as? String ?? ""
+                    guard cid == charityId else { return nil }
+                    let pts: Int64
+                    if let n = data["points"] as? Int64 { pts = n }
+                    else if let n = data["points"] as? Int { pts = Int64(n) }
+                    else if let n = data["points"] as? Double { pts = Int64(n) }
+                    else { pts = 0 }
+                    return LeaderboardRowModel(id: doc.documentID, userId: doc.documentID, points: pts)
+                }
+                .prefix(20)
+                .map { $0 }
 
             await MainActor.run { self.leaderboard = rows }
             await hydrateLeaderboardUsers(rows.map { $0.userId })
@@ -336,30 +339,47 @@ struct CharityDetailScreen: View {
         let chunks = stride(from: 0, to: userIds.count, by: 30).map {
             Array(userIds[$0..<min($0 + 30, userIds.count)])
         }
-        var names: [String: String] = [:]
-        var avatars: [String: String] = [:]
+
+        // Build one (names, avatars) tuple per chunk so we never mutate a
+        // captured `var` across an `await` — Swift 5.10 strict concurrency
+        // rejects that. The per-chunk results are then merged into two
+        // immutable dictionaries before we hop to the main actor.
+        var chunkResults: [(names: [String: String], avatars: [String: String])] = []
         for chunk in chunks {
             do {
                 let snap = try await db.collection("users")
                     .whereField(FieldPath.documentID(), in: chunk)
                     .getDocuments()
-                for doc in snap.documents {
-                    let data = doc.data()
-                    let display = (data["displayName"] as? String).flatMap { $0.isEmpty ? nil : $0 }
-                        ?? (data["username"] as? String)
-                        ?? "Walker"
-                    names[doc.documentID] = display
-                    if let url = data["photoUrl"] as? String, !url.isEmpty {
-                        avatars[doc.documentID] = url
+                let pairs: [(id: String, name: String, avatar: String?)] =
+                    snap.documents.map { doc in
+                        let data = doc.data()
+                        let display = (data["displayName"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+                            ?? (data["username"] as? String)
+                            ?? "Walker"
+                        let avatarUrl = (data["photoUrl"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+                        return (id: doc.documentID, name: display, avatar: avatarUrl)
                     }
-                }
+                let chunkNames = Dictionary(uniqueKeysWithValues: pairs.map { ($0.id, $0.name) })
+                let chunkAvatars = Dictionary(uniqueKeysWithValues: pairs.compactMap { p -> (String, String)? in
+                    guard let a = p.avatar else { return nil }
+                    return (p.id, a)
+                })
+                chunkResults.append((names: chunkNames, avatars: chunkAvatars))
             } catch {
                 continue
             }
         }
+
+        let finalNames: [String: String] = chunkResults.reduce(into: [:]) { acc, r in
+            acc.merge(r.names) { _, new in new }
+        }
+        let finalAvatars: [String: String] = chunkResults.reduce(into: [:]) { acc, r in
+            acc.merge(r.avatars) { _, new in new }
+        }
+
         await MainActor.run {
-            self.leaderboardNames.merge(names) { _, new in new }
-            self.leaderboardAvatars.merge(avatars) { _, new in new }
+            self.leaderboardNames.merge(finalNames) { _, new in new }
+            self.leaderboardAvatars.merge(finalAvatars) { _, new in new }
         }
     }
 
