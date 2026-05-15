@@ -136,19 +136,36 @@ platform :ios do
       build_number: build_num
     )
 
+    # The Xcode project pre-dated the developer account so DEVELOPMENT_TEAM
+    # and PROVISIONING_PROFILE_SPECIFIER are not set in project.pbxproj. We
+    # patch them in-place on the runner (throwaway file system) so the
+    # build can sign. Doing this via fastlane action rather than xcargs is
+    # more reliable per-target — xcargs' [target=NAME] syntax escaping is
+    # fragile in shells, and the project file gets thrown out after the run.
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "WoofWalk.xcodeproj",
+      team_id: "6439W9DW5X",
+      bundle_identifier: "com.woofwalk.ios",
+      code_sign_identity: "Apple Distribution",
+      profile_name: "match AppStore com.woofwalk.ios",
+      targets: ["WoofWalk"]
+    )
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "WoofWalk.xcodeproj",
+      team_id: "6439W9DW5X",
+      bundle_identifier: "com.woofwalk.ios.watchkitapp",
+      code_sign_identity: "Apple Distribution",
+      profile_name: "match AppStore com.woofwalk.ios.watchkitapp",
+      targets: ["WoofWalkWatch"]
+    )
+
     build_app(
       workspace: "WoofWalk.xcworkspace",
       scheme: "WoofWalk",
       configuration: "Release",
       export_method: "app-store",
-      # The Xcode project pre-dated the developer account so it has no
-      # DEVELOPMENT_TEAM baked in. We pass it via xcargs rather than mutating
-      # project.pbxproj — keeps the project file clean and means there's
-      # nothing to commit when the team rotates. CODE_SIGN_STYLE=Manual is
-      # required because match generates explicit profiles; if Xcode is
-      # left in Automatic it'll try to generate its own profile and ignore
-      # match's.
-      xcargs: "DEVELOPMENT_TEAM=6439W9DW5X CODE_SIGN_STYLE=Manual",
       export_options: {
         provisioningProfiles: {
           "com.woofwalk.ios" => "match AppStore com.woofwalk.ios",
