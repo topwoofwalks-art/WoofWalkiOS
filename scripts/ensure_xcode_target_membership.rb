@@ -28,24 +28,36 @@ abort "Target #{TARGET_NAME} not found" unless target
 
 source_build_phase = target.source_build_phase
 
-# Build a Set of paths already referenced by the Sources build phase. Each
-# entry is the project-relative path of the file (e.g. WoofWalk/Foo.swift).
+# Build a Set of canonical absolute paths already referenced by the
+# Sources build phase. We use File.realpath on both sides of the
+# comparison so that symlink-resolved paths on macOS (where /Users/runner
+# is sometimes routed via /private/var) match the on-disk paths we glob.
+# An earlier version of this script used Pathname#relative_path_from with
+# Dir.pwd, which silently mismatched when xcodeproj's real_path returned
+# a /private/-prefixed path while Dir.pwd did not — resulting in every
+# file being detected as "missing" and added a second time.
 existing_paths = Set.new
 source_build_phase.files.each do |build_file|
   next unless build_file.file_ref
-  path = build_file.file_ref.real_path.to_s
-  rel = Pathname.new(path).relative_path_from(Pathname.new(Dir.pwd)).to_s
-  existing_paths << rel
+  abs = build_file.file_ref.real_path.to_s
+  begin
+    existing_paths << File.realpath(abs)
+  rescue Errno::ENOENT
+    # File referenced in pbxproj but not on disk — leave it, not our job.
+    existing_paths << abs
+  end
 end
 
-# Walk the source tree and find every .swift file.
+# Walk the source tree and find every .swift file not yet in the target.
 missing = []
 Dir.glob("#{SOURCE_ROOT}/**/*.swift").each do |path|
-  # Normalise to forward slashes (Windows checkout safety) — xcodeproj
-  # is OS-agnostic but path comparisons must match.
-  normalised = path.tr("\\", "/")
-  next if existing_paths.any? { |existing| existing.tr("\\", "/") == normalised }
-  missing << normalised
+  begin
+    abs_path = File.realpath(path)
+  rescue Errno::ENOENT
+    next
+  end
+  next if existing_paths.include?(abs_path)
+  missing << path.tr("\\", "/")
 end
 
 if missing.empty?
