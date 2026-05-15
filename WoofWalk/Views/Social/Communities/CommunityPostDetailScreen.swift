@@ -73,6 +73,19 @@ struct CommunityPostDetailScreen: View {
                             Label("Delete Post", systemImage: "trash")
                         }
                     }
+                    // Pin/Unpin: owner / admin / moderator only. Mirrors
+                    // ui/social/communities/CommunityPostDetailScreen.kt:143
+                    // where the same item shows when `isAdmin` is true.
+                    if viewModel.canModerate, let post = viewModel.post {
+                        Button {
+                            Task { await viewModel.togglePin() }
+                        } label: {
+                            Label(
+                                post.isPinned ? "Unpin Post" : "Pin Post",
+                                systemImage: post.isPinned ? "pin.slash" : "pin"
+                            )
+                        }
+                    }
                     Button {
                         showReportSheet = true
                     } label: {

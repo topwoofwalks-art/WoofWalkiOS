@@ -369,6 +369,7 @@ struct ClientDetailScreen: View {
     @StateObject private var viewModel: ClientDetailViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddNote = false
+    @State private var showingEditClient = false
 
     init(clientId: String) {
         self.clientId = clientId
@@ -388,11 +389,31 @@ struct ClientDetailScreen: View {
         }
         .navigationTitle(viewModel.client?.name ?? "Client Details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            // Edit action — Android parity hook into EditClientScreen
+            // (notes, preferred service, instructions, tags). Hidden
+            // until the client doc has loaded so the destination has
+            // something to read.
+            if viewModel.client != nil {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingEditClient = true
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                }
+            }
+        }
         .sheet(isPresented: $showingAddNote) {
             AddNoteSheet(onSave: { content, category in
                 viewModel.addNote(content: content, category: category)
                 showingAddNote = false
             })
+        }
+        .sheet(isPresented: $showingEditClient) {
+            NavigationStack {
+                EditClientScreen(clientId: clientId)
+            }
         }
     }
 

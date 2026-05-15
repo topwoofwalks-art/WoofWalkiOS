@@ -157,6 +157,14 @@ struct MapScreen: View {
                 }
             }
 
+            // Live km-splits overlay — flashes a card on every km
+            // crossing during an active walk, mirroring Android
+            // `ui/map/SplitsOverlay.kt`. Sits above the GPS pill in the
+            // z-order so it's never occluded by the diagnostics chrome.
+            if walkTrackingViewModel.isWalkActive {
+                SplitsOverlay(walkTracking: WalkTrackingService.shared)
+            }
+
             // RAG GPS health pill — top-right while a walk is active.
             // Tap opens the diagnostic sheet (last fix age, accuracy, pipeline counters).
             if walkTrackingViewModel.isWalkActive {

@@ -191,6 +191,32 @@ class WalkTrackingService: ObservableObject {
     private var lastSignificantLat: Double = .nan
     private var lastSignificantLng: Double = .nan
 
+    // MARK: - Weather samples (recap card)
+
+    /// Per-walk weather samples taken every ~10 min from open-meteo, the
+    /// same upstream `WeatherWidget` reads. Reset on `startTracking`,
+    /// appended-to by the in-walk sampling timer, surfaced read-only via
+    /// `weatherSamples` so callers (WalkRepository / completion screen)
+    /// can persist + display the timeline. Mirrors Android
+    /// `WalkTrackingService.weatherSamples` collection. Bounded at 64
+    /// entries so a 10 h walk stays well under Firestore's 1 MiB doc.
+    @Published private(set) var weatherSamples: [WeatherSample] = []
+
+    /// 10-min sampling timer. Invalidated on stop / pause; restarted on
+    /// resume. Independent of the per-second duration timer so the
+    /// in-walk sampling cadence doesn't drift if the duration tick is
+    /// momentarily blocked.
+    private var weatherSamplingTimer: Timer?
+
+    /// Sampling cadence — 10 min, matching Android. open-meteo's free
+    /// tier caps at ~10k requests/day per IP, so this is well below
+    /// quota even with the full UK fleet on launch day.
+    private static let weatherSamplingIntervalSec: TimeInterval = 600.0
+
+    /// Cap so a marathon walk doesn't unbounded-grow the array. At 10-min
+    /// cadence this is ~10.6 h of coverage.
+    private static let weatherSampleCap: Int = 64
+
     private init(locationService: LocationService = .shared, motionService: MotionActivityService = .shared) {
         self.locationService = locationService
         self.motionService = motionService
@@ -442,6 +468,13 @@ class WalkTrackingService: ObservableObject {
         pipelineFixesAccepted = 0
         lastAcceptedFixAt = nil
 
+        // Reset per-walk weather samples + kick off the 10-min sampling
+        // timer. We take one synchronous sample right away so the recap
+        // card is never empty for short walks. Mirrors Android
+        // WalkTrackingService.startWeatherSampling.
+        weatherSamples.removeAll()
+        startWeatherSampling()
+
         locationService.startUpdatingLocation(
             accuracy: kCLLocationAccuracyBest,
             distanceFilter: kCLDistanceFilterNone
@@ -472,6 +505,7 @@ class WalkTrackingService: ObservableObject {
         pauseStartedAt = nil   // Manual pause does not arm the resume watcher
         stopResumeWatcher()
         timer?.invalidate()
+        stopWeatherSampling()
         diagManualPauseToggles += 1
         showNotification(title: "Walk Paused", body: "Tap to resume tracking")
         print("Walk tracking paused")
@@ -485,6 +519,7 @@ class WalkTrackingService: ObservableObject {
         pauseStartedAt = nil
         stopResumeWatcher()
         startTimer()
+        startWeatherSampling()
         diagManualPauseToggles += 1
         print("Walk tracking resumed")
     }
@@ -509,6 +544,7 @@ class WalkTrackingService: ObservableObject {
         motionService.stop()
         filterPipeline.reset()
         timer?.invalidate()
+        stopWeatherSampling()
         stopResumeWatcher()
         isAutoPaused = false
         pauseStartedAt = nil
@@ -811,6 +847,88 @@ class WalkTrackingService: ObservableObject {
             let durationSec = Int(Date().timeIntervalSince(start))
             self.trackingState.durationSeconds = durationSec
         }
+    }
+
+    // MARK: - Weather Sampling
+
+    /// Start the in-walk weather sampling timer. Takes one immediate
+    /// sample (so the recap is never empty for sub-10-min walks), then
+    /// schedules a repeating 10-min timer. Each tick hits the same
+    /// open-meteo "current" endpoint `WeatherWidget` uses and appends a
+    /// `WeatherSample` to `weatherSamples`.
+    private func startWeatherSampling() {
+        weatherSamplingTimer?.invalidate()
+        // First sample immediately on a Task so we don't block startTracking().
+        Task { @MainActor [weak self] in
+            await self?.captureWeatherSample()
+        }
+        weatherSamplingTimer = Timer.scheduledTimer(
+            withTimeInterval: Self.weatherSamplingIntervalSec,
+            repeats: true
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self = self,
+                      self.trackingState.isTracking,
+                      !self.trackingState.isPaused else { return }
+                await self.captureWeatherSample()
+            }
+        }
+    }
+
+    private func stopWeatherSampling() {
+        weatherSamplingTimer?.invalidate()
+        weatherSamplingTimer = nil
+    }
+
+    /// One weather-sample fetch. Uses the last accepted GPS coord if
+    /// available, otherwise falls back to the LocationService's current
+    /// authorised location. Failures are swallowed (logged at debug) —
+    /// a missing sample shouldn't perturb the walk recap.
+    private func captureWeatherSample() async {
+        // Cap the buffer so a marathon walk doesn't bloat the doc.
+        guard weatherSamples.count < Self.weatherSampleCap else { return }
+
+        let coord: CLLocationCoordinate2D? = lastAcceptedCoord
+            ?? lastLocation?.coordinate
+            ?? trackingState.polyline.last
+        guard let c = coord else { return }
+
+        do {
+            let sample = try await fetchOpenMeteoSample(lat: c.latitude, lon: c.longitude)
+            // Final guard — the user may have stopped tracking between
+            // dispatch and response. Don't pollute the next walk's samples.
+            guard trackingState.isTracking else { return }
+            weatherSamples.append(sample)
+        } catch {
+            print("[WeatherSampling] sample failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Minimal open-meteo client — same upstream `WeatherWidget` reads.
+    /// Kept inline so the service has no new dependency on
+    /// `WeatherWidgetViewModel`'s `MainActor` class.
+    private func fetchOpenMeteoSample(lat: Double, lon: Double) async throws -> WeatherSample {
+        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current=temperature_2m,precipitation,rain,showers,weather_code"
+        guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let current = root["current"] as? [String: Any] else {
+            throw URLError(.cannotParseResponse)
+        }
+        let temp = current["temperature_2m"] as? Double ?? 0
+        let precip = current["precipitation"] as? Double ?? 0
+        let rain = current["rain"] as? Double ?? 0
+        let showers = current["showers"] as? Double ?? 0
+        let code = current["weather_code"] as? Int ?? 0
+        return WeatherSample(
+            timestamp: Date().timeIntervalSince1970,
+            temperatureCelsius: temp,
+            precipitationMm: rain + showers + precip,
+            weatherCode: code
+        )
     }
 
     // MARK: - Milestones

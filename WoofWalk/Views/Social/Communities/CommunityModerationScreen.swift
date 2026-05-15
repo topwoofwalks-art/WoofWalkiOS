@@ -355,6 +355,57 @@ private struct MemberRow: View {
                     .background(roleColor(member.role).opacity(0.15))
                     .foregroundColor(roleColor(member.role))
                     .clipShape(Capsule())
+                if !member.isOwner && !showBanInput {
+                    Menu {
+                        // Promote ladder: MEMBER → MODERATOR → ADMIN. Each
+                        // step appears only if the member isn't already at
+                        // or above that rank.
+                        if member.role == .member {
+                            Button {
+                                onRoleChange(.moderator)
+                            } label: {
+                                Label("Promote to Moderator", systemImage: "arrow.up.circle")
+                            }
+                        }
+                        if member.role == .moderator {
+                            Button {
+                                onRoleChange(.admin)
+                            } label: {
+                                Label("Promote to Admin", systemImage: "arrow.up.circle.fill")
+                            }
+                        }
+                        // Demote ladder: ADMIN → MODERATOR → MEMBER.
+                        if member.role == .admin {
+                            Button {
+                                onRoleChange(.moderator)
+                            } label: {
+                                Label("Demote to Moderator", systemImage: "arrow.down.circle")
+                            }
+                        }
+                        if member.role == .moderator {
+                            Button {
+                                onRoleChange(.member)
+                            } label: {
+                                Label("Demote to Member", systemImage: "arrow.down.circle")
+                            }
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            onKick()
+                        } label: {
+                            Label("Kick", systemImage: "person.crop.circle.badge.xmark")
+                        }
+                        Button(role: .destructive) {
+                            showBanInput = true
+                        } label: {
+                            Label("Ban", systemImage: "hand.raised.fill")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundColor(.secondary)
+                    }
+                    .accessibilityLabel("Member actions")
+                }
             }
             if showBanInput {
                 TextField("Ban reason (optional)", text: $banReason)
@@ -385,23 +436,6 @@ private struct MemberRow: View {
                             .background(Color.secondary.opacity(0.15))
                             .clipShape(Capsule())
                     }
-                }
-            } else if !member.isOwner {
-                HStack(spacing: 8) {
-                    if member.role != .moderator {
-                        Button("Make Moderator") { onRoleChange(.moderator) }
-                            .font(.caption)
-                    }
-                    if member.role != .member {
-                        Button("Demote") { onRoleChange(.member) }
-                            .font(.caption)
-                    }
-                    Button("Kick") { onKick() }
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                    Button("Ban") { showBanInput = true }
-                        .font(.caption)
-                        .foregroundColor(.red)
                 }
             }
         }

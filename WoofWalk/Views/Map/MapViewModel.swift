@@ -73,6 +73,14 @@ class MapViewModel: ObservableObject {
     private var walkTimer: Timer?
     private let poiService = PoiServiceRepository.shared
 
+    /// The PlannedWalk that the user started this tracking session from,
+    /// if any. Set by `startPlannedWalkTracking(_:)`; consumed inside
+    /// `saveWalkSession` to compute a `WalkComparison` and persist it on
+    /// the walk doc so the recap can render Planned vs Actual. Cleared on
+    /// every fresh `startWalkTracking()` so a free walk doesn't inherit
+    /// the last planned walk's expectations.
+    private var activePlannedWalk: PlannedWalk?
+
     /// Idle timer that re-engages `.follow` after the user stops gesturing
     /// during an active walk. Mirrors Android's "auto-return to FOLLOW
     /// after 6 s of no gesture" UX added in v7.5.x — keeps the camera on
@@ -473,6 +481,7 @@ class MapViewModel: ObservableObject {
         walkStartTime = Date()
         walkDistance = 0
         walkPolyline = []
+        activePlannedWalk = nil
 
         walkTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self, let startTime = self.walkStartTime else { return }
@@ -480,15 +489,26 @@ class MapViewModel: ObservableObject {
         }
     }
 
+    /// Start a tracking session bound to a saved `PlannedWalk`. The
+    /// planned route, distance, duration, and POI list are captured up-
+    /// front; when `stopWalkTracking()` runs they're folded into a
+    /// `WalkComparison` and stored on the walk doc.
+    func startPlannedWalkTracking(_ planned: PlannedWalk) {
+        startWalkTracking()
+        activePlannedWalk = planned
+    }
+
     func stopWalkTracking() {
         let startTime = walkStartTime
         let distance = walkDistance
         let duration = walkDuration
         let polylineCoords = walkPolyline
+        let planned = activePlannedWalk
 
         walkTimer?.invalidate()
         walkTimer = nil
         walkStartTime = nil
+        activePlannedWalk = nil
 
         Task {
             do {
@@ -496,7 +516,8 @@ class MapViewModel: ObservableObject {
                     startTime: startTime,
                     distanceMeters: distance,
                     durationSec: Int(duration),
-                    polylineCoords: polylineCoords
+                    polylineCoords: polylineCoords,
+                    planned: planned
                 )
             } catch {
                 print("[MapViewModel] Failed to save walk session: \(error)")
@@ -508,7 +529,8 @@ class MapViewModel: ObservableObject {
         startTime: Date?,
         distanceMeters: Double,
         durationSec: Int,
-        polylineCoords: [CLLocationCoordinate2D]
+        polylineCoords: [CLLocationCoordinate2D],
+        planned: PlannedWalk? = nil
     ) async throws {
         guard let userId = Auth.auth().currentUser?.uid else {
             print("[MapViewModel] Cannot save walk: user not authenticated")
@@ -537,7 +559,7 @@ class MapViewModel: ObservableObject {
 
         let polyline = PolylineEncoder.encode(coordinates: polylineCoords)
 
-        let walkData: [String: Any] = [
+        var walkData: [String: Any] = [
             "userId": userId,
             "startedAt": Timestamp(date: start),
             "endedAt": Timestamp(date: now),
@@ -552,6 +574,28 @@ class MapViewModel: ObservableObject {
             "polyline": polyline,
             "dogIds": [String]()
         ]
+
+        // Planned vs Actual: when this session was launched from a saved
+        // PlannedWalk, fold a `WalkComparison` into the doc so the recap
+        // can render Planned vs Actual without a follow-up read.
+        if let planned, let comparison = WalkComparison.build(
+            planned: planned,
+            actualDistanceMeters: distanceMeters,
+            actualDurationSec: durationSec,
+            actualTrack: polylineCoords
+        ) {
+            do {
+                let encoded = try Firestore.Encoder().encode(comparison)
+                walkData["comparison"] = encoded
+                if let plannedId = planned.id {
+                    walkData["plannedWalkId"] = plannedId
+                }
+            } catch {
+                // Comparison is non-essential — log and persist the walk
+                // without it rather than failing the whole save.
+                print("[MapViewModel] Failed to encode WalkComparison (non-fatal): \(error)")
+            }
+        }
 
         let db = Firestore.firestore()
         try await db.collection("users").document(userId)

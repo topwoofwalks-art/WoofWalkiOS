@@ -113,6 +113,29 @@ final class CommunityModerationViewModel: ObservableObject {
         }
     }
 
+    /// Promote a member to the next role up the ladder
+    /// (MEMBER → MODERATOR → ADMIN). No-op for OWNER. Mirrors Android's
+    /// CommunityModerationViewModel.promoteMember — OWNER may grant ADMIN;
+    /// the repo gates the actual write server-side too.
+    func promoteMember(_ memberId: String, newRole: CommunityMemberRole) async {
+        do {
+            try await memberRepository.updateRole(communityId: communityId, userId: memberId, newRole: newRole)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Demote a member down the ladder (ADMIN → MODERATOR → MEMBER). The
+    /// authorisation check still lives in the repo + Firestore rules; this
+    /// is the explicit-intent wrapper so callsites read naturally.
+    func demoteMember(_ memberId: String, newRole: CommunityMemberRole) async {
+        do {
+            try await memberRepository.updateRole(communityId: communityId, userId: memberId, newRole: newRole)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     // MARK: - Posts
 
     func hidePost(_ postId: String) async {

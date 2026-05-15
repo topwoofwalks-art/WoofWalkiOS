@@ -52,6 +52,10 @@ struct BusinessScheduleScreen: View {
     @State private var expandedBookingId: String?
     @State private var showRejectAlert = false
     @State private var bookingToReject: String?
+    /// Set when the business owner taps "Cancel" on a confirmed booking.
+    /// Presents the `RefundBookingDialog`, which talks to the
+    /// `processRefund` CF + flips the booking status to CANCELLED.
+    @State private var bookingToRefund: BusinessBooking?
 
     private let calendar = Calendar.current
 
@@ -213,6 +217,42 @@ struct BusinessScheduleScreen: View {
         } message: {
             Text("Are you sure you want to reject this booking? The client will be notified.")
         }
+        // Refund sheet for confirmed-booking cancellations. Computes the
+        // policy-recommended refund on-device, then routes through the
+        // `processRefund` Cloud Function. Mirrors Android's
+        // `BookingDetailScreen.kt#RefundDialog` flow.
+        .sheet(item: $bookingToRefund) { businessBooking in
+            RefundBookingDialog(
+                booking: bookingFromBusinessBooking(businessBooking),
+                onCompleted: {
+                    bookingToRefund = nil
+                    viewModel.refresh()
+                },
+                onDismiss: {
+                    bookingToRefund = nil
+                }
+            )
+        }
+    }
+
+    /// Build a minimal `Booking` from the lightweight `BusinessBooking`
+    /// so the refund dialog can compute hours-until-start and price
+    /// without re-fetching the doc. The dialog only reads `id`,
+    /// `startTime`, `price`, `computedPrice` — everything else can be
+    /// left at its default.
+    private func bookingFromBusinessBooking(_ b: BusinessBooking) -> Booking {
+        let startMs = Int64(b.scheduledDate.timeIntervalSince1970 * 1000)
+        let endMs = Int64((b.endDate ?? b.scheduledDate).timeIntervalSince1970 * 1000)
+        return Booking(
+            id: b.id,
+            clientName: b.clientName,
+            startTime: startMs,
+            endTime: endMs,
+            status: b.status,
+            location: b.location,
+            price: b.price,
+            isPaid: b.isPaid
+        )
     }
 
     // MARK: - Top Bar
@@ -928,22 +968,45 @@ struct BusinessScheduleScreen: View {
                 if job.statusEnum == .confirmed || job.statusEnum == .inProgress {
                     Divider()
 
-                    NavigationLink(value: AppRoute.businessWalkConsole(bookingId: job.id)) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "figure.walk")
-                                .font(.subheadline.bold())
-                            Text(job.statusEnum == .inProgress ? "Resume Walk" : "Start Walk")
-                                .font(.subheadline.weight(.semibold))
+                    HStack(spacing: 8) {
+                        NavigationLink(value: AppRoute.businessWalkConsole(bookingId: job.id)) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "figure.walk")
+                                    .font(.subheadline.bold())
+                                Text(job.statusEnum == .inProgress ? "Resume Walk" : "Start Walk")
+                                    .font(.subheadline.weight(.semibold))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(hex: "#4CAF50"))
+                            )
                         }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color(hex: "#4CAF50"))
-                        )
+                        .buttonStyle(.plain)
+
+                        // Cancel with refund — Android parity hook into
+                        // the RefundBookingDialog + processRefund CF.
+                        // Hidden once the booking is in progress so we
+                        // don't surface a destructive action mid-walk.
+                        if job.statusEnum == .confirmed {
+                            Button {
+                                bookingToRefund = job
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.red)
+                                    .frame(width: 44, height: 44)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(.red.opacity(0.1))
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Cancel booking")
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
 
                 // Accept/Reject buttons for pending bookings

@@ -12,24 +12,50 @@ final class CommunityPostViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var isPostingComment: Bool = false
     @Published var error: String?
+    /// Current user's role in this community, if any. Populated on init
+    /// via the community repo so the detail screen can gate moderator
+    /// actions (Pin/Unpin) without forcing the parent to plumb the role
+    /// through every navigation hop.
+    @Published var myRole: CommunityMemberRole?
 
     let communityId: String
     let postId: String
     let currentUserId: String?
 
     private let repository: CommunityPostRepository
+    private let communityRepository: CommunityRepository
     private var cancellables = Set<AnyCancellable>()
 
     init(
         communityId: String,
         postId: String,
-        repository: CommunityPostRepository = .shared
+        repository: CommunityPostRepository = .shared,
+        communityRepository: CommunityRepository = .shared
     ) {
         self.communityId = communityId
         self.postId = postId
         self.repository = repository
+        self.communityRepository = communityRepository
         self.currentUserId = Auth.auth().currentUser?.uid
         bind()
+        Task { await loadMyRole() }
+    }
+
+    private func loadMyRole() async {
+        guard let uid = currentUserId else { return }
+        do {
+            let role = try await communityRepository.getMemberRole(communityId: communityId, userId: uid)
+            self.myRole = role
+        } catch {
+            // Non-fatal — role just stays nil and Pin/Unpin stays hidden.
+            print("[CommunityPostVM] loadMyRole failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// True when the signed-in user is an owner/admin/moderator of the
+    /// hosting community. Used to gate Pin/Unpin in the menu.
+    var canModerate: Bool {
+        myRole?.canModerate ?? false
     }
 
     private func bind() {
@@ -159,6 +185,17 @@ final class CommunityPostViewModel: ObservableObject {
     func deletePost() async {
         do {
             try await repository.deletePost(communityId: communityId, postId: postId)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Toggle the pinned flag on this post. Repository enforces moderator+
+    /// authorization server-side; the UI gating just hides the menu item
+    /// from users who definitely can't.
+    func togglePin() async {
+        do {
+            try await repository.togglePin(communityId: communityId, postId: postId)
         } catch {
             self.error = error.localizedDescription
         }

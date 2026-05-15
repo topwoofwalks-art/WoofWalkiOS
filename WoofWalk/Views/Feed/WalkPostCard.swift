@@ -8,6 +8,10 @@ struct WalkPostCard: View {
     let onShare: () -> Void
 
     @State private var showReactionPicker = false
+    /// Index of the photo whose comment sheet is open, or nil when closed.
+    /// Long-pressing any photo in a multi-image gallery opens this sheet
+    /// scoped to that photo (mirrors PhotoCommentSheet.kt on Android).
+    @State private var photoCommentIndex: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -59,14 +63,11 @@ struct WalkPostCard: View {
             // Route polyline thumbnail
             routeThumbnail
 
-            // Photo
-            if let photoUrl = post.photoUrl, let url = URL(string: photoUrl) {
-                AsyncImage(url: url) { img in
-                    img.resizable().scaledToFill().frame(maxHeight: 250).clipShape(RoundedRectangle(cornerRadius: 8))
-                } placeholder: {
-                    Rectangle().fill(Color.neutral90).frame(height: 200).clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-            }
+            // Photos. Multi-image posts use `media[]`; long-pressing any
+            // photo opens that photo's PhotoCommentSheet. Legacy posts that
+            // only have `photoUrl` render as a single image and long-press
+            // opens index 0.
+            photoGallery
 
             // Reaction summary
             if let reactions = post.reactions, !reactions.isEmpty {
@@ -115,6 +116,60 @@ struct WalkPostCard: View {
                     showReactionPicker = false
                 }
             }
+        }
+        .sheet(item: $photoCommentIndex.wrappedAsIdentifiable) { wrapper in
+            PhotoCommentSheet(post: post, photoIndex: wrapper.value)
+        }
+    }
+
+    // MARK: - Photo Gallery
+
+    /// Renders either:
+    ///   - multi-image gallery when `post.media` has >1 entries (horizontal
+    ///     scroll, each photo long-pressable for per-photo comments), or
+    ///   - single image when only `photoUrl` (legacy shape) is set
+    ///     (long-press opens comments for photoIndex 0).
+    /// Nothing renders when the post has no images at all.
+    @ViewBuilder
+    private var photoGallery: some View {
+        if let media = post.media, !media.isEmpty {
+            if media.count == 1 {
+                photoTile(urlStr: media[0].url, photoIndex: 0)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(Array(media.enumerated()), id: \.offset) { idx, item in
+                            photoTile(urlStr: item.url, photoIndex: idx)
+                                .frame(width: 240, height: 240)
+                        }
+                    }
+                }
+                .frame(height: 240)
+            }
+        } else if let photoUrl = post.photoUrl {
+            photoTile(urlStr: photoUrl, photoIndex: 0)
+        }
+    }
+
+    private func photoTile(urlStr: String, photoIndex: Int) -> some View {
+        Group {
+            if let url = URL(string: urlStr) {
+                AsyncImage(url: url) { img in
+                    img.resizable().scaledToFill()
+                } placeholder: {
+                    Rectangle().fill(Color.neutral90)
+                }
+            } else {
+                Rectangle().fill(Color.neutral90)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: 250)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .contentShape(RoundedRectangle(cornerRadius: 8))
+        .onLongPressGesture(minimumDuration: 0.4) {
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            self.photoCommentIndex = photoIndex
         }
     }
 
@@ -180,6 +235,25 @@ struct WalkPostCard: View {
             Text(value).font(.subheadline.bold())
             Text(label).font(.caption2).foregroundColor(.secondary)
         }
+    }
+}
+
+// MARK: - Int identifiable wrapper
+
+/// SwiftUI's `sheet(item:)` needs an Identifiable binding; wrap an `Int?`
+/// so the photo index can drive the per-photo comment sheet without
+/// promoting it to its own boxed state type at every callsite.
+private struct IdentifiableInt: Identifiable {
+    let value: Int
+    var id: Int { value }
+}
+
+private extension Binding where Value == Int? {
+    var wrappedAsIdentifiable: Binding<IdentifiableInt?> {
+        Binding<IdentifiableInt?>(
+            get: { self.wrappedValue.map(IdentifiableInt.init(value:)) },
+            set: { self.wrappedValue = $0?.value }
+        )
     }
 }
 
