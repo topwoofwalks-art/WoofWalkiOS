@@ -1,13 +1,6 @@
 platform :ios, '16.0'
 
-# Static linkage skips the [CP] Embed Pods Frameworks build phase
-# entirely — that phase's generated script has a bash strict-mode
-# bug (Pods-WoofWalk-frameworks.sh line 42 "source: unbound variable")
-# that's resisted multiple workaround attempts. Static frameworks
-# get linked into the main binary at compile time, so there's nothing
-# to embed at runtime. Firebase 10.x, Stripe, GoogleMaps, BranchSDK
-# all support static linkage. Saves ~30 MB of duplicated symbols too.
-use_frameworks! :linkage => :static
+use_frameworks!
 
 target 'WoofWalk' do
   pod 'Firebase/Core', '~> 10.29'
@@ -65,17 +58,11 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
-      # Xcode 15.4 sandboxes user script phases by default, which
-      # blocks the rsync calls in [CP] Embed Pods Frameworks from
-      # reading project-root paths. Different from the earlier
-      # set -u abort (handled below) — here rsync itself is denied.
+      # Xcode 15.4 sandboxes user script phases by default — disable
+      # so our custom embed-frameworks script (below) can rsync.
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
   end
-
-  # Disable sandboxing on the consuming WoofWalk target too — the
-  # [CP] Embed Pods Frameworks build phase runs on the main target,
-  # not on a Pods sub-target.
   installer.aggregate_targets.each do |aggregate|
     aggregate.user_project.native_targets.each do |target|
       target.build_configurations.each do |config|
@@ -85,7 +72,64 @@ post_install do |installer|
     aggregate.user_project.save
   end
 
-  # Note: with use_frameworks! :linkage => :static above, no
-  # Pods-WoofWalk-frameworks.sh script is generated. Previous patches
-  # to that script have been removed.
+  # OVERWRITE Pods-WoofWalk-frameworks.sh with a minimal, bash-strict-
+  # safe script. The CocoaPods-generated install_framework() function
+  # has `local source` declared only inside conditional branches, so
+  # under `set -u` an unmatched branch leaves `${source}` unbound and
+  # aborts at line 42. Multiple patches to the generated script have
+  # either failed to fix it or introduced an infinite-rsync hang.
+  #
+  # Our replacement just rsyncs every .framework that CocoaPods
+  # built into the embed location. No conditional branches, no
+  # SCRIPT_INPUT_FILE iteration, no chance of unbound vars.
+  frameworks_script = "Pods/Target Support Files/Pods-WoofWalk/Pods-WoofWalk-frameworks.sh"
+  if File.exist?(frameworks_script)
+    File.write(frameworks_script, <<~SH)
+      #!/bin/sh
+      # Custom embed-frameworks — replaces the buggy CocoaPods script.
+      # Rsyncs every .framework that CocoaPods built into the
+      # app's Frameworks/ folder. See Podfile post_install for context.
+      set -e
+      set -o pipefail
+
+      if [ -z "${TARGET_BUILD_DIR:-}" ]; then
+        echo "Custom embed: TARGET_BUILD_DIR unset, exiting cleanly"
+        exit 0
+      fi
+      if [ -z "${FRAMEWORKS_FOLDER_PATH:-}" ]; then
+        echo "Custom embed: FRAMEWORKS_FOLDER_PATH unset, exiting cleanly"
+        exit 0
+      fi
+      if [ -z "${BUILT_PRODUCTS_DIR:-}" ]; then
+        echo "Custom embed: BUILT_PRODUCTS_DIR unset, exiting cleanly"
+        exit 0
+      fi
+
+      DEST="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+      mkdir -p "$DEST"
+
+      echo "Custom embed: copying frameworks from ${BUILT_PRODUCTS_DIR} to ${DEST}"
+
+      # Each pod's framework is at BUILT_PRODUCTS_DIR/<PodName>/<Module>.framework
+      find "${BUILT_PRODUCTS_DIR}" -mindepth 2 -maxdepth 2 -name "*.framework" -type d | while read -r framework; do
+        [ -e "$framework" ] || continue
+        name=$(basename "$framework")
+        echo "  embedding $name"
+        rsync -av --delete --filter='- CVS/' --filter='- .svn/' --filter='- .git/' --filter='- .hg/' --filter='- Headers' --filter='- PrivateHeaders' --filter='- Modules' "$framework" "$DEST/"
+        # Strip non-arm64 slices for App Store submission.
+        binary="$DEST/$name/$(basename "$name" .framework)"
+        if [ -f "$binary" ] && [ "${CONFIGURATION:-}" != "Debug" ]; then
+          archs=$(lipo -archs "$binary" 2>/dev/null || true)
+          for slice in $archs; do
+            if [ "$slice" != "arm64" ]; then
+              lipo -remove "$slice" -output "$binary" "$binary" || true
+            fi
+          done
+        fi
+      done
+
+      echo "Custom embed: done"
+    SH
+    puts "Replaced #{frameworks_script} with minimal custom embed script"
+  end
 end
