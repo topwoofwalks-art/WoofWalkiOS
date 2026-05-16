@@ -58,7 +58,24 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+      # Xcode 15.4 sandboxes user script phases by default, which
+      # blocks the rsync calls in [CP] Embed Pods Frameworks from
+      # reading project-root paths. Different from the earlier
+      # set -u abort (handled below) — here rsync itself is denied.
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
+  end
+
+  # Disable sandboxing on the consuming WoofWalk target too — the
+  # [CP] Embed Pods Frameworks build phase runs on the main target,
+  # not on a Pods sub-target.
+  installer.aggregate_targets.each do |aggregate|
+    aggregate.user_project.native_targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      end
+    end
+    aggregate.user_project.save
   end
 
   # Patch Pods-WoofWalk-frameworks.sh — CocoaPods generates an
