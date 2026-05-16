@@ -139,7 +139,12 @@ jobs:
         # repo. Only needed the first time, or after a cert rotation.
 
       - name: Build + upload to TestFlight
-        timeout-minutes: 25
+        # 60-min timeout — the Pod sources alone (Firebase 10.29 +
+        # Stripe + GoogleMaps + BranchSDK) take 25-30 min to compile
+        # from source on a cold cache. Our app sources add another
+        # ~15 min. Total ~45 min worst case; 60 min gives headroom
+        # while still failing fast on a real hang.
+        timeout-minutes: 60
         run: bundle exec fastlane beta
 
       - name: Upload xcodebuild log on failure
