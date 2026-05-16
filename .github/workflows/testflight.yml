@@ -139,12 +139,13 @@ jobs:
         # repo. Only needed the first time, or after a cert rotation.
 
       - name: Build + upload to TestFlight
-        # 60-min timeout — the Pod sources alone (Firebase 10.29 +
-        # Stripe + GoogleMaps + BranchSDK) take 25-30 min to compile
-        # from source on a cold cache. Our app sources add another
-        # ~15 min. Total ~45 min worst case; 60 min gives headroom
-        # while still failing fast on a real hang.
-        timeout-minutes: 60
+        # 90-min timeout — run 26 with 60 min hit the wall right as
+        # WoofWalk Swift compile was in progress. Pod compile alone
+        # is ~30 min; WoofWalk compile + link + upload needs another
+        # 40-50 min on a cold cache. 90 min covers it with a small
+        # buffer. Subsequent runs with hot Pods/ cache complete in
+        # ~17 min like runs 11-13.
+        timeout-minutes: 90
         run: bundle exec fastlane beta
 
       - name: Upload xcodebuild log on failure
