@@ -49,8 +49,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Pods
-          key: pods-v2-${{ hashFiles('Podfile.lock', 'Podfile') }}
-          restore-keys: pods-v2-
+          # pods-v3 — cache-bust after pinning CocoaPods to 1.15.2.
+          # pods-v2 cache contained 1.16.x-generated frameworks.sh with
+          # the "source: unbound variable" regression even after the
+          # Gemfile pin landed.
+          key: pods-v3-${{ hashFiles('Podfile.lock', 'Podfile', 'Gemfile') }}
+          restore-keys: pods-v3-
 
       - name: Cache Ruby gems (fastlane)
         uses: ruby/setup-ruby@v1
