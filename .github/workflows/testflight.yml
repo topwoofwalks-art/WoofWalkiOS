@@ -59,7 +59,12 @@ jobs:
           bundler-cache: true
 
       - name: Install CocoaPods
-        run: pod install --repo-update
+        # Use bundle exec so the pinned CocoaPods version in Gemfile
+        # (currently 1.15.2 — see Gemfile for context) is used instead
+        # of whatever the macos-14 image ships system-wide. The 1.16.x
+        # cocoapods generates a Pods-WoofWalk-frameworks.sh that
+        # crashes at line 42 with "source: unbound variable".
+        run: bundle exec pod install --repo-update
 
       - name: Bootstrap certs (if requested)
         if: ${{ github.event.inputs.bootstrap_certs == 'true' }}
