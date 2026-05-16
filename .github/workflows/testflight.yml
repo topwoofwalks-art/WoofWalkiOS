@@ -108,24 +108,27 @@ jobs:
           # Verify
           head -50 "$SCRIPT" | grep -A 2 "install_framework"
 
-      - name: Disable user-script sandboxing on WoofWalk target
+      - name: Disable user-script sandboxing + add Swift compile diagnostics
         # Xcode 15.4 enables script-phase sandboxing by default, which
         # blocks the [CP] Embed Pods Frameworks rsync from reading
         # project paths. Toggle off on the consuming target's config.
+        # ALSO add -warn-long-expression-type-checking=200 +
+        # -warn-long-function-bodies=2000 so any Swift expression /
+        # function that takes too long to type-check surfaces as a
+        # warning in the xcodebuild log — diagnoses hangs.
         run: |
-          /usr/libexec/PlistBuddy -c "Print" WoofWalk.xcodeproj/project.pbxproj > /dev/null 2>&1 || true
-          # Use plutil to flip the build setting via xcodebuild's xcconfig override.
-          # Simpler: use ruby + xcodeproj.
           bundle exec ruby -e '
             require "xcodeproj"
             proj = Xcodeproj::Project.open("WoofWalk.xcodeproj")
             proj.targets.each do |t|
               t.build_configurations.each do |c|
                 c.build_settings["ENABLE_USER_SCRIPT_SANDBOXING"] = "NO"
+                existing = c.build_settings["OTHER_SWIFT_FLAGS"] || "$(inherited)"
+                c.build_settings["OTHER_SWIFT_FLAGS"] = existing + " -Xfrontend -warn-long-expression-type-checking=200 -Xfrontend -warn-long-function-bodies=2000"
               end
             end
             proj.save
-            puts "ENABLE_USER_SCRIPT_SANDBOXING=NO applied to all WoofWalk targets"
+            puts "Sandbox=NO + Swift compile diagnostics applied"
           '
 
       - name: Bootstrap certs (if requested)
@@ -136,6 +139,7 @@ jobs:
         # repo. Only needed the first time, or after a cert rotation.
 
       - name: Build + upload to TestFlight
+        timeout-minutes: 25
         run: bundle exec fastlane beta
 
       - name: Upload xcodebuild log on failure
