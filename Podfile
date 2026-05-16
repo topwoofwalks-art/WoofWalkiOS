@@ -60,4 +60,32 @@ post_install do |installer|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
     end
   end
+
+  # Patch Pods-WoofWalk-frameworks.sh — CocoaPods generates an
+  # install_framework() function whose `local source` is only assigned
+  # inside conditional `if [ -r ... ]` branches. When SCRIPT_INPUT_FILE
+  # arguments come in that don't match either condition, `${source}` is
+  # referenced without being assigned and bash (running under `set -u`)
+  # aborts with "source: unbound variable" at line 42. This affects
+  # both CocoaPods 1.15.x and 1.16.x — the bug is in the script template.
+  #
+  # Fix: insert `local source=""` at the top of install_framework() so
+  # the variable is always defined. The conditional `[ -r "" ]` test
+  # then cleanly short-circuits when no real path was provided, instead
+  # of crashing the whole embed phase.
+  frameworks_script = "Pods/Target Support Files/Pods-WoofWalk/Pods-WoofWalk-frameworks.sh"
+  if File.exist?(frameworks_script)
+    contents = File.read(frameworks_script)
+    sentinel = "local source=\"\"  # patched: avoid set -u unbound abort"
+    unless contents.include?(sentinel)
+      patched = contents.sub(
+        /^install_framework\(\)\s*\{\n/,
+        "install_framework()\n{\n  #{sentinel}\n"
+      )
+      if patched != contents
+        File.write(frameworks_script, patched)
+        puts "Patched #{frameworks_script}: init local source=\"\" in install_framework"
+      end
+    end
+  end
 end
